@@ -1,0 +1,288 @@
+﻿@using WebApplication1.Models.Stockage
+@model IEnumerable<WebApplication1.Models.Stockage.Echantillon>
+
+@{
+    ViewData["Title"] = "Mes Échantillons Assignés";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-vial"></i> @ViewData["Title"]</h2>
+        <div>
+            <span class="badge bg-info rounded-pill">@Model.Count() échantillon(s)</span>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3 text-muted"></i>
+            <h4>Aucun échantillon assigné</h4>
+            <p class="text-muted">Vous n'avez actuellement aucun échantillon assigné à analyser.</p>
+            <a asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-tachometer-alt"></i> Retour au tableau de bord
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Filtres et tri -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="filterPriorite">Filtrer par priorité :</label>
+                        <select id="filterPriorite" class="form-control">
+                            <option value="">Toutes les priorités</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="Haute">Haute</option>
+                            <option value="Normale">Normale</option>
+                            <option value="Basse">Basse</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterType">Filtrer por type :</label>
+                        <select id="filterType" class="form-control">
+                            <option value="">Tous les types</option>
+                            @foreach (var type in Model.Select(e => e.Type).Distinct())
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sortBy">Trier par :</label>
+                        <select id="sortBy" class="form-control">
+                            <option value="priorite">Priorité</option>
+                            <option value="date_limite">Date limite</option>
+                            <option value="date_reception">Date réception</option>
+                            <option value="numero">Numéro échantillon</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button id="resetFilters" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des échantillons -->
+        <div class="row" id="echantillonsList">
+            @foreach (var item in Model.OrderBy(e => e.Priorite).ThenBy(e => e.DateLimite))
+            {
+                <div class="col-lg-6 mb-4 echantillon-card"
+                     data-priorite="@item.Priorite"
+                     data-type="@item.Type"
+                     data-date-limite="@(item.DateLimite?.ToString("yyyy-MM-dd") ?? "9999-12-31")"
+                     data-date-reception="@item.DateReception.ToString("yyyy-MM-dd")"
+                     data-numero="@item.NumeroEchantillon">
+
+                    <div class="card h-100 @(item.Priorite == PrioriteEchantillon.Urgent ? "border-danger" : "")">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">@item.NumeroEchantillon</h5>
+                                <small class="text-muted">@item.Type</small>
+                            </div>
+                            <div>
+                                @switch (item.Priorite)
+                                {
+                                    case PrioriteEchantillon.Urgent:
+                                        <span class="badge bg-danger">URGENT</span>
+                                        break;
+                                    case PrioriteEchantillon.Normal:
+                                        <span class="badge bg-info">NORMALE</span>
+                                        break;
+                                    case PrioriteEchantillon.Critique:
+                                        <span class="badge bg-secondary">CRITIQUE</span>
+                                        break;
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <p class="card-text">@item.Description</p>
+
+                            <div class="row text-sm">
+                                <div class="col-6">
+                                    <i class="fas fa-calendar-alt text-muted"></i>
+                                    <small>Reçu le @item.DateReception.ToString("dd/MM/yyyy")</small>
+                                </div>
+                                <div class="col-6">
+                                    @if (item.DateLimite.HasValue)
+                                    {
+                                        var joursRestants = (item.DateLimite.Value - DateTime.Now).Days;
+                                        <i class="fas fa-clock text-muted"></i>
+                                        <small class="@(joursRestants <= 2 ? "text-danger fw-bold" : joursRestants <= 7 ? "text-warning" : "")">
+                                            @if (joursRestants >= 0)
+                                            {
+                                                @($"{joursRestants} jour(s) restant(s)")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger fw-bold">DÉPASSÉ !</span>
+                                            }
+                                        </small>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (item.Stockage != null)
+                            {
+                                <hr>
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Localisation : @item.Stockage.Zone - @item.Stockage.Emplacement
+                                </small>
+                            }
+                        </div>
+
+                        <div class="card-footer bg-light">
+                            <div class="btn-group w-100" role="group">
+                                <a asp-action="DemarrerAnalyse" asp-route-id="@item.Id"
+                                   class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-eye"></i> Détails
+                                </a>
+
+                                <form asp-controller="Analyses" asp-action="DemarrerAnalyse" asp-route-echantillonId="@item.Id" method="post" class="d-inline flex-fill">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success btn-sm w-100"
+                                            onclick="return confirm('Démarrer l\'analyse de l\'échantillon @item.NumeroEchantillon ?')">
+                                        <i class="fas fa-play-circle"></i> Démarrer l'analyse
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Fonction de filtrage
+            function filterEchantillons() {
+                var prioriteFilter = $('#filterPriorite').val();
+                var typeFilter = $('#filterType').val();
+
+                $('.echantillon-card').each(function() {
+                    var $card = $(this);
+                    var show = true;
+
+                    if (prioriteFilter && $card.data('priorite') != prioriteFilter) {
+                        show = false;
+                    }
+
+                    if (typeFilter && $card.data('type') != typeFilter) {
+                        show = false;
+                    }
+
+                    if (show) {
+                        $card.show();
+                    } else {
+                        $card.hide();
+                    }
+                });
+
+                // Afficher un message si aucun résultat
+                var visibleCards = $('.echantillon-card:visible').length;
+                $('#noResults').remove();
+                if (visibleCards === 0) {
+                    $('#echantillonsList').append(
+                        '<div id="noResults" class="col-12"><div class="alert alert-warning text-center">' +
+                        '<i class="fas fa-search"></i> Aucun échantillon ne correspond aux critères de filtrage.' +
+                        '</div></div>'
+                    );
+                }
+            }
+
+            // Fonction de tri
+            function sortEchantillons() {
+                var sortBy = $('#sortBy').val();
+                var $container = $('#echantillonsList');
+                var $cards = $('.echantillon-card').detach();
+
+                $cards.sort(function(a, b) {
+                    var aVal, bVal;
+
+                    switch(sortBy) {
+                        case 'priorite':
+                            var prioriteOrder = { 'Urgent': 1, 'Haute': 2, 'Normale': 3, 'Basse': 4 };
+                            aVal = prioriteOrder[$(a).data('priorite')] || 5;
+                            bVal = prioriteOrder[$(b).data('priorite')] || 5;
+                            break;
+                        case 'date_limite':
+                            aVal = $(a).data('date-limite');
+                            bVal = $(b).data('date-limite');
+                            break;
+                        case 'date_reception':
+                            aVal = $(a).data('date-reception');
+                            bVal = $(b).data('date-reception');
+                            break;
+                        case 'numero':
+                            aVal = $(a).data('numero');
+                            bVal = $(b).data('numero');
+                            break;
+                    }
+
+                    return aVal > bVal ? 1 : -1;
+                });
+
+                $container.append($cards);
+            }
+
+            // Événements
+            $('#filterPriorite, #filterType').change(filterEchantillons);
+            $('#sortBy').change(sortEchantillons);
+
+            // Réinitialiser les filtres
+            $('#resetFilters').click(function() {
+                $('#filterPriorite, #filterType').val('');
+                $('#sortBy').val('priorite');
+                filterEchantillons();
+                sortEchantillons();
+            });
+
+            // Confirmation avant démarrage
+            $('form[action*="DemarrerAnalyse"]').submit(function(e) {
+                var numeroEchantillon = $(this).closest('.card').find('h5').text();
+                return confirm('Êtes-vous sûr de vouloir démarrer l\'analyse de l\'échantillon ' + numeroEchantillon + ' ?\n\nCette action est irréversible.');
+            });
+        });
+    </script>
+}
+
+<style>
+    .card.border-danger {
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+    }
+
+    .badge {
+        font-size: 0.8em;
+    }
+
+    .btn-group .btn {
+        border-radius: 0;
+    }
+
+        .btn-group .btn:first-child {
+            border-radius: 0.25rem 0 0 0.25rem;
+        }
+
+        .btn-group .btn:last-child {
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+
+    .card-footer {
+        padding: 0.5rem;
+    }
+
+    .text-sm small {
+        font-size: 0.875em;
+    }
+</style>

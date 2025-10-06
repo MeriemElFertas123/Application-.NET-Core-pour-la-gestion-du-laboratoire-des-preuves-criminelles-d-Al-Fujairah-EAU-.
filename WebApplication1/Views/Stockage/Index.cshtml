@@ -1,0 +1,568 @@
+﻿@model WebApplication1.Models.Stockage.StockageViewModel
+@{
+    ViewBag.Title = "Stockage des Échantillons";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-warehouse text-primary"></i> Stockage des Échantillons</h2>
+                <p class="text-muted mb-0">Gestion des emplacements et stockage des échantillons validés</p>
+            </div>
+            <div>
+
+                @Html.ActionLink("Plan de stockage", "PlanStockage", null, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            En attente de stockage
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.Statistiques.EchantillonsEnAttente
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-left-success">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Emplacements occupés
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.Statistiques.TotalOccupe / @Model.Statistiques.TotalCapacite
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-archive fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-left-info">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Taux d'occupation
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.Statistiques.TauxOccupation%
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+                <div class="row no-gutters align-items-center">
+                    <div class="col-auto">
+                        <div class="progress progress-sm mr-2">
+                            <div class="progress-bar bg-info" role="progressbar"
+                                 style="width: @Model.Statistiques.TauxOccupation%"
+                                 aria-valuenow="@Model.Statistiques.TauxOccupation"
+                                 aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-left-warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Emplacements libres
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.Statistiques.TotalLibre
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-plus-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Zones de stockage -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-map-marked-alt"></i> Zones de stockage</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var zone in Model.ZonesStockage)
+                    {
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Zone @zone.Code</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <p class="card-text mb-1"><strong>@zone.Nom</strong></p>
+                                    <p class="card-text mb-1">
+                                        <i class="fas fa-thermometer-half"></i> @zone.Temperature
+                                    </p>
+                                    <p class="card-text mb-2">
+                                        <span class="badge bg-success">@zone.Occupe</span> occupés /
+                                        <span class="badge bg-info">@zone.Capacite</span> total
+                                    </p>
+                                    <div class="progress mb-2" style="height: 10px;">
+                                        <div class="progress-bar @(zone.TauxOccupation > 80 ? "bg-danger" : zone.TauxOccupation > 60 ? "bg-warning" : "bg-success")"
+                                             style="width: @zone.TauxOccupation%"></div>
+                                    </div>
+                                    <small class="text-muted">@zone.TauxOccupation% d'occupation</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des échantillons en attente -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-vials"></i> Échantillons en attente de stockage</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="toggleFilters()">
+                        <i class="fas fa-filter"></i> Filtres
+                    </button>
+                    @using (Html.BeginForm("Rechercher", "Stockage", FormMethod.Get, new { @class = "d-inline-block" }))
+                    {
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            @Html.TextBox("terme", "", new { @class = "form-control", @placeholder = "Rechercher...", @id = "searchInput" })
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Filtres (cachés par défaut) -->
+            <div class="card-body border-bottom bg-light" id="filtersPanel" style="display: none;">
+                @using (Html.BeginForm("Index", "Stockage", FormMethod.Get, new { @class = "row g-3" }))
+                {
+                    <div class="col-md-3">
+                        <label class="form-label">Zone compatible</label>
+                        @Html.DropDownList("zoneFilter",
+                            new SelectList(Model.ZonesStockage, "Code", "Nom"),
+                            "Toutes les zones",
+                            new { @class = "form-select form-select-sm" })
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Type d'échantillon</label>
+                        @Html.DropDownList("typeFilter",
+                            new SelectList(Enum.GetValues(typeof(WebApplication1.Models.Stockage.TypeEchantillon))
+                                .Cast<WebApplication1.Models.Stockage.TypeEchantillon>()
+                                .Select(v => new SelectListItem
+                                     {
+                                    Text = v.ToString(),
+                                    Value = v.ToString()
+                                }), "Value", "Text"),
+                            "Tous les types",
+                            new { @class = "form-select form-select-sm" })
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Priorité</label>
+                        @Html.DropDownList("prioriteFilter",
+                            new SelectList(Enum.GetValues(typeof(WebApplication1.Models.Stockage.PrioriteEchantillon))
+                                .Cast<WebApplication1.Models.Stockage.PrioriteEchantillon>()
+                                .Select(v => new SelectListItem
+                                     {
+                                    Text = v.ToString(),
+                                    Value = v.ToString()
+                                }), "Value", "Text"),
+                            "Toutes les priorités",
+                            new { @class = "form-select form-select-sm" })
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fas fa-filter"></i> Appliquer les filtres
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Section du tableau modifiée pour utiliser EnvoiEchantillonReceptionDto -->
+            <div class="card-body">
+                @if (Model.EchantillonsEnAttente != null && Model.EchantillonsEnAttente.Any())
+                {
+                    using (Html.BeginForm("PreparerAnalyse", "Stockage", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th width="50">
+                                            <input type="checkbox" id="selectAll" class="form-check-input" />
+                                        </th>
+                                        <th>Code QR</th>
+                                        <th>N° Affaire</th>
+                                        <th>Type d'analyse</th>
+                                        <th>Priorité</th>
+                                        <th>Date réception</th>
+                                        <th>Conditions stockage</th>
+                                        <th>Poids</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var echantillon in Model.EchantillonsEnAttente)
+                                    {
+                                        <tr class="@(echantillon.Priorite == "Urgent" ? "table-warning" : echantillon.Priorite == "Critique" ? "table-danger" : "")">
+                                            <td>
+                                                <input type="checkbox" name="echantillonIds" value="@echantillon.Id" class="form-check-input echantillon-checkbox" />
+                                            </td>
+                                            <td>
+                                                <strong>@echantillon.CodeQR</strong>
+                                                @if (echantillon.Priorite == "Urgent")
+                                                {
+                                                    <i class="fas fa-exclamation-triangle text-warning ms-1" title="Urgent"></i>
+                                                }
+                                                else if (echantillon.Priorite == "Critique")
+                                                {
+                                                    <i class="fas fa-exclamation-circle text-danger ms-1" title="Critique"></i>
+                                                }
+                                            </td>
+                                            <td>
+                                                @echantillon.NumeroAffaire
+                                                @if (!string.IsNullOrEmpty(echantillon.NomEnqueteur))
+                                                {
+                                                    <br><small class="text-muted">@echantillon.NomEnqueteur</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@echantillon.TypeAnalyse</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(echantillon.Priorite == "Critique" ? "bg-danger" : echantillon.Priorite == "Urgent" ? "bg-warning" : "bg-secondary")">
+                                                    @(echantillon.Priorite ?? "Normale")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (echantillon.DateReception.HasValue)
+                                                {
+                                                    @echantillon.DateReception.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    <br><small class="text-muted">Il y a @((DateTime.Now - echantillon.DateReception.Value).Hours)h</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Non spécifiée</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(echantillon.ConditionsStockage))
+                                                {
+                                                    <small class="text-muted">@echantillon.ConditionsStockage</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">Standard</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (echantillon.Poids.HasValue && echantillon.Poids > 0)
+                                                {
+                                                    <span>@echantillon.Poids.Value g</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <!-- Changez echantillon.EchantillonId par echantillon.Id -->
+                                                    @Html.ActionLink("Stocker", "Stocker", new { id = echantillon.Id },
+                                                        new { @class = "btn btn-success btn-sm", title = "Stocker maintenant" })
+
+                                                    <button type="button" class="btn btn-info btn-sm"
+                                                            onclick="voirDetails(@echantillon.Id)" title="Voir détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+
+                                                    <button type="button" class="btn btn-warning btn-sm"
+                                                            onclick="imprimerEtiquette(@echantillon.Id)" title="Imprimer étiquette">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Actions groupées -->
+                        <div class="border-top pt-3 mt-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <span id="selectedCount" class="text-muted">0 échantillon(s) sélectionné(s)</span>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="stockerSelection()">
+                                        <i class="fas fa-warehouse"></i> Stocker la sélection
+                                    </button>
+                                    <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirmerPreparation()">
+                                        <i class="fas fa-microscope"></i> Préparer pour analyse
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun échantillon en attente</h5>
+                        <p class="text-muted">Tous les échantillons ont été stockés ou sont en cours de traitement.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les détails d'échantillon -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-vial"></i> Détails de l'échantillon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Contenu chargé via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Gestion des cases à cocher
+            $('#selectAll').change(function () {
+                $('.echantillon-checkbox').prop('checked', this.checked);
+                updateSelectedCount();
+            });
+
+            $('.echantillon-checkbox').change(function () {
+                updateSelectedCount();
+                var total = $('.echantillon-checkbox').length;
+                var checked = $('.echantillon-checkbox:checked').length;
+                $('#selectAll').prop('indeterminate', checked > 0 && checked < total);
+                $('#selectAll').prop('checked', checked === total);
+            });
+
+            // Recherche en temps réel
+            $('#searchInput').on('input', function () {
+                var searchTerm = $(this).val().toLowerCase();
+                if (searchTerm.length > 2) {
+                    filterTable(searchTerm);
+                } else if (searchTerm.length === 0) {
+                    showAllRows();
+                }
+            });
+        });
+
+        function updateSelectedCount() {
+            var count = $('.echantillon-checkbox:checked').length;
+            $('#selectedCount').text(count + ' échantillon(s) sélectionné(s)');
+        }
+
+        function toggleFilters() {
+            $('#filtersPanel').toggle();
+        }
+
+        function voirDetails(echantillonId) {
+            // Charger les détails via AJAX
+            $.get('@Url.Action("Details", "Echantillons")/' + echantillonId, function (data) {
+                $('#detailsContent').html(data);
+                $('#detailsModal').modal('show');
+            }).fail(function () {
+                alert('Erreur lors du chargement des détails');
+            });
+        }
+
+        function imprimerEtiquette(echantillonId) {
+            if (confirm('Imprimer l\'étiquette pour cet échantillon ?')) {
+                window.open('@Url.Action("ImprimerEtiquette", "Echantillons")/' + echantillonId, '_blank');
+            }
+        }
+
+        function stockerSelection() {
+            var selected = $('.echantillon-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Veuillez sélectionner au moins un échantillon');
+                return;
+            }
+
+            if (selected.length === 1) {
+                // Un seul échantillon, rediriger vers la page de stockage
+                var echantillonId = selected.first().val();
+                window.location.href = '@Url.Action("Stocker", "Stockage")/' + echantillonId;
+            } else {
+                // Plusieurs échantillons, utiliser l'attribution groupée
+                window.location.href = '@Url.Action("AttribuerEmplacement", "Stockage")';
+            }
+        }
+
+        function confirmerPreparation() {
+            var selected = $('.echantillon-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Veuillez sélectionner au moins un échantillon');
+                return false;
+            }
+            return confirm('Préparer ' + selected.length + ' échantillon(s) pour l\'analyse ?');
+        }
+
+        function filterTable(searchTerm) {
+            $('tbody tr').each(function () {
+                var row = $(this);
+                var text = row.text().toLowerCase();
+                if (text.indexOf(searchTerm) > -1) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+        }
+
+        function showAllRows() {
+            $('tbody tr').show();
+        }
+
+        // Auto-refresh des statistiques toutes les 30 secondes
+        setInterval(function () {
+            $.get('@Url.Action("GetStatistiques", "Stockage")', function (data) {
+                // Mettre à jour les statistiques si nécessaire
+            });
+        }, 30000);
+    </script>
+}
+
+@section Styles {
+    <style>
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+
+        .text-xs {
+            font-size: 0.7rem;
+        }
+
+        .text-gray-300 {
+            color: #dddfeb !important;
+        }
+
+        .text-gray-800 {
+            color: #5a5c69 !important;
+        }
+
+        .progress-sm {
+            height: 0.5rem;
+        }
+
+        .no-gutters {
+            margin-right: 0;
+            margin-left: 0;
+        }
+
+            .no-gutters > .col,
+            .no-gutters > [class*="col-"] {
+                padding-right: 0;
+                padding-left: 0;
+            }
+
+        .card {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+            border: 1px solid #e3e6f0;
+        }
+
+        .table-hover tbody tr:hover {
+            color: #212529;
+            background-color: rgba(0, 0, 0, 0.075);
+        }
+
+        .btn-group-sm > .btn, .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            border-radius: 0.2rem;
+        }
+
+        .badge {
+            font-size: 0.75em;
+        }
+
+        #filtersPanel {
+            transition: all 0.3s ease;
+        }
+
+        .modal-header {
+            background-color: #4e73df;
+            color: white;
+        }
+
+            .modal-header .btn-close {
+                filter: invert(1);
+            }
+    </style>
+}

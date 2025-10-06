@@ -1,0 +1,713 @@
+﻿@model WebApplication1.Models.Envoi.ReceptionViewModel
+@{
+    ViewData["Title"] = "Réception des Échantillons";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+@functions {
+    string GetBadgeClass(string statut)
+    {
+        if (string.IsNullOrEmpty(statut)) return "badge-secondary";
+        switch (statut)
+        {
+            case "Envoyé": return "badge-primary";
+            case "Reçu": return "badge-warning";
+            case "Vérifié":
+            case "Accepté": return "badge-success";
+            case "Refusé": return "badge-danger";
+            case "Stocké": return "badge-info";
+            default: return "badge-secondary";
+        }
+    }
+
+    string GetStatutLabel(string statut)
+    {
+        if (string.IsNullOrEmpty(statut)) return "Inconnu";
+        switch (statut)
+        {
+            case "Envoyé": return "Envoyé";
+            case "Reçu": return "En Attente";
+            case "Vérifié": return "Vérifié";
+            case "Accepté": return "✓ Accepté";
+            case "Refusé": return "✗ Refusé";
+            case "Stocké": return "Stocké";
+            default: return statut;
+        }
+    }
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="header-section bg-primary text-white py-4 mb-4 rounded">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fa fa-inbox"></i> Réception des Échantillons</h1>
+                <p class="mb-0">Gestion et vérification des échantillons reçus au laboratoire</p>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-light" onclick="actualiserReceptions()">
+                    <i class="fa fa-refresh"></i> Actualiser
+                </button>
+                <button class="btn btn-outline-light" onclick="afficherHistorique()">
+                    <i class="fa fa-history"></i> Historique
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@(Model?.Statistiques?.EnAttente ?? 0)</h3>
+                        <p class="mb-0">En Attente</p>
+                    </div>
+                    <i class="fa fa-clock-o fa-2x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@(Model?.Statistiques?.Verifies ?? 0)</h3>
+                        <p class="mb-0">Acceptés</p>
+                    </div>
+                    <i class="fa fa-check-circle fa-2x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@(Model?.Statistiques?.Refuses ?? 0)</h3>
+                        <p class="mb-0">Refusés</p>
+                    </div>
+                    <i class="fa fa-times-circle fa-2x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@(Model?.Statistiques?.Stockes ?? 0)</h3>
+                        <p class="mb-0">Stockés</p>
+                    </div>
+                    <i class="fa fa-archive fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section de Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-controller="Recevoir" asp-action="Index" method="get" id="filtresForm">
+                @Html.AntiForgeryToken()
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <input asp-for="Filtres.Recherche" class="form-control" placeholder="Rechercher par n° affaire, QR code..." />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select asp-for="Filtres.Statut" class="form-control">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="verified">Acceptés</option>
+                            <option value="rejected">Refusés</option>
+                            <option value="stored">Stockés</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select asp-for="Filtres.Priorite" class="form-control">
+                            <option value="">Toutes priorités</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="normal">Normal</option>
+                            <option value="low">Faible</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input asp-for="Filtres.DateDebut" type="date" class="form-control" placeholder="Date début" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa fa-filter"></i> Filtrer
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Spinner de chargement -->
+    <div id="loadingSpinner" class="text-center" style="display: none; padding: 40px;">
+        <div class="fa fa-spinner fa-spin fa-3x text-primary"></div>
+        <p class="mt-2">Chargement des échantillons...</p>
+    </div>
+
+    <!-- Liste des Échantillons -->
+    <div id="echantillonsList">
+        @if (Model?.EchantillonsRecus != null && Model.EchantillonsRecus.Any())
+        {
+            foreach (var echantillon in Model.EchantillonsRecus)
+            {
+                <div class="card mb-3 echantillon-card" data-sample-id="@echantillon.Id"
+                     data-status="@(echantillon.StatutEchantillon?.ToLower() ?? "")">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <!-- QR Code et Image -->
+                            <div class="col-md-2 text-center">
+                                <div class="qr-display p-2 border rounded bg-light">
+                                    <strong>@(echantillon.CodeQR ?? "N/A")</strong>
+                                </div>
+                               
+                            </div>
+
+                            <!-- Informations principales -->
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h5 class="mb-0" style="margin-right: 15px;">@(echantillon.NumeroAffaire ?? "N/A")</h5>
+                                    <span class="badge @GetBadgeClass(echantillon.StatutEchantillon)">
+                                        @GetStatutLabel(echantillon.StatutEchantillon)
+                                    </span>
+                                    @if (echantillon.Priorite == "urgent")
+                                    {
+                                        <span class="badge bg-danger" style="margin-left: 10px;">
+                                            <i class="fa fa-exclamation-triangle"></i> URGENT
+                                        </span>
+                                    }
+                                </div>
+
+                                <p class="text-muted mb-2">
+                                    <i class="fa fa-user"></i> <strong>@(echantillon.NomEnqueteur ?? "Non spécifié")</strong> |
+                                    <i class="fa fa-calendar"></i> Envoyé le: <strong>@(echantillon.DateEnvoi?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</strong>
+                                    @if (echantillon.DateReception.HasValue)
+                                    {
+                                        <span> | Reçu le: <strong>@echantillon.DateReception.Value.ToString("dd/MM/yyyy HH:mm")</strong></span>
+                                    }
+                                </p>
+
+                                <p class="mb-2">
+                                    <strong>Description:</strong> @(echantillon.DescriptionEchantillon ?? "N/A")<br>
+                                    <strong>Type d'analyse:</strong> @(echantillon.TypeAnalyse ?? "N/A")<br>
+                                    <strong>Poids:</strong> @(echantillon.Poids?.ToString("F2") ?? "0") g |
+                                    <strong>Couleur:</strong> @(echantillon.Couleur ?? "Non spécifié") |
+                                    <strong>Emballage:</strong> @(echantillon.Emballage ?? "N/A")
+                                </p>
+
+                                @if (!string.IsNullOrEmpty(echantillon.Observations))
+                                {
+                                    <p class="mb-0">
+                                        <strong>Observations:</strong> @echantillon.Observations
+                                    </p>
+                                }
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="col-md-4 text-right">
+                                <div class="btn-group-vertical" style="gap: 5px;">
+                                    @if (echantillon.StatutEchantillon == "Envoyé")
+                                    {
+                                        <button class="btn btn-success btn-sm"
+                                                onclick="marquerRecu(@echantillon.Id)">
+                                            <i class="fa fa-check"></i> Vérifier
+                                        </button>
+                                    }
+
+                                    @if (echantillon.StatutEchantillon == "Reçu")
+                                    {
+                                        <button class="btn btn-primary btn-sm"
+                                                onclick="ouvrirVerification(@echantillon.Id)">
+                                            <i class="fa fa-check-square-o"></i> Vérifier
+                                        </button>
+                                    }
+
+                                    @if (echantillon.StatutEchantillon == "Accepté" || echantillon.StatutEchantillon == "Vérifié")
+                                    {
+                                        <button class="btn btn-info btn-sm"
+                                                onclick="procederAuStockage(@echantillon.Id)">
+                                            <i class="fa fa-archive"></i> Stocker
+                                        </button>
+                                    }
+
+                                    <button class="btn btn-outline-info btn-sm"
+                                            onclick="voirDetails(@echantillon.Id)">
+                                        <i class="fa fa-eye"></i> Détails
+                                    </button>
+
+                                    @if (echantillon.StatutEchantillon == "Refusé")
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                onclick="voirRapportRefus(@echantillon.Id)">
+                                            <i class="fa fa-file-text-o"></i> Rapport
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conteneur pour la vérification -->
+                    <div class="verification-container" id="verificationContainer_@echantillon.Id"
+                         style="display: none; padding: 15px; background: #f8f9fa; border-top: 1px solid #ddd;">
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="fa fa-info-circle fa-2x mb-3"></i>
+                <h5>Aucun échantillon trouvé</h5>
+                <p class="mb-0">Aucun échantillon ne correspond aux critères de recherche actuels.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal pour les détails -->
+<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="detailsModalLabel">
+                    <i class="fa fa-flask"></i> Détails de l'Échantillon
+                </h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="imprimerDetails()">
+                    <i class="fa fa-print"></i> Imprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Container pour les notifications -->
+<div id="toastContainer" class="position-fixed" style="top: 20px; right: 20px; z-index: 1055;"></div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+<script>
+    // Variables globales
+    var echantillonActuel = null;
+
+    // Fonction manquante qui causait l'erreur
+    function marquerRecu(echantillonId) {
+        console.log('Marquer comme reçu:', echantillonId);
+
+        $.ajax({
+            url: '/Recevoir/VerifierEchantillon',
+            type: 'GET',
+            data: { id: echantillonId },
+            success: function(html) {
+                $('#verificationContainer_' + echantillonId).html(html).slideDown();
+                $('html, body').animate({
+                    scrollTop: $('#verificationContainer_' + echantillonId).offset().top - 100
+                }, 500);
+            },
+            error: function(xhr, status, error) {
+                console.error('Erreur:', error);
+                afficherNotification('Erreur lors du chargement de la vérification', 'error');
+            }
+        });
+    }
+
+    // Fonction de validation
+    function validerVerification(echantillonId) {
+        console.log('Validation pour:', echantillonId);
+
+        if (!confirm('Êtes-vous sûr de valider cette vérification ?')) {
+            return;
+        }
+
+        var form = $('#verificationForm_' + echantillonId);
+        var formData = new FormData(form[0]);
+
+        $.ajax({
+            url: '/Recevoir/TraiterVerification',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    afficherNotification(response.message, 'success');
+                    $('#verificationContainer_' + echantillonId).slideUp();
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    afficherNotification(response.message, 'error');
+                }
+            },
+            error: function() {
+                afficherNotification('Erreur technique', 'error');
+            }
+        });
+    }
+
+    // Fonction pour annuler
+    function annulerVerification(echantillonId) {
+        if (confirm('Annuler la vérification ?')) {
+            $('#verificationContainer_' + echantillonId).slideUp();
+        }
+    }
+
+    // Autres fonctions essentielles
+    function ouvrirVerification(echantillonId) {
+        marquerRecu(echantillonId);
+    }
+
+    function voirDetails(echantillonId) {
+        $.ajax({
+            url: '/Recevoir/DetailsEchantillon',
+            type: 'GET',
+            data: { id: echantillonId },
+            success: function(details) {
+                var detailsHtml = '<div class="p-3"><h5>Détails</h5><pre>' + JSON.stringify(details, null, 2) + '</pre></div>';
+                $('#detailsContent').html(detailsHtml);
+                var modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                modal.show();
+            },
+            error: function() {
+                afficherNotification('Erreur lors du chargement', 'error');
+            }
+        });
+    }
+
+    function procederAuStockage(echantillonId) {
+           if (confirm('Êtes-vous sûr de vouloir transférer cet échantillon au stockage ?')) {
+               // Redirection vers la vue de stockage avec l'ID de l'échantillon
+               window.location.href = '/Stockage/Stocker?echantillonId=' + echantillonId;
+
+               // Alternative si vous avez une page dédiée pour le stockage :
+               // window.location.href = '/Recevoir/Stocker?echantillonId=' + echantillonId;
+           }
+       }
+
+    function scannerQR(codeQR) {
+        afficherNotification('QR Code scanné: ' + codeQR, 'info');
+    }
+
+    function voirRapportRefus(echantillonId) {
+        afficherNotification('Rapport pour: ' + echantillonId, 'info');
+    }
+
+    function afficherHistorique() {
+        window.location.href = '/Recevoir/Historique';
+    }
+
+    function actualiserReceptions() {
+        window.location.reload();
+    }
+
+    // Fonction de notification simple
+    function afficherNotification(message, type) {
+        var alertClass = type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info';
+        var toastHtml = '<div class="alert alert-' + alertClass + ' alert-dismissible fade show">' +
+                       '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                       message + '</div>';
+
+        $('#toastContainer').html(toastHtml);
+
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+
+    // Initialisation
+    $(document).ready(function() {
+        console.log('Page Réception chargée - Scripts fonctionnels');
+
+        // Vérification que les fonctions sont définies
+        console.log('marquerRecu:', typeof marquerRecu);
+        console.log('validerVerification:', typeof validerVerification);
+    });
+
+
+</script>
+
+<style>
+    /* Styles pour les cartes d'échantillons */
+    .echantillon-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #dee2e6;
+    }
+
+        .echantillon-card[data-status="envoyé"] {
+            border-left-color: #0d6efd;
+        }
+
+        .echantillon-card[data-status="reçu"] {
+            border-left-color: #ffc107;
+        }
+
+        .echantillon-card[data-status="accepté"],
+        .echantillon-card[data-status="vérifié"] {
+            border-left-color: #198754;
+        }
+
+        .echantillon-card[data-status="refusé"] {
+            border-left-color: #dc3545;
+        }
+
+        .echantillon-card[data-status="stocké"] {
+            border-left-color: #0dcaf0;
+        }
+
+        .echantillon-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+    /* Affichage du QR Code */
+    .qr-display {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 50%, #f5f5f5 50%, #f5f5f5 75%, transparent 75%, transparent);
+        background-size: 20px 20px;
+    }
+
+    /* Header avec gradient */
+    .header-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Boutons verticaux */
+    .btn-group-vertical .btn {
+        margin-bottom: 5px;
+        text-align: left;
+    }
+
+    /* Badges personnalisés */
+    .badge-primary {
+        background-color: #0d6efd;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .badge-success {
+        background-color: #198754;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+    }
+
+    .badge-info {
+        background-color: #0dcaf0;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+    }
+
+    /* Container de notifications */
+    #toastContainer {
+        min-width: 300px;
+        max-width: 500px;
+    }
+
+    /* Container de vérification */
+    .verification-container {
+        border-radius: 0 0 8px 8px;
+        margin-top: -15px;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .verification-container h4 {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    /* Cards de statistiques avec hover effect */
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Amélioration du spinner */
+    #loadingSpinner {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    /* Modal personnalisé */
+    .modal-content {
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .modal-footer {
+        background: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+        border-radius: 0 0 8px 8px;
+    }
+
+    /* Amélioration des tables */
+    .table-sm > tbody > tr > td {
+        padding: 5px;
+        vertical-align: middle;
+    }
+
+        .table-sm > tbody > tr > td:first-child {
+            width: 40%;
+            color: #666;
+        }
+
+    /* Effet de pulsation pour les urgents */
+    .badge.bg-danger {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .verification-container {
+            padding: 10px !important;
+        }
+
+        .header-section h1 {
+            font-size: 1.5rem;
+        }
+
+        .btn-group-vertical {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+            .btn-group-vertical .btn {
+                flex: 1 0 45%;
+            }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .echantillon-card .row {
+            margin: 0;
+        }
+
+        .echantillon-card .col-md-2,
+        .echantillon-card .col-md-6,
+        .echantillon-card .col-md-4 {
+            padding: 10px 15px;
+        }
+    }
+
+    /* Amélioration de l'impression */
+    @@media print {
+        .btn, .header-section, #toastContainer, .modal-footer {
+            display: none !important;
+        }
+
+        .echantillon-card {
+            page-break-inside: avoid;
+            border: 1px solid #ddd !important;
+            margin-bottom: 20px !important;
+        }
+
+        .badge {
+            border: 1px solid #333 !important;
+            color: #333 !important;
+            background: white !important;
+        }
+    }
+
+    /* Animations supplémentaires */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Style pour les filtres */
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, .25);
+    }
+</style>

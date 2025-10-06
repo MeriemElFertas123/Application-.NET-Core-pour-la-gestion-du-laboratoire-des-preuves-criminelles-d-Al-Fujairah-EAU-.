@@ -1,0 +1,118 @@
+﻿@model WebApplication1.Models.Analyste
+
+@{
+    ViewData["Title"] = "Détails de l'analyste";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-person-lines-fill me-2"></i> @ViewData["Title"]
+        </h2>
+        <p class="text-muted">Informations détaillées de l'analyste</p>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-person-badge me-2"></i>
+                @Model.NomComplet
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="info-group">
+                        <label class="fw-bold text-secondary">Nom :</label>
+                        <p class="mb-0">@Model.nom</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="info-group">
+                        <label class="fw-bold text-secondary">Prénom :</label>
+                        <p class="mb-0">@Model.prenom</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="info-group">
+                        <label class="fw-bold text-secondary">Spécialité :</label>
+                        <p class="mb-0">
+                            <span class="mb-0">@Model.specialite</span>
+                        </p>
+                    </div>
+                </div>
+              
+            </div>
+
+            @if (Model.User != null)
+            {
+                <hr />
+                <h5 class="text-secondary mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Informations de connexion
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="info-group">
+                            <label class="fw-bold text-secondary">Email :</label>
+                            <p class="mb-0">@Model.User.Email</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="info-group">
+                            <label class="fw-bold text-secondary">Nom d'utilisateur :</label>
+                            <p class="mb-0">@Model.User.UserName</p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+           
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+                    </a>
+                </div>
+                <div>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                        <i class="bi bi-pencil me-1"></i> Modifier
+                    </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .info-group {
+        padding: 10px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+        .info-group:last-child {
+            border-bottom: none;
+        }
+
+        .info-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.6em;
+    }
+</style>

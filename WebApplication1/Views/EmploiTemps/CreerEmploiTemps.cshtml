@@ -1,0 +1,828 @@
+﻿@model WebApplication1.Models.Emploi.EmploiTemps
+@{
+    ViewBag.Title = "Créer Emploi du Temps";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- En-tête -->
+    <div class="schedule-header mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="schedule-badge">
+                    <i class="fas fa-calendar-plus"></i>
+                </div>
+                <div class="ms-3">
+                    <h1 class="schedule-title">Créer Emploi du Temps</h1>
+                    <p class="schedule-subtitle">Planification hebdomadaire du personnel - Semaine @ViewBag.TargetWeek/@ViewBag.TargetYear</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+                <button type="submit" form="createScheduleForm" class="btn btn-success">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("CreerEmploiTemps", "EmploiTemps", FormMethod.Post, new { @id = "createScheduleForm", @class = "needs-validation", @novalidate = "" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <!-- Informations de la semaine -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="week-info-card">
+                    <h5><i class="fas fa-info-circle"></i> Informations de la Semaine</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.NumeroSemaine, "Numéro de semaine", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.NumeroSemaine, new { @class = "form-control", @value = ViewBag.TargetWeek, @readonly = "" })
+                                @Html.ValidationMessageFor(m => m.NumeroSemaine, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Annee, "Année", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.Annee, new { @class = "form-control", @value = ViewBag.TargetYear, @readonly = "" })
+                                @Html.ValidationMessageFor(m => m.Annee, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Statut, "Statut", new { @class = "form-label" })
+                                @Html.DropDownListFor(m => m.Statut, new SelectList(new[] {
+                                new { Value = "Draft", Text = "Brouillon" },
+                                                        new { Value = "Pending", Text = "En attente d'approbation" },
+                                                        new { Value = "Approved", Text = "Approuvé" }
+                                                        }, "Value", "Text", "Draft"), new { @class = "form-select" })
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Commentaires, "Commentaires", new { @class = "form-label" })
+                            @Html.TextAreaFor(m => m.Commentaires, new { @class = "form-control", @rows = "2", @placeholder = "Commentaires optionnels..." })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="personnel-summary-card">
+                <h5><i class="fas fa-users"></i> Personnel Disponible</h5>
+                <div class="personnel-stats">
+                    @foreach (var service in ViewBag.Services as List<WebApplication1.Models.Emploi.Service>)
+                    {
+                        var personnelsService = (ViewBag.Personnels as List<WebApplication1.Models.Emploi.Personnel>)
+                        .Where(p => p.ServiceId == service.Id).ToList();
+                        <div class="stat-row">
+                            <span>@service.Nom:</span>
+                            <span class="stat-value">@personnelsService.Count disponibles</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille de planification -->
+    <div class="schedule-grid-card">
+        <div class="schedule-grid-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-table"></i> Grille de Planification</h5>
+                <div class="grid-controls">
+                    <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="autoFillSchedule()">
+                        <i class="fas fa-magic"></i> Auto-remplir
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="clearSchedule()">
+                        <i class="fas fa-eraser"></i> Effacer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="schedule-grid-body">
+            <div class="table-responsive">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th class="service-column">Service</th>
+                            <th class="day-column">Lundi</th>
+                            <th class="day-column">Mardi</th>
+                            <th class="day-column">Mercredi</th>
+                            <th class="day-column">Jeudi</th>
+                            <th class="day-column">Vendredi</th>
+                            <th class="total-column">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var service in ViewBag.Services as List<WebApplication1.Models.Emploi.Service>)
+                        {
+                            <tr class="service-row" data-service="@service.Id">
+                                <td class="service-name">
+                                    <div class="service-info">
+                                        <span class="service-title">@service.Nom</span>
+                                        <small class="service-capacity">Capacité: @service.CapaciteMaximum personnes</small>
+                                    </div>
+                                </td>
+                                @{
+                                    var days = new[] {
+                                                        new { Code = "Monday", Nom = "Lundi" },
+                                                        new { Code = "Tuesday", Nom = "Mardi" },
+                                                        new { Code = "Wednesday", Nom = "Mercredi" },
+                                                        new { Code = "Thursday", Nom = "Jeudi" },
+                                                        new { Code = "Friday", Nom = "Vendredi" }
+                                                        };
+                                }
+                                @foreach (var day in days)
+                                {
+                                    <td class="schedule-cell" data-day="@day.Code.ToLower()" data-service="@service.Id">
+                                        <div class="personnel-assignment">
+                                            <!-- Équipe du matin -->
+                                            <div class="shift-container">
+                                                <div class="shift-label">Matin (8h-16h)</div>
+                                                <select class="personnel-select" multiple
+                                                        name="Affectations[@service.Id][@day.Code][Morning]"
+                                                        data-shift="morning"
+                                                        data-service="@service.Id"
+                                                        data-day="@day.Code"
+                                                        onchange="updateAssignments()">
+                                                    @foreach (var personnel in (ViewBag.Personnels as List<WebApplication1.Models.Emploi.Personnel>)
+                                                                                                .Where(p => p.ServiceId == service.Id && p.Actif))
+                                                    {
+                                                        <option value="@personnel.Id">@personnel.NomComplet (@personnel.TypePersonnelLibelle)</option>
+                                                    }
+                                                </select>
+                                            </div>
+
+                                            <!-- Équipe du soir -->
+                                            <div class="shift-container">
+                                                <div class="shift-label">Soir (16h-24h)</div>
+                                                <select class="personnel-select" multiple
+                                                        name="Affectations[@service.Id][@day.Code][Evening]"
+                                                        data-shift="evening"
+                                                        data-service="@service.Id"
+                                                        data-day="@day.Code"
+                                                        onchange="updateAssignments()">
+                                                    @foreach (var personnel in (ViewBag.Personnels as List<WebApplication1.Models.Emploi.Personnel>)
+                                                                                                .Where(p => p.ServiceId == service.Id && p.Actif))
+                                                    {
+                                                        <option value="@personnel.Id">@personnel.NomComplet (@personnel.TypePersonnelLibelle)</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                }
+                                <td class="total-cell">
+                                    <div class="total-hours">0h</div>
+                                    <div class="total-staff">0 pers.</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Résumé et validation -->
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="validation-card">
+                <h5><i class="fas fa-check-circle"></i> Validation et Actions</h5>
+                <div class="validation-buttons">
+                    <button type="submit" class="btn btn-outline-secondary me-2" name="action" value="draft">
+                        <i class="fas fa-save"></i> Enregistrer comme brouillon
+                    </button>
+                    <button type="submit" class="btn btn-warning me-2" name="action" value="pending">
+                        <i class="fas fa-paper-plane"></i> Soumettre pour approbation
+                    </button>
+                    <button type="submit" class="btn btn-success" name="action" value="approved">
+                        <i class="fas fa-check"></i> Approuver directement
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-card">
+                <h5><i class="fas fa-chart-bar"></i> Résumé</h5>
+                <div class="summary-stats">
+                    <div class="summary-item">
+                        <span class="summary-label">Total Heures:</span>
+                        <span class="summary-value" id="totalHours">0h</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Personnel Assigné:</span>
+                        <span class="summary-value" id="totalStaff">0 personnes</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Services Couverts:</span>
+                        <span class="summary-value" id="servicesCovered">0/@((ViewBag.Services as List<WebApplication1.Models.Emploi.Service>).Count)</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Taux de Couverture:</span>
+                        <span class="summary-value" id="coverageRate">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        }
+</div>
+
+<!-- Affichage des messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (ViewData.ModelState.Any(x => x.Value.Errors.Count > 0))
+{
+    <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        Des erreurs ont été détectées. Veuillez corriger les champs en rouge.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<style>
+    :root {
+        --schedule-primary: #8b5cf6;
+        --schedule-secondary: #a855f7;
+        --judicial-primary: #1e3a8a;
+        --judicial-success: #16a34a;
+        --judicial-warning: #d97706;
+        --judicial-danger: #dc2626;
+        --judicial-light: #f8fafc;
+        --judicial-border: #e2e8f0;
+    }
+
+    body {
+        background-color: var(--judicial-light);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .schedule-header {
+        background: linear-gradient(135deg, var(--schedule-primary), var(--schedule-secondary));
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+    }
+
+    .schedule-badge {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .schedule-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .schedule-subtitle {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .week-info-card, .personnel-summary-card, .schedule-grid-card, .validation-card, .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+
+        .week-info-card h5, .personnel-summary-card h5, .validation-card h5, .summary-card h5 {
+            color: var(--judicial-primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--judicial-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .personnel-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--judicial-border);
+    }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+    .stat-value {
+        font-weight: 600;
+        color: var(--judicial-primary);
+    }
+
+    .schedule-grid-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .schedule-grid-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--judicial-border);
+        background: var(--judicial-light);
+    }
+
+        .schedule-grid-header h5 {
+            margin: 0;
+            color: var(--judicial-primary);
+            font-weight: 600;
+        }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .schedule-table th {
+            background: var(--judicial-primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+            .schedule-table th.service-column {
+                width: 200px;
+                text-align: left;
+            }
+
+            .schedule-table th.day-column {
+                width: 180px;
+            }
+
+            .schedule-table th.total-column {
+                width: 120px;
+            }
+
+        .schedule-table td {
+            border: 1px solid var(--judicial-border);
+            padding: 0;
+            vertical-align: top;
+        }
+
+    .service-name {
+        padding: 1rem;
+        background: var(--judicial-light);
+    }
+
+    .service-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .service-title {
+        font-weight: 600;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .service-capacity {
+        color: #6b7280;
+        font-size: 0.8rem;
+    }
+
+    .schedule-cell {
+        padding: 0.5rem;
+        min-height: 140px;
+    }
+
+    .personnel-assignment {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        height: 100%;
+    }
+
+    .shift-container {
+        flex: 1;
+        border: 1px solid var(--judicial-border);
+        border-radius: 6px;
+        padding: 0.5rem;
+        background: #fafafa;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .shift-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+        text-align: center;
+        padding: 0.25rem;
+        background: rgba(139, 92, 246, 0.1);
+        border-radius: 4px;
+    }
+
+    .personnel-select {
+        flex: 1;
+        width: 100%;
+        border: none;
+        background: transparent;
+        font-size: 0.8rem;
+        min-height: 50px;
+        outline: none;
+    }
+
+        .personnel-select option {
+            padding: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+            .personnel-select option:checked {
+                background: var(--schedule-primary);
+                color: white;
+            }
+
+    .total-cell {
+        padding: 1rem;
+        text-align: center;
+        background: var(--judicial-light);
+    }
+
+    .total-hours, .total-staff {
+        font-weight: 600;
+        color: var(--judicial-primary);
+    }
+
+    .total-hours {
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .total-staff {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .summary-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--judicial-border);
+    }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+    .summary-label {
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: var(--judicial-primary);
+    }
+
+    .validation-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .schedule-cell:hover {
+        background-color: rgba(139, 92, 246, 0.05);
+    }
+
+    .personnel-select:focus {
+        outline: 2px solid var(--schedule-primary);
+        outline-offset: 2px;
+    }
+
+    .coverage-good {
+        color: var(--judicial-success) !important;
+    }
+
+    .coverage-warning {
+        color: var(--judicial-warning) !important;
+    }
+
+    .coverage-danger {
+        color: var(--judicial-danger) !important;
+    }
+
+    .grid-controls .btn {
+        margin-left: 0.5rem;
+    }
+</style>
+
+<script>
+    let personnelAssignments = {};
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('=== INITIALISATION GRILLE PLANIFICATION ===');
+        initializePersonnelSelects();
+        updateSummary();
+        debugFormStructure();
+
+        // Ajouter l'événement de soumission du formulaire
+        document.getElementById('createScheduleForm').addEventListener('submit', function(e) {
+            console.log('=== SOUMISSION DU FORMULAIRE ===');
+            debugFormData();
+
+            const hasAnyAssignment = Array.from(document.querySelectorAll('.personnel-select'))
+                .some(select => select.selectedOptions.length > 0);
+
+            if (!hasAnyAssignment) {
+                e.preventDefault();
+                showNotification('Veuillez sélectionner au moins un personnel avant de soumettre le formulaire.', 'danger');
+                return false;
+            }
+
+            console.log('Formulaire validé, soumission en cours...');
+        });
+    });
+
+    function debugFormStructure() {
+        console.log('=== DEBUG STRUCTURE FORMULAIRE ===');
+        const selects = document.querySelectorAll('.personnel-select');
+        console.log(`Nombre total de selects: ${selects.length}`);
+
+        selects.forEach((select, index) => {
+            console.log(`Select ${index}:`);
+            console.log(`  - name: "${select.name}"`);
+            console.log(`  - service: "${select.dataset.service}"`);
+            console.log(`  - day: "${select.dataset.day}"`);
+            console.log(`  - shift: "${select.dataset.shift}"`);
+            console.log(`  - options: ${select.options.length}`);
+        });
+    }
+
+    function initializePersonnelSelects() {
+        const selects = document.querySelectorAll('.personnel-select');
+        console.log(`Initialisation de ${selects.length} selects`);
+
+        selects.forEach((select, index) => {
+            select.addEventListener('change', function () {
+                console.log(`Changement détecté sur: ${select.name}`);
+                const selectedValues = Array.from(select.selectedOptions).map(o => o.value);
+                console.log(`Valeurs sélectionnées: [${selectedValues.join(', ')}]`);
+
+                updateAssignments();
+                updateSummary();
+            });
+        });
+    }
+
+    function updateAssignments() {
+        console.log('=== MISE À JOUR DES AFFECTATIONS ===');
+        const selects = document.querySelectorAll('.personnel-select');
+        personnelAssignments = {};
+
+        selects.forEach(select => {
+            const service = select.dataset.service;
+            const day = select.dataset.day;
+            const shift = select.dataset.shift;
+            const selectedOptions = Array.from(select.selectedOptions).map(option => option.value);
+
+            if (selectedOptions.length > 0) {
+                console.log(`Service ${service}, ${day}, ${shift} -> [${selectedOptions.join(', ')}]`);
+            }
+
+            if (!personnelAssignments[service]) {
+                personnelAssignments[service] = {};
+            }
+            if (!personnelAssignments[service][day]) {
+                personnelAssignments[service][day] = {};
+            }
+
+            personnelAssignments[service][day][shift] = selectedOptions;
+        });
+
+        updateTotalColumns();
+    }
+
+    function updateTotalColumns() {
+        const services = document.querySelectorAll('.service-row');
+
+        services.forEach(serviceRow => {
+            const serviceId = serviceRow.dataset.service;
+            const totalCell = serviceRow.querySelector('.total-cell');
+
+            let totalHours = 0;
+            let totalStaff = new Set();
+
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                if (personnelAssignments[serviceId] && personnelAssignments[serviceId][day]) {
+                    Object.values(personnelAssignments[serviceId][day]).forEach(assignments => {
+                        totalHours += assignments.length * 8;
+                        assignments.forEach(person => totalStaff.add(person));
+                    });
+                }
+            });
+
+            totalCell.querySelector('.total-hours').textContent = `${totalHours}h`;
+            totalCell.querySelector('.total-staff').textContent = `${totalStaff.size} pers.`;
+        });
+    }
+
+    function updateSummary() {
+        let totalHours = 0;
+        let totalStaff = new Set();
+        let servicesCovered = 0;
+
+        const services = document.querySelectorAll('.service-row');
+        const totalServices = services.length;
+
+        services.forEach(serviceRow => {
+            const serviceId = serviceRow.dataset.service;
+            let serviceHasAssignments = false;
+
+            if (personnelAssignments[serviceId]) {
+                Object.values(personnelAssignments[serviceId]).forEach(dayAssignments => {
+                    Object.values(dayAssignments).forEach(shiftAssignments => {
+                        if (shiftAssignments.length > 0) {
+                            serviceHasAssignments = true;
+                            totalHours += shiftAssignments.length * 8;
+                            shiftAssignments.forEach(person => totalStaff.add(person));
+                        }
+                    });
+                });
+            }
+
+            if (serviceHasAssignments) {
+                servicesCovered++;
+            }
+        });
+
+        const coverageRate = totalServices > 0 ? Math.round((servicesCovered / totalServices) * 100) : 0;
+
+        document.getElementById('totalHours').textContent = `${totalHours}h`;
+        document.getElementById('totalStaff').textContent = `${totalStaff.size} personnes`;
+        document.getElementById('servicesCovered').textContent = `${servicesCovered}/${totalServices}`;
+
+        const coverageElement = document.getElementById('coverageRate');
+        coverageElement.textContent = `${coverageRate}%`;
+
+        coverageElement.className = 'summary-value';
+        if (coverageRate >= 75) {
+            coverageElement.classList.add('coverage-good');
+        } else if (coverageRate >= 50) {
+            coverageElement.classList.add('coverage-warning');
+        } else {
+            coverageElement.classList.add('coverage-danger');
+        }
+
+        console.log(`Résumé: ${totalHours}h, ${totalStaff.size} personnes, ${servicesCovered}/${totalServices} services (${coverageRate}%)`);
+    }
+
+    function debugFormData() {
+        console.log('=== DEBUG DONNÉES AVANT ENVOI ===');
+        const form = document.getElementById('createScheduleForm');
+        const formData = new FormData(form);
+
+        console.log('Données du formulaire:');
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('Affectations')) {
+                console.log(`${key}: "${value}"`);
+            }
+        }
+
+        console.log('=== VÉRIFICATION DIRECTE DES SELECTS ===');
+        const selects = document.querySelectorAll('.personnel-select');
+        let totalAffectations = 0;
+
+        selects.forEach(select => {
+            if (select.selectedOptions.length > 0) {
+                const values = Array.from(select.selectedOptions).map(o => o.value).join(',');
+                console.log(`${select.name}: "${values}"`);
+                totalAffectations++;
+            }
+        });
+
+        console.log(`Total selects avec données: ${totalAffectations}`);
+        return totalAffectations > 0;
+    }
+
+    function autoFillSchedule() {
+        if (confirm('Ceci va remplir automatiquement la planification selon les règles par défaut. Continuer ?')) {
+            const services = document.querySelectorAll('.service-row');
+
+            services.forEach(serviceRow => {
+                const morningSelects = serviceRow.querySelectorAll('[data-shift="morning"]');
+                const eveningSelects = serviceRow.querySelectorAll('[data-shift="evening"]');
+
+                morningSelects.forEach((select, index) => {
+                    if (select.options.length > 1) {
+                        for (let i = 1; i <= Math.min(2, select.options.length - 1); i++) {
+                            select.options[i].selected = true;
+                        }
+                    }
+                });
+
+                eveningSelects.forEach((select, index) => {
+                    if (select.options.length > 1 && index < 3) {
+                        select.options[1].selected = true;
+                    }
+                });
+            });
+
+            updateAssignments();
+            updateSummary();
+            showNotification('Planification automatique appliquée avec succès!', 'success');
+        }
+    }
+
+    function clearSchedule() {
+        if (confirm('Êtes-vous sûr de vouloir effacer toute la planification ?')) {
+            document.querySelectorAll('.personnel-select option').forEach(option => {
+                option.selected = false;
+            });
+
+            personnelAssignments = {};
+            updateTotalColumns();
+            updateSummary();
+            showNotification('Planification effacée', 'info');
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '1050';
+        notification.style.minWidth = '300px';
+
+        const icons = {
+            'success': 'fas fa-check-circle',
+            'warning': 'fas fa-exclamation-triangle',
+            'danger': 'fas fa-exclamation-circle',
+            'info': 'fas fa-info-circle'
+        };
+
+        notification.innerHTML = `
+            <i class="${icons[type]} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Auto-hide alerts après 5 secondes
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(alert => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        });
+    }, 5000);
+</script>

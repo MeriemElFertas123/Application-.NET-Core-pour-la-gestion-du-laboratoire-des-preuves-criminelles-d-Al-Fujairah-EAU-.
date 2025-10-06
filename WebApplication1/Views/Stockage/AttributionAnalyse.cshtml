@@ -1,0 +1,954 @@
+﻿@model WebApplication1.Models.Stockage.AttributionAnalyseViewModel
+@{
+    ViewBag.Title = "Attribution de l'Analyse";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- En-tête de la page -->
+            <div class="page-header-modern">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="header-text">
+                        <h1>Attribution de l'Analyse</h1>
+                        <p class="text-muted">Assignation des échantillons aux analystes qualifiés</p>
+                    </div>
+                    <div class="header-badge">
+                        <span class="badge badge-outline-primary">Technicien</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-modern">
+                <div class="card-body">
+                    @using (Html.BeginForm())
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <!-- Messages de statut -->
+                        if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success alert-modern">
+                                <div class="alert-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Succès!</strong>
+                                    <p>@TempData["SuccessMessage"]</p>
+                                </div>
+                            </div>
+                        }
+
+                        if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger alert-modern">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <strong>Erreur!</strong>
+                                    <p>@TempData["ErrorMessage"]</p>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Section Description -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="info-card-content">
+                                <h4>Processus d'Attribution</h4>
+                                <p>L'échantillon stocké est attribué à un analyste qualifié selon le type d'analyse requis et la charge de travail actuelle.</p>
+                            </div>
+                        </div>
+
+                        <!-- Formulaire d'attribution -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-cogs"></i>
+                                Paramètres d'Attribution
+                            </h3>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group-modern">
+                                        <label class="form-label">
+                                            <i class="fas fa-user"></i>
+                                            Analyste Assigné
+                                        </label>
+                                        @Html.DropDownListFor(m => m.AnalysteId, Model.AnalystesDisponibles,
+                                            "Choisir un analyste...", new { @class = "form-control form-control-modern" })
+                                        @Html.ValidationMessageFor(m => m.AnalysteId, "", new { @class = "form-error" })
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group-modern">
+                                        <label class="form-label">
+                                            <i class="fas fa-flask"></i>
+                                            Type d'Analyse
+                                        </label>
+                                        @Html.DropDownListFor(m => m.TypeAnalyseRequis, Model.TypesAnalyseDisponibles,
+                                            "Sélectionner le type...", new { @class = "form-control form-control-modern" })
+                                        @Html.ValidationMessageFor(m => m.TypeAnalyseRequis, "", new { @class = "form-error" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group-modern">
+                                        <label class="form-label">
+                                            <i class="fas fa-exclamation"></i>
+                                            Niveau de Priorité
+                                        </label>
+                                        @Html.DropDownListFor(m => m.PrioriteAnalyse, Model.NiveauxPriorite,
+                                            "Choisir la priorité...", new { @class = "form-control form-control-modern" })
+                                        @Html.ValidationMessageFor(m => m.PrioriteAnalyse, "", new { @class = "form-error" })
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group-modern">
+                                        <label class="form-label">Options</label>
+                                        <div class="custom-checkbox">
+                                            @Html.CheckBoxFor(m => m.NotifierAnalyste, new { @class = "custom-checkbox-input" })
+                                            <label class="custom-checkbox-label" for="NotifierAnalyste">
+                                                <span class="custom-checkbox-indicator"></span>
+                                                <i class="fas fa-bell"></i>
+                                                Notifier l'analyste automatiquement
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group-modern">
+                                <label class="form-label">
+                                    <i class="fas fa-comment-alt"></i>
+                                    Instructions Spéciales
+                                </label>
+                                @Html.TextAreaFor(m => m.InstructionsSpeciales, new
+                                {
+                                    @class = "form-control form-control-modern",
+                                    @rows = "4",
+                                    @placeholder = "Ajoutez des instructions particulières pour l'analyste..."
+                                })
+                            </div>
+                        </div>
+
+                        <!-- Section des échantillons -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <i class="fas fa-vials"></i>
+                                    Échantillons Disponibles
+                                </h3>
+                                @if (Model.EchantillonsDisponibles.Any())
+                                {
+                                    <div class="section-actions">
+                                        <label class="select-all-checkbox">
+                                            <input type="checkbox" id="selectAll" title="Tout sélectionner">
+                                            <span class="checkmark"></span>
+                                            Tout sélectionner
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (Model.EchantillonsDisponibles.Any())
+                            {
+                                <div class="table-container">
+                                    <table class="table table-modern">
+                                        <thead>
+                                            <tr>
+                                                <th width="60px" class="text-center">
+                                                    <i class="fas fa-check"></i>
+                                                </th>
+                                                <th>Numéro</th>
+                                                <th>Affaire</th>
+                                                <th>Type</th>
+                                                <th>Zone</th>
+                                                <th>Emplacement</th>
+                                                <th>Priorité</th>
+                                                <th>Réception</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < Model.EchantillonsDisponibles.Count; i++)
+                                            {
+                                                <tr class="table-row-selectable">
+                                                    <td class="text-center">
+                                                        <div class="table-checkbox">
+                                                            @Html.CheckBoxFor(m => m.EchantillonsDisponibles[i].EstSelectionne,
+                                                                new { @class = "echantillon-checkbox", id = $"echantillon-{i}" })
+                                                            <label for="echantillon-@i" class="checkmark"></label>
+                                                        </div>
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].Id)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].NumeroEchantillon)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].NumeroAffaire)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].TypeEchantillon)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].Zone)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].Emplacement)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].Priorite)
+                                                        @Html.HiddenFor(m => m.EchantillonsDisponibles[i].DateReception)
+                                                    </td>
+                                                    <td>
+                                                        <div class="sample-number">@Model.EchantillonsDisponibles[i].NumeroEchantillon</div>
+                                                    </td>
+                                                    <td>@Model.EchantillonsDisponibles[i].NumeroAffaire</td>
+                                                    <td>
+                                                        <span class="badge badge-info">@Model.EchantillonsDisponibles[i].TypeEchantillon</span>
+                                                    </td>
+                                                    <td><strong>@Model.EchantillonsDisponibles[i].Zone</strong></td>
+                                                    <td>@Model.EchantillonsDisponibles[i].Emplacement</td>
+                                                    <td>
+                                                        @{
+                                                            var prioriteClass = "badge-secondary";
+                                                            switch (Model.EchantillonsDisponibles[i].Priorite.ToLower())
+                                                            {
+                                                                case "urgent":
+                                                                case "urgente":
+                                                                    prioriteClass = "badge-danger";
+                                                                    break;
+                                                                case "elevee":
+                                                                case "élevée":
+                                                                    prioriteClass = "badge-warning";
+                                                                    break;
+                                                                case "normale":
+                                                                    prioriteClass = "badge-success";
+                                                                    break;
+                                                            }
+                                                        }
+                                                        <span class="badge @prioriteClass">@Model.EchantillonsDisponibles[i].Priorite</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="date-display">@Model.EchantillonsDisponibles[i].DateReception.ToString("dd/MM/yyyy")</span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fas fa-flask"></i>
+                                    </div>
+                                    <h4>Aucun échantillon disponible</h4>
+                                    <p>Il n'y a actuellement aucun échantillon disponible pour attribution.</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Actions du formulaire -->
+                        <div class="form-actions-modern">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check"></i>
+                                Attribuer les Échantillons
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i>
+                                Retour
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Sélectionner/désélectionner tous les échantillons
+            $('#selectAll').change(function () {
+                var isChecked = $(this).prop('checked');
+                $('.echantillon-checkbox').prop('checked', isChecked).trigger('change');
+            });
+
+            // Gestion du changement d'état des checkboxes individuelles
+            $(document).on('change', '.echantillon-checkbox', function (e) {
+                e.stopPropagation();
+                updateSelectAllCheckbox();
+                updateRowSelection(this);
+            });
+
+            // Sélection par clic sur la ligne
+            $('.table-row-selectable').click(function (e) {
+                // Ne pas déclencher si le clic est sur la checkbox ou son label
+                if (!$(e.target).is('.echantillon-checkbox, .checkmark, .table-checkbox, .table-checkbox *')) {
+                    var checkbox = $(this).find('.echantillon-checkbox');
+                    checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+                }
+            });
+
+            // Mise à jour de la checkbox "Tout sélectionner"
+            function updateSelectAllCheckbox() {
+                var total = $('.echantillon-checkbox').length;
+                var checked = $('.echantillon-checkbox:checked').length;
+
+                $('#selectAll').prop('checked', total === checked);
+                $('#selectAll').prop('indeterminate', checked > 0 && checked < total);
+            }
+
+            // Mise à jour visuelle des lignes sélectionnées
+            function updateRowSelection(checkbox) {
+                var row = $(checkbox).closest('tr');
+                if ($(checkbox).is(':checked')) {
+                    row.addClass('selected');
+                } else {
+                    row.removeClass('selected');
+                }
+            }
+
+            // Initialisation au chargement
+            $('.echantillon-checkbox').each(function () {
+                updateRowSelection(this);
+            });
+            updateSelectAllCheckbox();
+        });
+    </script>
+}
+<style>
+    /* Variables CSS */
+    :root {
+        --primary-color: #007bff;
+        --primary-light: rgba(0, 123, 255, 0.1);
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --secondary-color: #6c757d;
+        --light-color: #f8f9fa;
+        --dark-color: #343a40;
+        --border-color: #dee2e6;
+        --text-muted: #6c757d;
+        --shadow-light: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow-medium: 0 4px 8px rgba(0,0,0,0.15);
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+    }
+
+    /* Reset et styles de base */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    .container-fluid {
+        padding: 0 15px;
+    }
+
+    /* En-tête de page */
+    .page-header-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -15px -15px 30px -15px;
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+        box-shadow: var(--shadow-medium);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .header-icon {
+        font-size: 2.5rem;
+        opacity: 0.9;
+    }
+
+    .header-text h1 {
+        margin: 0;
+        font-size: 2.2rem;
+        font-weight: 600;
+    }
+
+    .header-text p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+
+    .header-badge {
+        margin-left: auto;
+    }
+
+    .badge-outline-primary {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Carte principale */
+    .card-modern {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-medium);
+        background: white;
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+
+        .card-modern .card-body {
+            padding: 2rem;
+        }
+
+    /* Alertes */
+    .alert-modern {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-light);
+    }
+
+    .alert-success {
+        background-color: rgba(40, 167, 69, 0.1);
+        border-left: 4px solid var(--success-color);
+    }
+
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left: 4px solid var(--danger-color);
+    }
+
+    .alert-icon {
+        font-size: 1.5rem;
+        margin-top: 2px;
+    }
+
+    .alert-success .alert-icon {
+        color: var(--success-color);
+    }
+
+    .alert-danger .alert-icon {
+        color: var(--danger-color);
+    }
+
+    .alert-content strong {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .alert-content p {
+        margin: 0;
+        color: var(--dark-color);
+    }
+
+    /* Carte d'information */
+    .info-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        border-left: 4px solid var(--info-color);
+    }
+
+    .info-card-icon {
+        font-size: 1.8rem;
+        color: var(--info-color);
+        margin-top: 5px;
+    }
+
+    .info-card-content h4 {
+        margin: 0 0 10px 0;
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+
+    .info-card-content p {
+        margin: 0;
+        color: var(--secondary-color);
+        line-height: 1.6;
+    }
+
+    /* Sections du formulaire */
+    .form-section {
+        margin-bottom: 2.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+        color: var(--dark-color);
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    /* Formulaires */
+    .form-group-modern {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .form-control-modern {
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: white;
+        width: 100%;
+    }
+
+        .form-control-modern:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+            outline: none;
+        }
+
+    select.form-control-modern {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+    }
+
+    .form-error {
+        color: var(--danger-color);
+        font-size: 0.875rem;
+        margin-top: 5px;
+        display: block;
+    }
+
+    /* Checkbox personnalisée */
+    .custom-checkbox {
+        margin-top: 25px;
+    }
+
+    .custom-checkbox-input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .custom-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--dark-color);
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .custom-checkbox-indicator {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        transition: var(--transition);
+    }
+
+    .custom-checkbox-input:checked ~ .custom-checkbox-indicator {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+        .custom-checkbox-input:checked ~ .custom-checkbox-indicator::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+    /* Checkbox "Tout sélectionner" */
+    .select-all-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--dark-color);
+    }
+
+        .select-all-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+    /* Tableau */
+    .table-container {
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-light);
+        margin-bottom: 1rem;
+    }
+
+    .table-modern {
+        margin: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .table-modern thead th {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+            text-align: left;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+            .table-modern thead th:first-child {
+                border-top-left-radius: var(--border-radius);
+            }
+
+            .table-modern thead th:last-child {
+                border-top-right-radius: var(--border-radius);
+            }
+
+        .table-modern tbody tr {
+            transition: var(--transition);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+            .table-modern tbody tr:last-child {
+                border-bottom: none;
+            }
+
+            .table-modern tbody tr.hover {
+                background-color: rgba(0,123,255,0.05);
+            }
+
+            .table-modern tbody tr.selected {
+                background-color: var(--primary-light);
+                border-left: 4px solid var(--primary-color);
+            }
+
+        .table-modern tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border: none;
+        }
+
+    /* Checkbox de table */
+    .table-checkbox {
+        position: relative;
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+    }
+
+        .table-checkbox .echantillon-checkbox {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .table-checkbox .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            transition: var(--transition);
+        }
+
+        .table-checkbox .echantillon-checkbox:checked ~ .checkmark {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .table-checkbox .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .table-checkbox .echantillon-checkbox:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .table-checkbox .checkmark:after {
+            left: 5px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+    /* Éléments de table */
+    .table-row-selectable {
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+        .table-row-selectable:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+    .sample-number {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Courier New', monospace;
+    }
+
+    .date-display {
+        font-family: 'Courier New', monospace;
+        color: var(--secondary-color);
+    }
+
+    /* Badges */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    .badge-info {
+        background: var(--info-color);
+        color: white;
+    }
+
+    .badge-success {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .badge-warning {
+        background: var(--warning-color);
+        color: var(--dark-color);
+    }
+
+    .badge-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .badge-secondary {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+    /* État vide */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--secondary-color);
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-light);
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--secondary-color);
+    }
+
+    .empty-state h4 {
+        margin-bottom: 0.5rem;
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* Actions du formulaire */
+    .form-actions-modern {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid var(--border-color);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+        color: white;
+        box-shadow: var(--shadow-light);
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            background: linear-gradient(135deg, #0069d9 0%, #004a9c 100%);
+        }
+
+    .btn-secondary {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+    .btn-lg {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+        }
+
+        .header-badge {
+            margin-left: 0;
+            margin-top: 10px;
+        }
+
+        .header-icon {
+            font-size: 2rem;
+        }
+
+        .header-text h1 {
+            font-size: 1.8rem;
+        }
+
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .form-actions-modern {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-modern {
+            min-width: 700px;
+        }
+
+        .card-modern .card-body {
+            padding: 1.5rem;
+        }
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert-modern, .info-card, .form-section {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+</style>

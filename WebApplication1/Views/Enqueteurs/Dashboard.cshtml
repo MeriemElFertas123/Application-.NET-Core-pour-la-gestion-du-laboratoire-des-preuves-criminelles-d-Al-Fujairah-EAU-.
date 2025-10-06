@@ -1,0 +1,625 @@
+﻿@model WebApplication1.Models.DashboardEnqueteur
+
+@{
+    ViewData["Title"] = "Dashboard Enquêteur";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+
+    // Récupérer les informations de l'enquêteur connecté
+    var enqueteurNom = User.Identity?.Name ?? "Enquêteur";
+    var enqueteurEmail = User.Identity?.Name ?? "";
+    var dateAujourdhui = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"));
+    var heureActuelle = DateTime.Now.ToString("HH:mm");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dashboard-container {
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 2rem 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #007bff;
+        }
+
+        .welcome-section h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .specialite-badge {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .date-section {
+            text-align: right;
+            color: #6c757d;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            }
+
+            .stat-card.affaires {
+                border-left-color: #007bff;
+            }
+
+            .stat-card.echantillons {
+                border-left-color: #28a745;
+            }
+
+            .stat-card.envois {
+                border-left-color: #6f42c1;
+            }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            flex: 1;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .stat-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .icon-blue {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+
+        .icon-green {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+
+        .icon-purple {
+            background: linear-gradient(135deg, #6f42c1, #5a36a8);
+        }
+
+        .value-blue {
+            color: #007bff;
+        }
+
+        .value-green {
+            color: #28a745;
+        }
+
+        .value-purple {
+            color: #6f42c1;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            height: 450px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .chart-canvas-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recent-items-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .recent-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 0.5rem;
+        }
+
+        .list-group-item {
+            border: none;
+            border-bottom: 1px solid #f8f9fa;
+            padding: 1rem;
+        }
+
+            .list-group-item:last-child {
+                border-bottom: none;
+            }
+
+        .badge-statut {
+            font-size: 0.75rem;
+            padding: 0.4em 0.6em;
+        }
+
+        @@media (max-width: 1200px) {
+            .stats-grid
+
+        {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        }
+
+        @@media (max-width: 768px) {
+            .dashboard-header
+
+        {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-container {
+            height: 400px;
+        }
+
+        }
+
+        @@media (max-width: 576px) {
+            .chart-container
+
+        {
+            height: 350px;
+            padding: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        }
+    </style>
+}
+
+<div class="dashboard-container">
+    <div class="content-wrapper">
+        <!-- Messages d'alerte -->
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> @ViewBag.ErrorMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div class="welcome-section">
+                <h1><i class="fas fa-search"></i> @enqueteurNom</h1>
+                <p>Enquêteur Principal</p>
+                <span class="specialite-badge">
+                    <i class="fas fa-user-shield"></i> Spécialité: Investigations Criminelles
+                </span>
+            </div>
+            <div class="date-section">
+                <p><strong>@dateAujourdhui</strong></p>
+                <p>@heureActuelle</p>
+                @if (!string.IsNullOrEmpty(enqueteurEmail))
+                {
+                    <p><i class="fas fa-envelope"></i> @enqueteurEmail</p>
+                }
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card affaires">
+                <div class="stat-header">
+                    <span class="stat-title">Affaires en cours</span>
+                    <div class="stat-icon icon-blue">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-blue">@Model.TotalAffaires</div>
+                <p class="stat-description">Total des affaires assignées</p>
+            </div>
+
+            <div class="stat-card echantillons">
+                <div class="stat-header">
+                    <span class="stat-title">Échantillons</span>
+                    <div class="stat-icon icon-green">
+                        <i class="fas fa-vial"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-green">@Model.TotalEchantillons</div>
+                <p class="stat-description">Échantillons collectés dans vos affaires</p>
+            </div>
+
+            <div class="stat-card envois">
+                <div class="stat-header">
+                    <span class="stat-title">Envois laboratoire</span>
+                    <div class="stat-icon icon-purple">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-purple">@Model.TotalEnvoisLabo</div>
+                <p class="stat-description">Envois effectués au laboratoire</p>
+            </div>
+        </div>
+
+        <!-- Graphiques de répartition des affaires -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5 class="chart-title">Répartition des affaires par statut</h5>
+                    <div class="chart-canvas-container">
+                        <canvas id="affairesStatutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5 class="chart-title">Répartition des affaires par priorité</h5>
+                    <div class="chart-canvas-container">
+                        <canvas id="affairesPrioriteChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Affaires et échantillons récents -->
+        <div class="row">
+            <!-- Affaires récentes -->
+            <div class="col-md-6">
+                <div class="recent-items-container">
+                    <h5 class="recent-title"><i class="fas fa-clock me-2"></i>Affaires récentes</h5>
+                    <div class="list-group">
+                        @if (Model.AffairesRecentes != null && Model.AffairesRecentes.Any())
+                        {
+                            foreach (var affaire in Model.AffairesRecentes)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@affaire.NumeroAffaire - @affaire.Titre</h6>
+                                        <small class="text-muted">@affaire.DateOuverture.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(affaire.Description))
+                                    {
+                                        <p class="mb-1 text-truncate">@affaire.Description</p>
+                                    }
+                                    <div class="mt-2">
+                                        <span class="badge bg-secondary badge-statut">@affaire.Statut</span>
+                                        <span class="badge bg-info badge-statut">@affaire.Priorite</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-3">Aucune affaire récente</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Échantillons récents -->
+            <div class="col-md-6">
+                <div class="recent-items-container">
+                    <h5 class="recent-title"><i class="fas fa-vial me-2"></i>Échantillons récents</h5>
+                    <div class="list-group">
+                        @if (Model.EchantillonsRecents != null && Model.EchantillonsRecents.Any())
+                        {
+                            foreach (var echantillon in Model.EchantillonsRecents)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@echantillon.NumeroEchantillon</h6>
+                                        <small class="text-muted">@echantillon.DateReception.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                    <p class="mb-1">Type: @echantillon.Type</p>
+                                    <div>
+                                        <span class="badge bg-secondary badge-statut">@echantillon.Statut</span>
+                                        <span class="badge bg-warning text-dark badge-statut">@echantillon.Priorite</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-3">Aucun échantillon récent</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Inclure Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Données pour les graphiques
+            const statutAffairesData = [
+                @foreach (var item in Model.AffairesParStatut)
+                {
+                        <text>{ statut: '@item.Key', count: @item.Value },</text>
+                }
+            ];
+
+            const prioriteAffairesData = [
+                @foreach (var item in Model.AffairesParPriorite)
+                {
+                        <text>{ priorite: '@item.Key', count: @item.Value },</text>
+                }
+            ];
+
+            // Palette de couleurs
+            const colors = [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                '#858796', '#6f42c1', '#e83e8c', '#2e59d9', '#17a673'
+            ];
+
+            // Fonction pour formater les labels (enlever les nombres des enums)
+            function formatLabel(label) {
+                return label.split('.').pop();
+            }
+
+            // Animation des compteurs
+            animateCounters();
+
+            // Initialiser les graphiques avec délai
+            setTimeout(initializeCharts, 100);
+
+            function animateCounters() {
+                const statValues = document.querySelectorAll('.stat-value');
+                statValues.forEach(value => {
+                    const finalValue = parseInt(value.textContent);
+                    if (finalValue > 0) {
+                        let currentValue = 0;
+                        const increment = Math.ceil(finalValue / 20);
+                        const timer = setInterval(() => {
+                            currentValue += increment;
+                            if (currentValue >= finalValue) {
+                                value.textContent = finalValue;
+                                clearInterval(timer);
+                            } else {
+                                value.textContent = currentValue;
+                            }
+                        }, 50);
+                    }
+                });
+            }
+
+            function initializeCharts() {
+                // Configuration commune pour les légendes
+                const legendConfig = {
+                    position: 'bottom',
+                    align: 'center',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 11
+                        },
+                        boxWidth: 15,
+                        boxHeight: 15,
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, index) => {
+                                    const dataset = data.datasets[0];
+                                    const value = dataset.data[index];
+                                    const total = dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+
+                                    return {
+                                        text: `${label} (${value} - ${percentage}%)`,
+                                        fillStyle: dataset.backgroundColor[index],
+                                        strokeStyle: dataset.backgroundColor[index],
+                                        lineWidth: 0,
+                                        pointStyle: 'circle',
+                                        hidden: false,
+                                        index: index
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    },
+                    maxHeight: 100,
+                    onClick: function(e, legendItem, legend) {
+                        const index = legendItem.index;
+                        const chart = legend.chart;
+
+                        if (chart.getDatasetMeta(0).data[index].hidden === undefined ||
+                            chart.getDatasetMeta(0).data[index].hidden === false) {
+                            chart.getDatasetMeta(0).data[index].hidden = true;
+                        } else {
+                            chart.getDatasetMeta(0).data[index].hidden = false;
+                        }
+                        chart.update();
+                    }
+                };
+
+                // Configuration commune pour les graphiques
+                const commonOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 10,
+                            bottom: 10
+                        }
+                    },
+                    plugins: {
+                        legend: legendConfig,
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // 1. Graphique des affaires par statut
+                const affairesStatutCtx = document.getElementById('affairesStatutChart');
+                if (affairesStatutCtx && statutAffairesData.length > 0) {
+                    new Chart(affairesStatutCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: statutAffairesData.map(item => formatLabel(item.statut)),
+                            datasets: [{
+                                data: statutAffairesData.map(item => item.count),
+                                backgroundColor: colors.slice(0, statutAffairesData.length),
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
+                                hoverBorderWidth: 3,
+                                hoverBorderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            cutout: '50%'
+                        }
+                    });
+                }
+
+                // 2. Graphique des affaires par priorité
+                const affairesPrioriteCtx = document.getElementById('affairesPrioriteChart');
+                if (affairesPrioriteCtx && prioriteAffairesData.length > 0) {
+                    new Chart(affairesPrioriteCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: prioriteAffairesData.map(item => formatLabel(item.priorite)),
+                            datasets: [{
+                                data: prioriteAffairesData.map(item => item.count),
+                                backgroundColor: colors.slice(0, prioriteAffairesData.length),
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
+                                hoverBorderWidth: 3,
+                                hoverBorderColor: '#ffffff'
+                            }]
+                        },
+                        options: commonOptions
+                    });
+                }
+            }
+
+            // Animation d'entrée pour les cartes
+            const cards = document.querySelectorAll('.stat-card, .recent-items-container, .chart-container');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+}

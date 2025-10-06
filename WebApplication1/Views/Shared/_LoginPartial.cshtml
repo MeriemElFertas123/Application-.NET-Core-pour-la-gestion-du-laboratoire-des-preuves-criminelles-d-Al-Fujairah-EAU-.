@@ -1,0 +1,11 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using WebApplication1.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+    <ul class="navbar-nav navbar-right">
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login" id="loginLink"></a>
+        </li>
+    </ul>
+

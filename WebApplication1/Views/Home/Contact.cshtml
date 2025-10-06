@@ -1,0 +1,145 @@
+﻿@{
+    ViewData["Title"] = "Contact";
+    ViewData["Message"] = "Laboratoire des Preuves Judiciaires";
+}
+
+<main aria-labelledby="title" class="contact-container">
+    <div class="contact-card">
+        <h2 id="title">@ViewData["Title"]</h2>
+        <h3>@ViewData["Message"]</h3>
+
+        <div class="contact-info">
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <h4>Adresse</h4>
+                    <p>
+                        Ministère de la Justice<br>
+                        Direction des Expertises Scientifiques<br>
+                        12 Place Vendôme<br>
+                        75001 Paris, France
+                    </p>
+                </div>
+            </div>
+
+            <div class="contact-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                    <h4>Téléphone</h4>
+                    <p>
+                        Standard : 01 44 77 60 60<br>
+                        Urgences judiciaires : 01 44 77 60 61
+                    </p>
+                </div>
+            </div>
+
+            <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <h4>Emails</h4>
+                    <p>
+                        <strong>Administration :</strong> secretariat.dnes@justice.gouv.fr<br>
+                        <strong>Dépôt de preuves :</strong> depot.preuves@justice.gouv.fr
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-notice">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Les demandes doivent émaner exclusivement des services habilités (police, gendarmerie, justice).</p>
+        </div>
+    </div>
+</main>
+
+<style>
+    .contact-container {
+        background-color: #f8f9fa;
+        min-height: calc(100vh - 56px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .contact-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 40px;
+        max-width: 800px;
+        width: 100%;
+    }
+
+        .contact-card h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .contact-card h3 {
+            color: #6c757d;
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+    .contact-item {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+        align-items: flex-start;
+    }
+
+        .contact-item i {
+            color: #8b0000;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+
+        .contact-item h4 {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .contact-item p {
+            color: #495057;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+    .contact-notice {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin-top: 30px;
+        display: flex;
+        gap: 10px;
+    }
+
+        .contact-notice i {
+            color: #856404;
+            font-size: 1.2rem;
+        }
+
+        .contact-notice p {
+            color: #856404;
+            margin: 0;
+        }
+
+    @@media (max-width: 768px) {
+        .contact-card {
+            padding: 20px;
+        }
+
+        .contact-item {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

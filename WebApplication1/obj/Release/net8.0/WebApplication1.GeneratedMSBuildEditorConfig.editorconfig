@@ -1,0 +1,501 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = WebApplication1
+build_property.RootNamespace = WebApplication1
+build_property.ProjectDir = M:\Desktop\PFA\WebApplication1\WebApplication1\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = true
+build_property.MSBuildProjectDirectory = M:\Desktop\PFA\WebApplication1\WebApplication1
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/AccessDenied.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxBY2Nlc3NEZW5pZWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ChangePassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxDaGFuZ2VQYXNzd29yZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ConfirmEmail.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxDb25maXJtRW1haWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ConfirmEmailChange.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxDb25maXJtRW1haWxDaGFuZ2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ExternalLogin.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxFeHRlcm5hbExvZ2luLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ForgotPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxGb3Jnb3RQYXNzd29yZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ForgotPasswordConfirmation.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxGb3Jnb3RQYXNzd29yZENvbmZpcm1hdGlvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Lockout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2Nrb3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/LoginWith2fa.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dpbldpdGgyZmEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/LoginWithRecoveryCode.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dpbldpdGhSZWNvdmVyeUNvZGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/DeletePersonalData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcRGVsZXRlUGVyc29uYWxEYXRhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/Disable2fa.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcRGlzYWJsZTJmYS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/DownloadPersonalData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcRG93bmxvYWRQZXJzb25hbERhdGEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/Email.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcRW1haWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/EnableAuthenticator.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcRW5hYmxlQXV0aGVudGljYXRvci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/ExternalLogins.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcRXh0ZXJuYWxMb2dpbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/GenerateRecoveryCodes.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcR2VuZXJhdGVSZWNvdmVyeUNvZGVzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/PersonalData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcUGVyc29uYWxEYXRhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/ResetAuthenticator.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcUmVzZXRBdXRoZW50aWNhdG9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/SetPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcU2V0UGFzc3dvcmQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/ShowRecoveryCodes.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcU2hvd1JlY292ZXJ5Q29kZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/TwoFactorAuthentication.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcVHdvRmFjdG9yQXV0aGVudGljYXRpb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcX0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/_ManageNav.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcX01hbmFnZU5hdi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/_StatusMessage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcX1N0YXR1c01lc3NhZ2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Manage/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Profile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxQcm9maWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/RegisterConfirmation.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxSZWdpc3RlckNvbmZpcm1hdGlvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxSZXNlbmRFbWFpbENvbmZpcm1hdGlvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ResetPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxSZXNldFBhc3N3b3JkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/ResetPasswordConfirmation.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxSZXNldFBhc3N3b3JkQ29uZmlybWF0aW9uLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/_StatusMessage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxfU3RhdHVzTWVzc2FnZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/Account/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxfVmlld0ltcG9ydHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZhbGlkYXRpb25TY3JpcHRzUGFydGlhbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Areas/Identity/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Admin/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Archive.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcQXJjaGl2ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Assign.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcQXNzaWduLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Cloturer.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcQ2xvdHVyZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/MesAffaires.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcTWVzQWZmYWlyZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/Search.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcU2VhcmNoLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Affaires/ToutesAffaires.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWZmYWlyZXNcVG91dGVzQWZmYWlyZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/AValider.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcQVZhbGlkZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/DemarrerAnalyse.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcRGVtYXJyZXJBbmFseXNlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/EnCours.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcRW5Db3Vycy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/Historique.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcSGlzdG9yaXF1ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/MesEchantillons.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcTWVzRWNoYW50aWxsb25zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/MesRapports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcTWVzUmFwcG9ydHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/MesResultats.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcTWVzUmVzdWx0YXRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analyses/SaisirResultats.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzZXNcU2Fpc2lyUmVzdWx0YXRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analystes/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzdGVzXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analystes/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzdGVzXERhc2hib2FyZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analystes/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzdGVzXERlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analystes/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzdGVzXERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analystes/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzdGVzXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Analystes/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQW5hbHlzdGVzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Assign/History.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXNzaWduXEhpc3RvcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Assign/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXNzaWduXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Echantillons/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRWNoYW50aWxsb25zXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Echantillons/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRWNoYW50aWxsb25zXERlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Echantillons/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRWNoYW50aWxsb25zXERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Echantillons/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRWNoYW50aWxsb25zXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Echantillons/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRWNoYW50aWxsb25zXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/EmploiTemps/CreerEmploiTemps.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1wbG9pVGVtcHNcQ3JlZXJFbXBsb2lUZW1wcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/EmploiTemps/HistoriqueEmploisTemps.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1wbG9pVGVtcHNcSGlzdG9yaXF1ZUVtcGxvaXNUZW1wcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/EmploiTemps/ModifierEmploiTemps.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1wbG9pVGVtcHNcTW9kaWZpZXJFbXBsb2lUZW1wcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/EmploiTemps/VoirEmploiTempsSemaine.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1wbG9pVGVtcHNcVm9pckVtcGxvaVRlbXBzU2VtYWluZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Enqueteurs/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5xdWV0ZXVyc1xDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Enqueteurs/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5xdWV0ZXVyc1xEYXNoYm9hcmQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Enqueteurs/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5xdWV0ZXVyc1xEZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Enqueteurs/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5xdWV0ZXVyc1xEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Enqueteurs/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5xdWV0ZXVyc1xFZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Enqueteurs/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5xdWV0ZXVyc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Envoi/DetailsEnvoi.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW52b2lcRGV0YWlsc0Vudm9pLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Envoi/MesEnvois.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW52b2lcTWVzRW52b2lzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Envoi/PreparerEnvoi.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW52b2lcUHJlcGFyZXJFbnZvaS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Envoi/VerificationEchantillon.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW52b2lcVmVyaWZpY2F0aW9uRWNoYW50aWxsb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Envoi/VoirEnvoi.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW52b2lcVm9pckVudm9pLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Home/About.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxBYm91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Home/Contact.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxDb250YWN0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Permissions/Attribuer.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGVybWlzc2lvbnNcQXR0cmlidWVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Rapports/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmFwcG9ydHNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Recevoir/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVjZXZvaXJcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Recevoir/_VerificationCorrespondance.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVjZXZvaXJcX1ZlcmlmaWNhdGlvbkNvcnJlc3BvbmRhbmNlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Retour/CloturerAffaire.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmV0b3VyXENsb3R1cmVyQWZmYWlyZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Retour/ConsulterResultats.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmV0b3VyXENvbnN1bHRlclJlc3VsdGF0cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Shared/_LayoutMenu.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRNZW51LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Shared/_LoginPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Stockage/AttributionAnalyse.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2thZ2VcQXR0cmlidXRpb25BbmFseXNlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Stockage/Consulter.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2thZ2VcQ29uc3VsdGVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Stockage/CreateZone.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2thZ2VcQ3JlYXRlWm9uZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Stockage/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2thZ2VcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Stockage/PlanStockage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2thZ2VcUGxhblN0b2NrYWdlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Stockage/Stocker.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2thZ2VcU3RvY2tlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Techniciens/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVjaG5pY2llbnNcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Techniciens/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVjaG5pY2llbnNcRGFzaGJvYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Techniciens/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVjaG5pY2llbnNcRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Techniciens/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVjaG5pY2llbnNcRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Techniciens/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVjaG5pY2llbnNcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Techniciens/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVjaG5pY2llbnNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/UserManagement/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlck1hbmFnZW1lbnRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[M:/Desktop/PFA/WebApplication1/WebApplication1/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-bddmc6yalx

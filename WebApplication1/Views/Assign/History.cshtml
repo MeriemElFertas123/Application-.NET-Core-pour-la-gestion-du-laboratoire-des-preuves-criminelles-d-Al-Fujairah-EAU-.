@@ -1,0 +1,774 @@
+﻿@model IEnumerable<WebApplication1.Models.Affaire>
+
+@{
+    ViewData["Title"] = "Historique des affectations";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="history-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-history"></i> @ViewData["Title"]</h1>
+            <p class="subtitle">Consultez l'historique des affaires assignées aux enquêteurs</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="notification success">
+            <i class="fas fa-check-circle"></i>
+            <span>@TempData["SuccessMessage"]</span>
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="notification error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>@TempData["ErrorMessage"]</span>
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+    }
+
+    <div class="history-actions">
+        <a asp-action="Index" class="btn btn-outline">Retour à l'affectation</a>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Rechercher une affaire ou un enquêteur..." />
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <div class="history-filters">
+        <div class="filter-group">
+            <label for="enqueteurFilter">Filtrer par enquêteur :</label>
+            <select id="enqueteurFilter" class="form-select">
+                <option value="">Tous les enquêteurs</option>
+                @foreach (var enqueteur in (List<WebApplication1.Models.Enqueteur>)ViewBag.Enqueteurs)
+                {
+                    <option value="@enqueteur.idEnqueteur">@enqueteur.nom</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="statusFilter">Filtrer par statut :</label>
+            <select id="statusFilter" class="form-select">
+                <option value="">Tous les statuts</option>
+                <option value="Ouverte">Ouverte</option>
+                <option value="EnquêteActive">Enquête active</option>
+                <option value="Suspendue">Suspendue</option>
+                <option value="Résolue">Résolue</option>
+                <option value="NonRésolue">Non résolue</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="dateFilter">Filtrer par période :</label>
+            <select id="dateFilter" class="form-select">
+                <option value="all">Toutes les dates</option>
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="year">Cette année</option>
+                <option value="custom">Personnalisée</option>
+            </select>
+        </div>
+
+        <div class="custom-date-filters" id="customDateFilters" style="display: none;">
+            <div class="filter-group">
+                <label for="startDate">De :</label>
+                <input type="date" id="startDate" class="form-select" />
+            </div>
+            <div class="filter-group">
+                <label for="endDate">À :</label>
+                <input type="date" id="endDate" class="form-select" />
+            </div>
+        </div>
+    </div>
+
+    <div class="history-stats">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Count()</div>
+            <div class="stat-label">Affaires assignées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">@((ViewBag.Enqueteurs as List<WebApplication1.Models.Enqueteur>).Count)</div>
+            <div class="stat-label">Enquêteurs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">@Model.GroupBy(a => a.IdEnqueteurResponsable).Count()</div>
+            <div class="stat-label">Enquêteurs actifs</div>
+        </div>
+    </div>
+
+    <div class="history-table-container">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Affaire</th>
+                    <th>Enquêteur</th>
+                    <th>Date d'ouverture</th>
+                    <th>Date d'affectation</th>
+                    <th>Statut</th>
+                    <th>Priorité</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var affaire in Model)
+                {
+                    var enqueteur = ((List<WebApplication1.Models.Enqueteur>)ViewBag.Enqueteurs).FirstOrDefault(e => e.idEnqueteur == affaire.IdEnqueteurResponsable);
+                    <tr data-enqueteur="@affaire.IdEnqueteurResponsable" data-status="@affaire.Statut"
+                        data-date="@affaire.DateOuverture.ToString("yyyy-MM-dd")">
+                        <td>
+                            <div class="affaire-info">
+                                <div class="affaire-title">@affaire.Titre</div>
+                                @if (!string.IsNullOrEmpty(affaire.Description))
+                                {
+                                    <div class="affaire-description">@affaire.Description</div>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @if (enqueteur != null)
+                            {
+                                <div class="enqueteur-info">
+                                    <div class="enqueteur-name">@enqueteur.nom</div>
+                                    <div class="enqueteur-details">
+                                        @if (!string.IsNullOrEmpty(enqueteur.service))
+                                        {
+                                            <span class="badge">@enqueteur.service</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Non assigné</span>
+                            }
+                        </td>
+                        <td>@affaire.DateOuverture.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="text-muted">Non spécifiée</span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-@affaire.Statut.ToString().ToLower()">
+                                @affaire.Statut
+                            </span>
+                        </td>
+                        <td>
+                            <span class="priority-badge priority-@affaire.Priorite.ToString().ToLower()">
+                                @affaire.Priorite
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a asp-action="Reassign" asp-route-id="@affaire.Id" class="btn btn-sm btn-primary">Réassigner</a>
+                                <form asp-controller="Assign" asp-action="Unassign" asp-route-id="@affaire.Id" method="post" class="unassign-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir désassigner cette affaire ?');">
+                                        Désassigner
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>Aucune affectation trouvée</h3>
+                <p>Aucune affaire n'a été assignée à un enquêteur pour le moment.</p>
+            </div>
+        }
+    </div>
+
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Affichage de 1 à @Model.Count() sur @Model.Count() entrées
+        </div>
+        <div class="pagination-controls">
+            <button class="btn btn-outline" disabled>Précédent</button>
+            <button class="btn btn-outline" disabled>Suivant</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Gestion des filtres
+            $('#enqueteurFilter, #statusFilter, #dateFilter').change(function () {
+                filterTable();
+            });
+
+            $('#dateFilter').change(function () {
+                if ($(this).val() === 'custom') {
+                    $('#customDateFilters').show();
+                } else {
+                    $('#customDateFilters').hide();
+                    filterTable();
+                }
+            });
+
+            $('#startDate, #endDate').change(function () {
+                if ($('#dateFilter').val() === 'custom') {
+                    filterTable();
+                }
+            });
+
+            // Recherche
+            $('#searchInput').on('keyup', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('.history-table tbody tr').each(function () {
+                    var rowText = $(this).text().toLowerCase();
+                    $(this).toggle(rowText.indexOf(searchText) > -1);
+                });
+            });
+
+            function filterTable() {
+                var enqueteurId = $('#enqueteurFilter').val();
+                var status = $('#statusFilter').val();
+                var dateFilter = $('#dateFilter').val();
+                var startDate, endDate;
+
+                // Définir les dates en fonction du filtre
+                if (dateFilter === 'custom') {
+                    startDate = new Date($('#startDate').val());
+                    endDate = new Date($('#endDate').val());
+                } else {
+                    var today = new Date();
+                    switch (dateFilter) {
+                        case 'today':
+                            startDate = new Date(today);
+                            endDate = new Date(today);
+                            break;
+                        case 'week':
+                            startDate = new Date(today.setDate(today.getDate() - today.getDay()));
+                            endDate = new Date(today.setDate(today.getDate() + 6));
+                            break;
+                        case 'month':
+                            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                            endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                            break;
+                        case 'year':
+                            startDate = new Date(today.getFullYear(), 0, 1);
+                            endDate = new Date(today.getFullYear(), 11, 31);
+                            break;
+                        default:
+                            startDate = null;
+                            endDate = null;
+                    }
+                }
+
+                $('.history-table tbody tr').each(function () {
+                    var showRow = true;
+                    var rowEnqueteur = $(this).data('enqueteur');
+                    var rowStatus = $(this).data('status');
+                    var rowDate = new Date($(this).data('date'));
+
+                    // Filtre par enquêteur
+                    if (enqueteurId && rowEnqueteur != enqueteurId) {
+                        showRow = false;
+                    }
+
+                    // Filtre par statut
+                    if (status && rowStatus != status) {
+                        showRow = false;
+                    }
+
+                    // Filtre par date
+                    if (dateFilter !== 'all' && startDate && endDate) {
+                        if (rowDate < startDate || rowDate > endDate) {
+                            showRow = false;
+                        }
+                    }
+
+                    $(this).toggle(showRow);
+                });
+            }
+
+            // Confirmation avant désassignation
+            $('.unassign-form').submit(function (e) {
+                if (!confirm('Êtes-vous sûr de vouloir désassigner cette affaire ?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    /* Variables CSS pour la cohérence */
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+        --text-color: #495057;
+        --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        --shadow-hover: 0 4px 20px rgba(0,0,0,0.15);
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+    }
+
+    .history-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 40px 0;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+
+    .header-content h1 {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: 300;
+    }
+
+    .header-content i {
+        margin-right: 15px;
+    }
+
+    .subtitle {
+        margin: 10px 0 0 0;
+        font-size: 1.1em;
+        opacity: 0.9;
+    }
+
+    .notification {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        animation: slideIn 0.3s ease;
+    }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .notification i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .notification .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+            .notification .close-btn:hover {
+                opacity: 1;
+            }
+
+    .history-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .search-box {
+        position: relative;
+        min-width: 300px;
+    }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            transition: var(--transition);
+        }
+
+            .search-box input:focus {
+                outline: none;
+                border-color: var(--secondary-color);
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+    .history-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 15px;
+    }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+    .form-select {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        background: white;
+        transition: var(--transition);
+    }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+    .custom-date-filters {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .history-stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        flex: 1;
+        min-width: 150px;
+        padding: 20px;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2.5em;
+        font-weight: 300;
+        color: var(--secondary-color);
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9em;
+        color: var(--text-color);
+        opacity: 0.8;
+    }
+
+    .history-table-container {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+        margin-bottom: 30px;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .history-table th, .history-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-table th {
+            background: var(--light-gray);
+            color: var(--primary-color);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .history-table tr:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+    .affaire-info {
+        max-width: 300px;
+    }
+
+    .affaire-title {
+        font-weight: 500;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+
+    .affaire-description {
+        font-size: 0.9em;
+        color: var(--text-color);
+        opacity: 0.8;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .enqueteur-info {
+        min-width: 150px;
+    }
+
+    .enqueteur-name {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .enqueteur-details {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 0.75em;
+        background: var(--light-gray);
+        color: var(--text-color);
+        border-radius: 10px;
+    }
+
+    .status-badge, .priority-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+
+    .status-ouverte {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+
+    .status-enquêteactive {
+        background: #e1f5fe;
+        color: #0277bd;
+    }
+
+    .status-suspendue {
+        background: #fff8e1;
+        color: #f57c00;
+    }
+
+    .status-résolue {
+        background: #e8eaf6;
+        color: #3f51b5;
+    }
+
+    .status-nonrésolue {
+        background: #ffebee;
+        color: #d32f2f;
+    }
+
+    .priority-urgente {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .priority-haute {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .priority-moyenne {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .priority-faible {
+        background: #f3e5f5;
+        color: #7b1fa2;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 15px;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 0.9em;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    .btn-primary {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+    .btn-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-color);
+    }
+
+        .empty-state i {
+            font-size: 4em;
+            color: var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+
+    .pagination-info {
+        color: var(--text-color);
+        font-size: 0.9em;
+    }
+
+    .pagination-controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .text-muted {
+        color: var(--border-color);
+        font-style: italic;
+    }
+
+    /* Animation */
+    @@keyframes slideIn {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .history-filters {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .custom-date-filters {
+            flex-direction: column;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .history-table th, .history-table td {
+            padding: 10px 5px;
+            font-size: 0.9em;
+        }
+    }
+</style>

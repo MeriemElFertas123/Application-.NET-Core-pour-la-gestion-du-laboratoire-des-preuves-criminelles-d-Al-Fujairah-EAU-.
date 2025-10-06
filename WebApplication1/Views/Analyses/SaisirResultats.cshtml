@@ -1,0 +1,149 @@
+﻿@model WebApplication1.Models.Stockage.Echantillon
+
+@{
+    ViewData["Title"] = "Déposer les Résultats d'Analyse";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container">
+    <h2><i class="fas fa-file-upload"></i> @ViewData["Title"]</h2>
+    <h4>@Model.NumeroEchantillon</h4>
+
+    <form asp-controller="Analyses" asp-action="SoumettreResultats" asp-route-id="@Model.Id"
+          method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        @{
+            var analysesList = Model.Analyses.ToList();
+        }
+
+        @for (int i = 0; i < analysesList.Count; i++)
+        {
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <input type="hidden" name="Analyses[@i].Id" value="@analysesList[i].Id" />
+                    <span>@analysesList[i].Nom</span>
+                    @if (!string.IsNullOrEmpty(analysesList[i].Resultats) || analysesList[i].FichierContenu != null)
+                    {
+                        <span class="badge bg-success">Rapport déposé</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">En attente</span>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-sm-2">
+                            <label class="form-label mb-0">Rapport d'analyse </label>
+                        </div>
+                        <div class="col-sm-10">
+                            <div class="custom-file">
+                                <input type="file" class="form-control"
+                                       name="Analyses[@i].FichierContenu"
+                                       id="Analyses_@(i)__FichierContenu"
+                                       accept=".pdf,.doc,.docx">
+                                <label class="form-label" for="Analyses_@(i)__FichierContenu">
+                                    @if (analysesList[i].FichierContenu != null && !string.IsNullOrEmpty(analysesList[i].NomFichier))
+                                    {
+                                        @analysesList[i].NomFichier
+                                    }
+                                    else
+                                    {
+                                        <text>Choisir un fichier...</text>
+                                    }
+                                </label>
+                            </div>
+                            <small class="form-text text-muted mt-1">
+                                Formats acceptés : PDF, Word (max 5MB). Optionnel si rapport déjà déposé.
+                            </small>
+
+                            @if (analysesList[i].FichierContenu != null && !string.IsNullOrEmpty(analysesList[i].NomFichier))
+                            {
+                                <div class="mt-2">
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-file"></i> @analysesList[i].NomFichier
+                                    </span>
+                                    <small class="text-muted ms-2">
+                                        (Déposé le @analysesList[i].DateAnalyse)
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(analysesList[i].Methode))
+                    {
+                        <div class="row align-items-center mt-2">
+                            <div class="col-sm-2">
+                                <label class="form-label mb-0">Méthode utilisée</label>
+                            </div>
+                            <div class="col-sm-10">
+                                <p class="form-control-plaintext mb-0">@analysesList[i].Methode</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Enregistrer les rapports
+            </button>
+            <a asp-action="EnCours" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Afficher le nom du fichier sélectionné
+            $('input[type="file"]').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('label').html(fileName || 'Choisir un fichier...');
+
+                // Mettre à jour le badge
+                var card = $(this).closest('.card');
+                var badge = card.find('.badge');
+
+                if (fileName) {
+                    badge.removeClass('bg-warning')
+                        .addClass('bg-success')
+                        .text('Rapport sélectionné');
+                } else {
+                    badge.removeClass('bg-success')
+                        .addClass('bg-warning')
+                        .text('En attente');
+                }
+            });
+
+            // Validation côté client
+            $('form').on('submit', function (e) {
+                var hasData = false;
+
+                // Vérifier si au moins une analyse a des données
+                $('.card').each(function () {
+                    var fileInput = $(this).find('input[type="file"]');
+                    var textArea = $(this).find('textarea');
+
+                    if ((fileInput.val() && fileInput.val().length > 0) ||
+                        (textArea.val() && textArea.val().trim().length > 0)) {
+                        hasData = true;
+                        return false; // break
+                    }
+                });
+
+                if (!hasData) {
+                    alert('Veuillez saisir au moins un résultat (fichier ou texte).');
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+}

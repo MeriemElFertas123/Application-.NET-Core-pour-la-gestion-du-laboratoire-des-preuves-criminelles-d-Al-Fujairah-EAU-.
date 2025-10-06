@@ -1,0 +1,1022 @@
+﻿@model WebApplication1.Models.Emploi.EmploiTemps
+@{
+    ViewData["Title"] = "Modifier Emploi du Temps";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- En-tête -->
+    <div class="schedule-header mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="schedule-badge">
+                    <i class="fas fa-calendar-edit"></i>
+                </div>
+                <div class="ms-3">
+                    <h1 class="schedule-title">Modifier Emploi du Temps</h1>
+                    <p class="schedule-subtitle">Semaine @Model.NumeroSemaine/@Model.Annee - Statut: @Model.StatutLibelle</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="@Url.Action("VoirEmploiTempsSemaine", "EmploiTemps", new { week = Model.NumeroSemaine, year = Model.Annee })" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+                <button type="submit" form="editScheduleForm" class="btn btn-success">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="ModifierEmploiTemps" asp-controller="EmploiTemps" method="post" id="editScheduleForm" class="needs-validation" novalidate>
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="NumeroSemaine" />
+        <input type="hidden" asp-for="Annee" />
+        <input type="hidden" asp-for="DateCreation" />
+        <input type="hidden" asp-for="CreePar" />
+
+        <!-- Informations de base -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="info-card">
+                    <h5><i class="fas fa-info-circle"></i> Informations de l'Emploi du Temps</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Semaine/Année</label>
+                                <input type="text" class="form-control" value="Semaine @Model.NumeroSemaine - @Model.Annee" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Période</label>
+                                <input type="text" class="form-control" value="@Model.PeriodeAffichage" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Statut Actuel</label>
+                                <div class="current-status">
+                                    @if (Model.Statut == "Approved")
+                                    {
+                                        <span class="status-badge approved">
+                                            <i class="fas fa-check-circle"></i> @Model.StatutLibelle
+                                        </span>
+                                    }
+                                    else if (Model.Statut == "Pending")
+                                    {
+                                        <span class="status-badge pending">
+                                            <i class="fas fa-clock"></i> @Model.StatutLibelle
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge draft">
+                                            <i class="fas fa-edit"></i> @Model.StatutLibelle
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Commentaires" class="form-label">Commentaires</label>
+                                <textarea asp-for="Commentaires" class="form-control" rows="2" placeholder="Commentaires sur les modifications..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <h5><i class="fas fa-chart-bar"></i> Statistiques Actuelles</h5>
+                    <div class="stats-list">
+                        <div class="stat-item">
+                            <span class="stat-label">Personnel assigné:</span>
+                            <span class="stat-value">@Model.NombrePersonnelAssigne personnes</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Heures totales:</span>
+                            <span class="stat-value">@Model.HeuresTotal h</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Taux de couverture:</span>
+                            <span class="stat-value coverage-@(Model.TauxCouverture >= 90 ? "good" : Model.TauxCouverture >= 70 ? "warning" : "danger")">@Model.TauxCouverture%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Services couverts:</span>
+                            <span class="stat-value">@Model.Affectations.Select(a => a.ServiceId).Distinct().Count()/4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grille de planification -->
+        <div class="schedule-grid-card">
+            <div class="schedule-grid-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-table"></i> Grille de Planification</h5>
+                    <div class="grid-controls">
+                        <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="autoFillSchedule()">
+                            <i class="fas fa-magic"></i> Auto-remplir
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="clearSchedule()">
+                            <i class="fas fa-eraser"></i> Effacer tout
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="resetToOriginal()">
+                            <i class="fas fa-undo"></i> Restaurer original
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="schedule-grid-body">
+                <div class="table-responsive">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th class="service-column">Service</th>
+                                <th class="day-column">Lundi<br><small>@Model.DateDebut.ToString("dd MMM")</small></th>
+                                <th class="day-column">Mardi<br><small>@Model.DateDebut.AddDays(1).ToString("dd MMM")</small></th>
+                                <th class="day-column">Mercredi<br><small>@Model.DateDebut.AddDays(2).ToString("dd MMM")</small></th>
+                                <th class="day-column">Jeudi<br><small>@Model.DateDebut.AddDays(3).ToString("dd MMM")</small></th>
+                                <th class="day-column">Vendredi<br><small>@Model.DateDebut.AddDays(4).ToString("dd MMM")</small></th>
+                                <th class="total-column">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var service in ViewBag.Services as List<WebApplication1.Models.Emploi.Service>)
+                            {
+                                <tr class="service-row" data-service="@service.Id">
+                                    <td class="service-name">
+                                        <div class="service-info">
+                                            <span class="service-title">@service.Nom</span>
+                                            <small class="service-capacity">Capacité: @service.CapaciteMaximum personnes</small>
+                                        </div>
+                                    </td>
+                                    @foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" })
+                                    {
+                                        <td class="schedule-cell" data-day="@day.ToLower()" data-service="@service.Id">
+                                            <div class="personnel-assignment">
+                                                <!-- Équipe du matin -->
+                                                <div class="shift-container">
+                                                    <select class="personnel-select" multiple
+                                                            name="Affectations[@service.Id][@day][Morning]"
+                                                            data-shift="morning"
+                                                            data-service="@service.Id"
+                                                            data-day="@day">
+                                                        @foreach (var personnel in (ViewBag.Personnels as List<WebApplication1.Models.Emploi.Personnel>)
+                                                                                                        .Where(p => p.ServiceId == service.Id && p.Actif))
+                                                        {
+                                                            var isSelected = Model.Affectations.Any(a =>
+                                                            a.ServiceId == service.Id &&
+                                                            a.Jour == day &&
+                                                            a.Equipe == "Morning" &&
+                                                            a.PersonnelId == personnel.Id);
+                                                            <option value="@personnel.Id" selected="@isSelected">
+                                                                @personnel.NomComplet (@personnel.TypePersonnelLibelle)
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                    <div class="shift-label">Matin (8h-16h)</div>
+                                                </div>
+                                                <!-- Équipe du soir -->
+                                                <div class="shift-container">
+                                                    <select class="personnel-select" multiple
+                                                            name="Affectations[@service.Id][@day][Evening]"
+                                                            data-shift="evening"
+                                                            data-service="@service.Id"
+                                                            data-day="@day">
+                                                        @foreach (var personnel in (ViewBag.Personnels as List<WebApplication1.Models.Emploi.Personnel>)
+                                                                                                        .Where(p => p.ServiceId == service.Id && p.Actif))
+                                                        {
+                                                            var isSelected = Model.Affectations.Any(a =>
+                                                            a.ServiceId == service.Id &&
+                                                            a.Jour == day &&
+                                                            a.Equipe == "Evening" &&
+                                                            a.PersonnelId == personnel.Id);
+                                                            <option value="@personnel.Id" selected="@isSelected">
+                                                                @personnel.NomComplet (@personnel.TypePersonnelLibelle)
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                    <div class="shift-label">Soir (16h-24h)</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    }
+                                    <td class="total-cell">
+                                        <div class="total-hours">0h</div>
+                                        <div class="total-staff">0 pers.</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions de sauvegarde -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="validation-card">
+                    <h5><i class="fas fa-save"></i> Actions de Sauvegarde</h5>
+                    <p class="text-muted">Choisissez l'action à effectuer après la modification :</p>
+                    <div class="validation-buttons">
+                        <button type="submit" class="btn btn-outline-secondary me-2" name="action" value="draft">
+                            <i class="fas fa-save"></i> Enregistrer comme brouillon
+                        </button>
+                        @if (Model.Statut == "Draft")
+                        {
+                            <button type="submit" class="btn btn-warning me-2" name="action" value="pending">
+                                <i class="fas fa-paper-plane"></i> Soumettre pour approbation
+                            </button>
+                        }
+                        @if (Model.Statut == "Pending" && User.IsInRole("Directeur"))
+                        {
+                            <button type="submit" class="btn btn-success me-2" name="action" value="approved">
+                                <i class="fas fa-check"></i> Approuver
+                            </button>
+                        }
+                        <button type="submit" class="btn btn-primary" name="action" value="">
+                            <i class="fas fa-save"></i> Enregistrer sans changer le statut
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card">
+                    <h5><i class="fas fa-chart-bar"></i> Résumé des Modifications</h5>
+                    <div class="summary-stats">
+                        <div class="summary-item">
+                            <span class="summary-label">Total Heures:</span>
+                            <span class="summary-value" id="totalHours">@Model.HeuresTotal h</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Personnel Assigné:</span>
+                            <span class="summary-value" id="totalStaff">@Model.NombrePersonnelAssigne personnes</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Services Couverts:</span>
+                            <span class="summary-value" id="servicesCovered">@Model.Affectations.Select(a => a.ServiceId).Distinct().Count()/@((ViewBag.Services as List<WebApplication1.Models.Emploi.Service>).Count)</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Taux de Couverture:</span>
+                            <span class="summary-value" id="coverageRate">@Model.TauxCouverture%</span>
+                        </div>
+                    </div>
+                    <div class="changes-indicator mt-3">
+                        <div class="alert alert-info" id="changesAlert" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span id="changesMessage">Des modifications ont été détectées</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        Des erreurs ont été détectées. Veuillez corriger les champs en rouge.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<style>
+    /* Styles CSS inchangés */
+    :root {
+        --schedule-primary: #8b5cf6;
+        --schedule-secondary: #a855f7;
+        --judicial-primary: #1e3a8a;
+        --judicial-success: #16a34a;
+        --judicial-warning: #d97706;
+        --judicial-danger: #dc2626;
+        --judicial-light: #f8fafc;
+        --judicial-border: #e2e8f0;
+    }
+
+    body {
+        background-color: var(--judicial-light);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .schedule-header {
+        background: linear-gradient(135deg, var(--schedule-primary), var(--schedule-secondary));
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+    }
+
+    .schedule-badge {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .schedule-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .schedule-subtitle {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .info-card, .stats-card, .schedule-grid-card, .validation-card, .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+
+        .info-card h5, .stats-card h5, .validation-card h5, .summary-card h5 {
+            color: var(--judicial-primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--judicial-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .current-status {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .status-badge.approved {
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--judicial-success);
+            border: 2px solid var(--judicial-success);
+        }
+
+        .status-badge.pending {
+            background: rgba(217, 119, 6, 0.2);
+            color: var(--judicial-warning);
+            border: 2px solid var(--judicial-warning);
+        }
+
+        .status-badge.draft {
+            background: rgba(100, 116, 139, 0.2);
+            color: #64748b;
+            border: 2px solid #64748b;
+        }
+
+    .stats-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--judicial-border);
+    }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+    .stat-label {
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: var(--judicial-primary);
+    }
+
+    .coverage-good {
+        color: var(--judicial-success) !important;
+    }
+
+    .coverage-warning {
+        color: var(--judicial-warning) !important;
+    }
+
+    .coverage-danger {
+        color: var(--judicial-danger) !important;
+    }
+
+    .schedule-grid-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .schedule-grid-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--judicial-border);
+        background: var(--judicial-light);
+    }
+
+        .schedule-grid-header h5 {
+            margin: 0;
+            color: var(--judicial-primary);
+            font-weight: 600;
+        }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .schedule-table th {
+            background: var(--judicial-primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+            .schedule-table th.service-column {
+                width: 200px;
+                text-align: left;
+            }
+
+            .schedule-table th.day-column {
+                width: 180px;
+            }
+
+            .schedule-table th.total-column {
+                width: 120px;
+            }
+
+        .schedule-table td {
+            border: 1px solid var(--judicial-border);
+            padding: 0;
+            vertical-align: top;
+        }
+
+    .service-name {
+        padding: 1rem;
+        background: var(--judicial-light);
+    }
+
+    .service-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .service-title {
+        font-weight: 600;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .service-capacity {
+        color: #6b7280;
+        font-size: 0.8rem;
+    }
+
+    .schedule-cell {
+        padding: 0.5rem;
+        min-height: 120px;
+    }
+
+    .personnel-assignment {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        height: 100%;
+    }
+
+    .shift-container {
+        flex: 1;
+        border: 1px solid var(--judicial-border);
+        border-radius: 6px;
+        padding: 0.5rem;
+        background: #fafafa;
+        position: relative;
+    }
+
+        .shift-container.modified {
+            border-color: var(--judicial-warning);
+            background: rgba(217, 119, 6, 0.1);
+        }
+
+    .shift-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+        text-align: center;
+    }
+
+    .personnel-select {
+        width: 100%;
+        border: none;
+        background: transparent;
+        font-size: 0.8rem;
+        min-height: 40px;
+    }
+
+        .personnel-select option {
+            padding: 0.25rem;
+        }
+
+            .personnel-select option:checked {
+                background: var(--schedule-primary);
+                color: white;
+            }
+
+        .personnel-select.changed {
+            border: 2px solid var(--judicial-warning);
+        }
+
+    .total-cell {
+        padding: 1rem;
+        text-align: center;
+        background: var(--judicial-light);
+    }
+
+    .total-hours, .total-staff {
+        font-weight: 600;
+        color: var(--judicial-primary);
+    }
+
+    .total-hours {
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .total-staff {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .summary-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--judicial-border);
+    }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+    .summary-label {
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: var(--judicial-primary);
+    }
+
+    .validation-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .changes-indicator {
+        margin-top: 1rem;
+    }
+
+    .schedule-cell:hover {
+        background-color: rgba(139, 92, 246, 0.05);
+    }
+
+    .personnel-select:focus {
+        outline: 2px solid var(--schedule-primary);
+        outline-offset: 2px;
+    }
+
+    media (max-width: 768px) {
+        .schedule-header .d-flex
+
+    {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .validation-buttons {
+        flex-direction: column;
+    }
+
+    .schedule-table {
+        font-size: 0.8rem;
+    }
+
+    .assignment-cell {
+        min-height: 100px;
+    }
+
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+    }
+
+    .highlight-change {
+        animation: highlightChange 2s ease-out;
+    }
+
+    keyframes highlightChange {
+        0%
+
+    {
+        background-color: rgba(217, 119, 6, 0.3);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+
+    }
+</style>
+
+<script>
+    let personnelAssignments = {};
+    let originalAssignments = {};
+    let hasChanges = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializePersonnelSelects();
+        loadOriginalAssignments();
+        updateSummary();
+
+        // Auto-hide alerts après 5 secondes
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            });
+        }, 5000);
+    });
+
+    function initializePersonnelSelects() {
+        const selects = document.querySelectorAll('.personnel-select');
+        selects.forEach(select => {
+            select.addEventListener('change', function () {
+                updateAssignments();
+                updateSummary();
+                detectChanges();
+                this.classList.add('highlight-change');
+                setTimeout(() => this.classList.remove('highlight-change'), 2000);
+            });
+        });
+    }
+
+    function loadOriginalAssignments() {
+        // Charger les affectations originales
+        const selects = document.querySelectorAll('.personnel-select');
+        selects.forEach(select => {
+            const service = select.dataset.service;
+            const day = select.dataset.day;
+            const shift = select.dataset.shift;
+            const selectedOptions = Array.from(select.selectedOptions).map(option => option.value);
+
+            if (!originalAssignments[service]) {
+                originalAssignments[service] = {};
+            }
+            if (!originalAssignments[service][day]) {
+                originalAssignments[service][day] = {};
+            }
+
+            originalAssignments[service][day][shift] = [...selectedOptions];
+        });
+
+        personnelAssignments = JSON.parse(JSON.stringify(originalAssignments));
+    }
+
+    function updateAssignments() {
+        const selects = document.querySelectorAll('.personnel-select');
+        personnelAssignments = {};
+
+        selects.forEach(select => {
+            const service = select.dataset.service;
+            const day = select.dataset.day;
+            const shift = select.dataset.shift;
+            const selectedOptions = Array.from(select.selectedOptions).map(option => option.value);
+
+            if (!personnelAssignments[service]) {
+                personnelAssignments[service] = {};
+            }
+            if (!personnelAssignments[service][day]) {
+                personnelAssignments[service][day] = {};
+            }
+
+            personnelAssignments[service][day][shift] = selectedOptions;
+        });
+
+        updateTotalColumns();
+    }
+
+    function updateTotalColumns() {
+        const services = document.querySelectorAll('.service-row');
+
+        services.forEach(serviceRow => {
+            const serviceId = serviceRow.dataset.service;
+            const totalCell = serviceRow.querySelector('.total-cell');
+
+            let totalHours = 0;
+            let totalStaff = new Set();
+
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+                if (personnelAssignments[serviceId] && personnelAssignments[serviceId][day]) {
+                    Object.values(personnelAssignments[serviceId][day]).forEach(assignments => {
+                        totalHours += assignments.length * 8;
+                        assignments.forEach(person => totalStaff.add(person));
+                    });
+                }
+            });
+
+            totalCell.querySelector('.total-hours').textContent = `${totalHours}h`;
+            totalCell.querySelector('.total-staff').textContent = `${totalStaff.size} pers.`;
+        });
+    }
+
+    function updateSummary() {
+        let totalHours = 0;
+        let totalStaff = new Set();
+        let servicesCovered = 0;
+
+        const services = document.querySelectorAll('.service-row');
+        const totalServices = services.length;
+
+        services.forEach(serviceRow => {
+            const serviceId = serviceRow.dataset.service;
+            let serviceHasAssignments = false;
+
+            if (personnelAssignments[serviceId]) {
+                Object.values(personnelAssignments[serviceId]).forEach(dayAssignments => {
+                    Object.values(dayAssignments).forEach(shiftAssignments => {
+                        if (shiftAssignments.length > 0) {
+                            serviceHasAssignments = true;
+                            totalHours += shiftAssignments.length * 8;
+                            shiftAssignments.forEach(person => totalStaff.add(person));
+                        }
+                    });
+                });
+            }
+
+            if (serviceHasAssignments) {
+                servicesCovered++;
+            }
+        });
+
+        const coverageRate = totalServices > 0 ? Math.round((servicesCovered / totalServices) * 100) : 0;
+
+        document.getElementById('totalHours').textContent = `${totalHours}h`;
+        document.getElementById('totalStaff').textContent = `${totalStaff.size} personnes`;
+        document.getElementById('servicesCovered').textContent = `${servicesCovered}/${totalServices}`;
+
+        const coverageElement = document.getElementById('coverageRate');
+        coverageElement.textContent = `${coverageRate}%`;
+
+        coverageElement.className = 'summary-value';
+        if (coverageRate >= 75) {
+            coverageElement.classList.add('coverage-good');
+        } else if (coverageRate >= 50) {
+            coverageElement.classList.add('coverage-warning');
+        } else {
+            coverageElement.classList.add('coverage-danger');
+        }
+    }
+
+    function detectChanges() {
+        hasChanges = false;
+        const selects = document.querySelectorAll('.personnel-select');
+
+        selects.forEach(select => {
+            const service = select.dataset.service;
+            const day = select.dataset.day;
+            const shift = select.dataset.shift;
+            const currentSelection = Array.from(select.selectedOptions).map(option => option.value).sort();
+
+            const originalSelection = (originalAssignments[service] &&
+                                    originalAssignments[service][day] &&
+                                    originalAssignments[service][day][shift]) || [];
+
+            const originalSorted = [...originalSelection].sort();
+
+            if (JSON.stringify(currentSelection) !== JSON.stringify(originalSorted)) {
+                hasChanges = true;
+                select.classList.add('changed');
+                select.closest('.shift-container').classList.add('modified');
+            } else {
+                select.classList.remove('changed');
+                select.closest('.shift-container').classList.remove('modified');
+            }
+        });
+
+        // Afficher/masquer l'indicateur de changements
+        const changesAlert = document.getElementById('changesAlert');
+        const changesMessage = document.getElementById('changesMessage');
+
+        if (hasChanges) {
+            changesMessage.textContent = 'Des modifications ont été détectées';
+            changesAlert.style.display = 'block';
+            changesAlert.className = 'alert alert-warning fade-in';
+        } else {
+            changesAlert.style.display = 'none';
+        }
+    }
+
+    function autoFillSchedule() {
+        if (confirm('Ceci va remplir automatiquement les créneaux vides selon les règles par défaut. Continuer ?')) {
+            // Logique d'auto-remplissage similaire à la création
+            const services = document.querySelectorAll('.service-row');
+
+            services.forEach(serviceRow => {
+                const morningSelects = serviceRow.querySelectorAll('[data-shift="morning"]');
+                const eveningSelects = serviceRow.querySelectorAll('[data-shift="evening"]');
+
+                morningSelects.forEach((select, index) => {
+                    if (select.selectedOptions.length === 0 && select.options.length > 1) {
+                        // Sélectionner les 2 premières options disponibles
+                        for (let i = 1; i <= Math.min(2, select.options.length - 1); i++) {
+                            select.options[i].selected = true;
+                        }
+                    }
+                });
+
+                eveningSelects.forEach((select, index) => {
+                    if (select.selectedOptions.length === 0 && select.options.length > 1 && index < 3) {
+                        // Sélectionner 1 option pour le soir (3 premiers jours)
+                        select.options[1].selected = true;
+                    }
+                });
+            });
+
+            updateAssignments();
+            updateSummary();
+            detectChanges();
+            showNotification('Auto-remplissage appliqué aux créneaux vides', 'success');
+        }
+    }
+
+    function clearSchedule() {
+        if (confirm('Êtes-vous sûr de vouloir effacer toute la planification ?')) {
+            document.querySelectorAll('.personnel-select option').forEach(option => {
+                option.selected = false;
+            });
+
+            updateAssignments();
+            updateSummary();
+            detectChanges();
+            showNotification('Planification effacée', 'info');
+        }
+    }
+
+    function resetToOriginal() {
+        if (confirm('Voulez-vous restaurer la planification originale ? Toutes les modifications seront perdues.')) {
+            // Restaurer les sélections originales
+            const selects = document.querySelectorAll('.personnel-select');
+            selects.forEach(select => {
+                const service = select.dataset.service;
+                const day = select.dataset.day;
+                const shift = select.dataset.shift;
+
+                // Désélectionner tout
+                Array.from(select.options).forEach(option => option.selected = false);
+
+                // Restaurer la sélection originale
+                const originalSelection = (originalAssignments[service] &&
+                                        originalAssignments[service][day] &&
+                                        originalAssignments[service][day][shift]) || [];
+
+                originalSelection.forEach(personnelId => {
+                    const option = select.querySelector(`option[value="${personnelId}"]`);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            });
+
+            updateAssignments();
+            updateSummary();
+            detectChanges();
+            showNotification('Planification originale restaurée', 'info');
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '1050';
+        notification.style.minWidth = '300px';
+
+        const icons = {
+            'success': 'fas fa-check-circle',
+            'warning': 'fas fa-exclamation-triangle',
+            'danger': 'fas fa-exclamation-circle',
+            'info': 'fas fa-info-circle'
+        };
+
+        notification.innerHTML = `
+            <i class="${icons[type]} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Avertir avant de quitter si des changements non sauvegardés
+    window.addEventListener('beforeunload', function (e) {
+        if (hasChanges) {
+            e.preventDefault();
+            e.returnValue = 'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter ?';
+        }
+    });
+
+    // Désactiver l'avertissement lors de la soumission du formulaire
+    document.getElementById('editScheduleForm').addEventListener('submit', function() {
+        hasChanges = false;
+    });
+</script>

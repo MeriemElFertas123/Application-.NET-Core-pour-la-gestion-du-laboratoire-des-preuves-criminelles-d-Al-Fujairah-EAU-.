@@ -1,0 +1,489 @@
+﻿@model WebApplication1.Models.Affaire
+
+@{
+    ViewData["Title"] = "Créer une nouvelle affaire";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <!-- Messages d'erreur/succès -->
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-folder-plus me-2"></i>
+                        Créer une nouvelle affaire
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Résumé des erreurs de validation -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Veuillez corriger les erreurs suivantes :</h6>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState)
+                                {
+                                    @foreach (var errorMessage in error.Value.Errors)
+                                    {
+                                        <li>@errorMessage.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post" class="needs-validation" novalidate id="createAffaireForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <!-- Titre -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Titre" class="form-label fw-bold required">
+                                    <i class="fas fa-heading text-primary me-1"></i>
+                                    Titre
+                                </label>
+                                <input asp-for="Titre"
+                                       class="form-control @(Html.ViewData.ModelState["Titre"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                                       placeholder="Saisissez le titre de l'affaire"
+                                       required
+                                       maxlength="200" />
+                                <span asp-validation-for="Titre" class="invalid-feedback"></span>
+                                <div class="form-text">Maximum 200 caractères</div>
+                            </div>
+
+                            <!-- Lieu -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Lieu" class="form-label fw-bold">
+                                    <i class="fas fa-map-marker-alt text-primary me-1"></i>
+                                    Lieu
+                                </label>
+                                <input asp-for="Lieu"
+                                       class="form-control @(Html.ViewData.ModelState["Lieu"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                                       placeholder="Lieu de l'affaire"
+                                       maxlength="200" />
+                                <span asp-validation-for="Lieu" class="invalid-feedback"></span>
+                                <div class="form-text">Optionnel - Maximum 200 caractères</div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">
+                                <i class="fas fa-align-left text-primary me-1"></i>
+                                Description
+                            </label>
+                            <textarea asp-for="Description"
+                                      class="form-control @(Html.ViewData.ModelState["Description"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Description détaillée de l'affaire..."></textarea>
+                            <span asp-validation-for="Description" class="invalid-feedback"></span>
+                            <div class="form-text">Optionnel - Maximum 2000 caractères</div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Date d'ouverture -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DateOuverture" class="form-label fw-bold required">
+                                    <i class="fas fa-calendar-plus text-primary me-1"></i>
+                                    Date d'ouverture
+                                </label>
+                                <input asp-for="DateOuverture"
+                                       type="date"
+                                       class="form-control @(Html.ViewData.ModelState["DateOuverture"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                                       required />
+                                <span asp-validation-for="DateOuverture" class="invalid-feedback"></span>
+                            </div>
+
+                            <!-- Date de fermeture -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DateFermeture" class="form-label fw-bold">
+                                    <i class="fas fa-calendar-minus text-primary me-1"></i>
+                                    Date de fermeture
+                                </label>
+                                <input asp-for="DateFermeture"
+                                       type="date"
+                                       class="form-control @(Html.ViewData.ModelState["DateFermeture"]?.Errors.Count > 0 ? "is-invalid" : "")" />
+                                <span asp-validation-for="DateFermeture" class="invalid-feedback"></span>
+                                <div class="form-text">Optionnel - Doit être postérieure à la date d'ouverture</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Statut -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Statut" class="form-label fw-bold required">
+                                    <i class="fas fa-flag text-primary me-1"></i>
+                                    Statut
+                                </label>
+                                <select asp-for="Statut"
+                                        class="form-select @(Html.ViewData.ModelState["Statut"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                                        required>
+                                    <option value="">-- Sélectionner un statut --</option>
+                                    <option value="1" selected>Ouverte</option>
+                                    <option value="2">Enquête Active</option>
+                                    <option value="3">Suspendue</option>
+                                    <option value="4">Résolue</option>
+                                    <option value="5">Non Résolue</option>
+                                </select>
+                                <span asp-validation-for="Statut" class="invalid-feedback"></span>
+                            </div>
+
+                            <!-- Priorité -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Priorite" class="form-label fw-bold required">
+                                    <i class="fas fa-exclamation-triangle text-primary me-1"></i>
+                                    Priorité
+                                </label>
+                                <select asp-for="Priorite"
+                                        class="form-select @(Html.ViewData.ModelState["Priorite"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                                        required>
+                                    <option value="">-- Sélectionner une priorité --</option>
+                                    <option value="1">Faible</option>
+                                    <option value="2" selected>Moyenne</option>
+                                    <option value="3">Haute</option>
+                                    <option value="4">Urgente</option>
+                                </select>
+                                <span asp-validation-for="Priorite" class="invalid-feedback"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Retour à la liste
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-warning me-2" onclick="resetForm()">
+                                    <i class="fas fa-undo me-2"></i>
+                                    Réinitialiser
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <span class="spinner-border spinner-border-sm d-none me-2" id="loadingSpinner"></span>
+                                    <i class="fas fa-save me-2" id="saveIcon"></i>
+                                    Créer l'affaire
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .card-header {
+        border-bottom: none;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .form-label {
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+    .btn-outline-warning {
+        border: 2px solid #ffc107;
+        color: #ffc107;
+    }
+
+        .btn-outline-warning:hover {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .invalid-feedback {
+        display: block;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .alert-success {
+        background-color: #d1edff;
+        color: #0c5460;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    hr {
+        border-color: #dee2e6;
+        opacity: 0.5;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('createAffaireForm');
+        const dateOuvertureInput = document.querySelector('#DateOuverture');
+        const dateFermetureInput = document.querySelector('#DateFermeture');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const saveIcon = document.getElementById('saveIcon');
+
+        // Définir la date d'aujourd'hui par défaut
+        if (dateOuvertureInput && !dateOuvertureInput.value) {
+            dateOuvertureInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        // Validation personnalisée des dates
+        function validateDates() {
+            if (dateFermetureInput.value && dateOuvertureInput.value) {
+                const dateOuverture = new Date(dateOuvertureInput.value);
+                const dateFermeture = new Date(dateFermetureInput.value);
+
+                if (dateFermeture < dateOuverture) {
+                    dateFermetureInput.setCustomValidity('La date de fermeture ne peut pas être antérieure à la date d\'ouverture');
+                    dateFermetureInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    dateFermetureInput.setCustomValidity('');
+                    dateFermetureInput.classList.remove('is-invalid');
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        // Ajouter les événements de validation des dates
+        if (dateOuvertureInput && dateFermetureInput) {
+            dateOuvertureInput.addEventListener('change', validateDates);
+            dateFermetureInput.addEventListener('change', validateDates);
+        }
+
+        // Validation du formulaire à la soumission
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                // Afficher le spinner de chargement
+                if (loadingSpinner && saveIcon && submitBtn) {
+                    loadingSpinner.classList.remove('d-none');
+                    saveIcon.classList.add('d-none');
+                    submitBtn.disabled = true;
+                }
+
+                // Valider le formulaire
+                if (!form.checkValidity() || !validateDates()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    // Cacher le spinner si erreur
+                    if (loadingSpinner && saveIcon && submitBtn) {
+                        loadingSpinner.classList.add('d-none');
+                        saveIcon.classList.remove('d-none');
+                        submitBtn.disabled = false;
+                    }
+                }
+
+                form.classList.add('was-validated');
+            });
+        }
+
+        // Validation en temps réel pour les champs requis
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            field.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        });
+
+        // Compteur de caractères pour la description
+        const descriptionField = document.querySelector('#Description');
+        if (descriptionField) {
+            const maxLength = descriptionField.getAttribute('maxlength');
+            const charCounter = document.createElement('div');
+            charCounter.className = 'form-text text-end';
+            charCounter.innerHTML = `<span id="charCount">0</span>/${maxLength} caractères`;
+            descriptionField.parentNode.appendChild(charCounter);
+
+            const charCountSpan = document.getElementById('charCount');
+            descriptionField.addEventListener('input', function() {
+                const currentLength = this.value.length;
+                charCountSpan.textContent = currentLength;
+
+                if (currentLength > maxLength * 0.9) {
+                    charCountSpan.parentElement.classList.add('text-warning');
+                } else {
+                    charCountSpan.parentElement.classList.remove('text-warning');
+                }
+            });
+        }
+    });
+
+    // Fonction pour réinitialiser le formulaire
+    function resetForm() {
+        const form = document.getElementById('createAffaireForm');
+        if (form) {
+            form.reset();
+            form.classList.remove('was-validated');
+
+            // Supprimer toutes les classes de validation
+            const inputs = form.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid', 'is-valid');
+            });
+
+            // Réinitialiser la date d'ouverture à aujourd'hui
+            const dateOuvertureInput = document.querySelector('#DateOuverture');
+            if (dateOuvertureInput) {
+                dateOuvertureInput.value = new Date().toISOString().split('T')[0];
+            }
+
+            // Réinitialiser les sélections par défaut
+            document.querySelector('#Statut').value = '1';
+            document.querySelector('#Priorite').value = '2';
+
+            // Réinitialiser le compteur de caractères
+            const charCountSpan = document.getElementById('charCount');
+            if (charCountSpan) {
+                charCountSpan.textContent = '0';
+                charCountSpan.parentElement.classList.remove('text-warning');
+            }
+        }
+    }
+
+    // Fonction pour afficher un message de confirmation avant de quitter
+    let formChanged = false;
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createAffaireForm');
+        if (form) {
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+            });
+        }
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            const message = 'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter cette page?';
+            e.returnValue = message;
+            return message;
+        }
+    });
+
+    // Désactiver l'alerte de fermeture lors de la soumission
+    document.getElementById('createAffaireForm')?.addEventListener('submit', function() {
+        formChanged = false;
+    });
+</script>

@@ -1,0 +1,188 @@
+﻿@model WebApplication1.Models.Stockage.Echantillon
+
+@{
+    ViewBag.Title = "Supprimer l'Échantillon";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="fas fa-trash-alt"></i> Supprimer l'Échantillon #@Model.Id</h4>
+                <div class="float-right">
+                    <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-light btn-sm">
+                        <i class="fas fa-eye"></i> Voir détails
+                    </a>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Attention !</h5>
+                    <p>Vous êtes sur le point de supprimer définitivement cet échantillon. Cette action est irréversible.</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-info-circle"></i> Informations Générales</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Numéro :</th>
+                                <td>@Model.NumeroEchantillon</td>
+                            </tr>
+                            <tr>
+                                <th>Type :</th>
+                                <td>@Html.Raw(GetTypeBadge(Model.Type))</td>
+                            </tr>
+                            <tr>
+                                <th>Date Réception :</th>
+                                <td>@Model.DateReception.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                            <tr>
+                                <th>Statut :</th>
+                                <td>@Html.Raw(GetStatusBadge(Model.Statut))</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-users"></i> Assignations</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Affaire :</th>
+                                <td>@(Model.Affaire?.Titre ?? "Non assigné")</td>
+                            </tr>
+                            <tr>
+                                <th>Stockage :</th>
+                                <td>@(Model.Stockage?.Emplacement  +"-" + Model.Stockage?.Zone ?? "Non assigné")</td>
+                            </tr>
+                            <tr>
+                                <th>Analyste :</th>
+                                <td>@(Model.Analyste?.nom ?? "Non assigné")</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.NomFichier))
+                {
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5><i class="fas fa-file"></i> Fichier Attaché</h5>
+                            <div class="bg-light p-3 rounded">
+                                <i class="@GetFileIcon(Model.TypeMime)"></i>
+                                @Model.NomFichier (@Model.TailleFichierFormatee)
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <hr>
+
+                @using (Html.BeginForm())
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="form-actions text-right">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Confirmer la suppression
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetTypeBadge(WebApplication1.Models.Stockage.TypeEchantillon type)
+    {
+        switch (type)
+        {
+            case WebApplication1.Models.Stockage.TypeEchantillon.Sang:
+                return "<span class='badge bg-danger'><i class='fas fa-tint'></i> Sang</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Salive:
+                return "<span class='badge bg-info'><i class='fas fa-teeth'></i> Salive</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Urine:
+                return "<span class='badge bg-warning text-dark'><i class='fas fa-flask'></i> Urine</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Tissu:
+                return "<span class='badge bg-success'><i class='fas fa-dna'></i> Tissu</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Autre:
+                return "<span class='badge bg-secondary'><i class='fas fa-vial'></i> Autre</span>";
+            default:
+                return "<span class='badge bg-light text-dark'>Inconnu</span>";
+        }
+    }
+
+    public string GetStatusBadge(WebApplication1.Models.Stockage.StatutEchantillon statut)
+    {
+        switch (statut)
+        {
+            case WebApplication1.Models.Stockage.StatutEchantillon.EnAttente:
+                return "<span class='badge bg-warning'>En attente</span>";
+            case WebApplication1.Models.Stockage.StatutEchantillon.EnAnalyse:
+                return "<span class='badge bg-primary'>En analyse</span>";
+            case WebApplication1.Models.Stockage.StatutEchantillon.AnalyseTerminee:
+                return "<span class='badge bg-success'>Terminé</span>";
+            case WebApplication1.Models.Stockage.StatutEchantillon.Archive:
+                return "<span class='badge bg-secondary'>Archivé</span>";
+            default:
+                return "<span class='badge bg-light text-dark'>Inconnu</span>";
+        }
+    }
+
+    public string GetFileIcon(string mimeType)
+    {
+        if (string.IsNullOrEmpty(mimeType))
+            return "fas fa-file";
+
+        if (mimeType.StartsWith("image/"))
+            return "fas fa-file-image text-success";
+        else if (mimeType.StartsWith("video/"))
+            return "fas fa-file-video text-primary";
+        else if (mimeType.StartsWith("audio/"))
+            return "fas fa-file-audio text-info";
+        else if (mimeType.Contains("pdf"))
+            return "fas fa-file-pdf text-danger";
+        else
+            return "fas fa-file text-secondary";
+    }
+}
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        border-bottom: 1px solid #ddd;
+        padding: 1rem;
+    }
+
+    .float-right {
+        float: right;
+    }
+
+    .table th {
+        width: 30%;
+        font-weight: 600;
+    }
+
+    .form-actions {
+        margin-top: 20px;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+    }
+</style>

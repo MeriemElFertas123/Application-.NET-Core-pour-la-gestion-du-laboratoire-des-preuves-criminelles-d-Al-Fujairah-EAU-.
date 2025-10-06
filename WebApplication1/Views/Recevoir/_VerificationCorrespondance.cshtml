@@ -1,0 +1,523 @@
+﻿@model WebApplication1.Models.Envoi.VerificationCorrespondanceViewModel
+
+<div id="verificationForm_@Model.EnvoiEchantillonId">
+    <form asp-controller="Recevoir" asp-action="TraiterVerification" method="post" id="verificationForm_@Model.EnvoiEchantillonId">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="EnvoiEchantillonId" />
+
+        <div class="row">
+            <div class="col-md-12">
+                <h4><i class="fa fa-check-square-o"></i> Vérification de Correspondance</h4>
+
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h5 class="panel-title">
+                            <i class="fa fa-flask"></i> Informations de l'Échantillon
+                        </h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-condensed">
+                                    <tr>
+                                        <td><strong>Code QR:</strong></td>
+                                        <td>@Model.EchantillonInfo.CodeQR</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>N° Affaire:</strong></td>
+                                        <td>@Model.EchantillonInfo.NumeroAffaire</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Enquêteur:</strong></td>
+                                        <td>@Model.EchantillonInfo.NomEnqueteur</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Type d'analyse:</strong></td>
+                                        <td>@Model.EchantillonInfo.TypeAnalyse</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-condensed">
+                                    <tr>
+                                        <td><strong>Poids attendu:</strong></td>
+                                        <td>@(Model.EchantillonInfo.Poids?.ToString("F2") ?? "0") g</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Couleur attendue:</strong></td>
+                                        <td>@Model.EchantillonInfo.Couleur</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Emballage:</strong></td>
+                                        <td>@Model.EchantillonInfo.Emballage</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Date d'envoi:</strong></td>
+                                        <td>@(Model.EchantillonInfo.DateEnvoi?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle"></i>
+                    <strong>Instructions:</strong> Vérifiez chaque critère en comparant l'échantillon physique reçu avec les informations attendues ci-dessus.
+                </div>
+
+                <!-- Critères de vérification -->
+                <div id="criteresVerification">
+                    @for (int i = 0; i < Model.CriteresVerification.Count; i++)
+                    {
+                        var critere = Model.CriteresVerification[i];
+
+                        <div class="panel panel-default critere-panel" data-critere="@critere.Nom">
+                            <div class="panel-heading">
+                                <h5 class="panel-title">
+                                    <i class="fa @critere.Icone"></i> @critere.Nom
+                                    @if (critere.Obligatoire)
+                                    {
+                                        <span class="text-danger">*</span>
+                                    }
+                                </h5>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="control-label">Valeur attendue:</label>
+                                        <div class="form-control-static bg-info text-white" style="padding: 8px; border-radius: 4px;">
+                                            <strong>@critere.ValeurAttendue</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="control-label">Valeur constatée:</label>
+
+                                        <input type="hidden" name="CriteresVerification[@i].Nom" value="@critere.Nom" />
+                                        <input type="hidden" name="CriteresVerification[@i].TypeVerification" value="@critere.TypeVerification" />
+                                        <input type="hidden" name="CriteresVerification[@i].ValeurAttendue" value="@critere.ValeurAttendue" />
+                                        <input type="hidden" name="CriteresVerification[@i].Obligatoire" value="@critere.Obligatoire.ToString()" />
+                                        <input type="hidden" name="CriteresVerification[@i].ToleranceMin" value="@critere.ToleranceMin" />
+                                        <input type="hidden" name="CriteresVerification[@i].ToleranceMax" value="@critere.ToleranceMax" />
+
+                                        @if (critere.TypeVerification == "numeric")
+                                        {
+                                            <div class="input-group">
+                                                <input type="number"
+                                                       name="CriteresVerification[@i].ValeurConstatee"
+                                                       class="form-control critere-input"
+                                                       step="0.01"
+                                                       placeholder="Entrez la valeur mesurée"
+                                                       @(critere.Obligatoire ? "required" : "") />
+                                                <span class="input-group-addon">g</span>
+                                            </div>
+                                        }
+                                        else if (critere.TypeVerification == "select" && critere.OptionsDisponibles != null)
+                                        {
+                                            <select name="CriteresVerification[@i].ValeurConstatee"
+                                                    class="form-control critere-input"
+                                                    @(critere.Obligatoire ? "required" : "")>
+                                                <option value="">-- Sélectionnez --</option>
+                                                @foreach (var option in critere.OptionsDisponibles)
+                                                {
+                                                    <option value="@option">@option</option>
+                                                }
+                                            </select>
+                                        }
+                                        else if (critere.TypeVerification == "radio" && critere.OptionsDisponibles != null)
+                                        {
+                                            <div class="radio-group">
+                                                @for (int j = 0; j < critere.OptionsDisponibles.Count; j++)
+                                                {
+                                                    var option = critere.OptionsDisponibles[j];
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio"
+                                                                   name="CriteresVerification[@i].ValeurConstatee"
+                                                                   value="@option"
+                                                                   class="critere-input"
+                                                                   @(critere.Obligatoire ? "required" : "") />
+                                                            @option
+                                                        </label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <input type="text"
+                                                   name="CriteresVerification[@i].ValeurConstatee"
+                                                   class="form-control critere-input"
+                                                   placeholder="Entrez la valeur constatée"
+                                                   @(critere.Obligatoire ? "required" : "") />
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Zone d'observations pour ce critère -->
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <label class="control-label">Observations (optionnel):</label>
+                                        <textarea name="CriteresVerification[@i].Observations"
+                                              class="form-control"
+                                              rows="2"
+                                              placeholder="Observations particulières pour ce critère..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Indicateur de conformité -->
+                                <div class="row mt-2">
+                                    <div class="col-md-12">
+                                        <div class="conformite-indicator" id="conformite_@i" style="display: none;">
+                                            <span class="label label-default">Non vérifié</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Observations générales -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h5 class="panel-title">
+                            <i class="fa fa-comments"></i> Observations Générales
+                        </h5>
+                    </div>
+                    <div class="panel-body">
+                        <textarea name="ObservationsGenerales"
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="Observations générales sur l'échantillon, son état, particularités observées..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Résumé de la vérification -->
+                <div class="panel panel-warning" id="resumeVerification" style="display: none;">
+                    <div class="panel-heading">
+                        <h5 class="panel-title">
+                            <i class="fa fa-exclamation-triangle"></i> Résumé de la Vérification
+                        </h5>
+                    </div>
+                    <div class="panel-body">
+                        <div id="listeNonConformites"></div>
+                        <div id="actionRecommandee" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="text-right mt-3">
+                    <button type="button" class="btn btn-default"
+                            onclick="annulerVerification(@Model.EnvoiEchantillonId)">
+                        <i class="fa fa-times"></i> Annuler
+                    </button>
+                    <button type="button" class="btn btn-success"
+                            onclick="validerVerification(@Model.EnvoiEchantillonId)">
+                        <i class="fa fa-check"></i> Valider
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Variables pour le suivi de la vérification
+        var criteresVerifies = 0;
+        var totalCriteres = @Model.CriteresVerification.Count;
+        var echantillonId = @Model.EnvoiEchantillonId;
+        var nonConformites = [];
+
+        // Gérer les changements sur tous les inputs
+        $('.critere-input').on('change input', function() {
+            var $this = $(this);
+            var panel = $this.closest('.critere-panel');
+            var critereIndex = $this.attr('name').match(/\[(\d+)\]/)[1];
+            var critereNom = panel.data('critere');
+
+            verifierCritere(critereIndex, critereNom, $this.val());
+            mettreAJourResume();
+        });
+
+            // Fonction pour vérifier un critère - VERSION CORRIGÉE
+    function verifierCritere(index, nom, valeurConstatee) {
+        if (!valeurConstatee || valeurConstatee.trim() === '') {
+            mettreAJourIndicateur(index, 'non-verifie', 'Non vérifié');
+            return;
+        }
+
+        // Récupérer les données des critères depuis les champs cachés
+        var critereNom = $('input[name="CriteresVerification[' + index + '].Nom"]').val();
+        var typeVerification = $('input[name="CriteresVerification[' + index + '].TypeVerification"]').val();
+        var valeurAttendue = $('input[name="CriteresVerification[' + index + '].ValeurAttendue"]').val();
+        var toleranceMin = parseFloat($('input[name="CriteresVerification[' + index + '].ToleranceMin"]').val()) || 0;
+        var toleranceMax = parseFloat($('input[name="CriteresVerification[' + index + '].ToleranceMax"]').val()) || 999999;
+
+        var estConforme = true;
+        var message = '';
+
+        // Vérification selon le type - CORRECTION POUR LE POIDS
+        switch(typeVerification) {
+            case 'numeric':
+                var valeur = parseFloat(valeurConstatee.replace(',', '.'));
+
+                if (isNaN(valeur)) {
+                    estConforme = false;
+                    message = 'Valeur numérique invalide';
+                } else {
+                    // CORRECTION : Vérification correcte de la tolérance
+                    estConforme = valeur >= toleranceMin && valeur <= toleranceMax;
+
+                    if (critereNom === 'Poids') {
+                        var poidsAttendu = parseFloat(valeurAttendue);
+                        message = estConforme ?
+                            'Conforme (' + valeur + 'g dans la tolérance ' + toleranceMin + '-' + toleranceMax + 'g)' :
+                            'Non conforme (' + valeur + 'g hors tolérance ' + toleranceMin + '-' + toleranceMax + 'g)';
+                    } else {
+                        message = estConforme ? 'Conforme' : 'Non conforme';
+                    }
+                }
+                break;
+
+            case 'select':
+            case 'radio':
+                if (critereNom === 'Couleur') {
+                    estConforme = valeurConstatee === valeurAttendue || valeurConstatee === 'Autre';
+                    message = estConforme ? 'Conforme' : 'Non conforme (attendu: ' + valeurAttendue + ')';
+                } else if (critereNom === 'Emballage') {
+                    estConforme = valeurConstatee === 'Conforme';
+                    message = estConforme ? 'Conforme' : 'Emballage ' + valeurConstatee.toLowerCase();
+                } else if (critereNom === 'État général') {
+                    estConforme = valeurConstatee === 'Bon état';
+                    message = estConforme ? 'Conforme' : 'État: ' + valeurConstatee;
+                } else {
+                    estConforme = true;
+                    message = 'Vérifié';
+                }
+                break;
+
+            default:
+                estConforme = true;
+                message = 'Vérifié';
+                break;
+        }
+
+        // Mettre à jour l'indicateur
+        var typeIndicateur = estConforme ? 'conforme' : 'non-conforme';
+        mettreAJourIndicateur(index, typeIndicateur, message);
+
+        // Gérer les non-conformités
+        var nonConformiteIndex = nonConformites.findIndex(nc => nc.critere === critereNom);
+
+        if (!estConforme) {
+            var nonConformite = {
+                critere: critereNom,
+                valeurAttendue: valeurAttendue,
+                valeurConstatee: valeurConstatee,
+                message: message
+            };
+
+            if (nonConformiteIndex >= 0) {
+                nonConformites[nonConformiteIndex] = nonConformite;
+            } else {
+                nonConformites.push(nonConformite);
+            }
+        } else {
+            if (nonConformiteIndex >= 0) {
+                nonConformites.splice(nonConformiteIndex, 1);
+            }
+        }
+
+        mettreAJourResume();
+    }
+
+        // Mettre à jour l'indicateur visuel
+        function mettreAJourIndicateur(index, type, message) {
+            var $indicateur = $('#conformite_' + index);
+            var $label = $indicateur.find('.label');
+
+            if ($label.length === 0) {
+                $label = $('<span class="label"></span>');
+                $indicateur.append($label);
+            }
+
+            $label.removeClass('label-default label-success label-danger label-warning');
+
+            switch(type) {
+                case 'conforme':
+                    $label.addClass('label-success').text('✓ ' + message);
+                    break;
+                case 'non-conforme':
+                    $label.addClass('label-danger').text('✗ ' + message);
+                    break;
+                case 'non-verifie':
+                default:
+                    $label.addClass('label-default').text(message);
+                    break;
+            }
+
+            $indicateur.show();
+        }
+
+        // Mettre à jour le résumé
+        function mettreAJourResume() {
+            var $resume = $('#resumeVerification');
+            var $listeNC = $('#listeNonConformites');
+            var $action = $('#actionRecommandee');
+
+            if (nonConformites.length > 0) {
+                var html = '<h6><i class="fa fa-times-circle text-danger"></i> Non-conformités détectées:</h6><ul class="list-unstyled">';
+                nonConformites.forEach(function(nc) {
+                    html += `<li class="text-danger"><i class="fa fa-caret-right"></i> <strong>${nc.critere}:</strong> ${nc.message}</li>`;
+                });
+                html += '</ul>';
+                $listeNC.html(html);
+
+                $action.html('<div class="alert alert-warning"><strong>Action recommandée:</strong> L\'échantillon sera marqué comme NON CONFORME et un rapport de non-conformité sera généré.</div>');
+                $resume.show();
+            } else {
+                $resume.hide();
+            }
+        }
+    });
+
+    // Fonctions globales pour les boutons (à définir ailleurs)
+    function annulerVerification(envoiEchantillonId) {
+        // Implémentation à définir
+        console.log('Annuler vérification pour l\'échantillon: ' + envoiEchantillonId);
+    }
+
+        function validerVerification(envoiEchantillonId) {
+        console.log('Valider vérification pour l\'échantillon: ' + envoiEchantillonId);
+
+        if (!confirm('Êtes-vous sûr de vouloir valider cette vérification ?')) {
+            return;
+        }
+
+        // CORRECTION : Trouver le FORMULAIRE, pas le DIV
+        var form = document.querySelector('#verificationForm_' + envoiEchantillonId + ' form');
+
+        if (!form) {
+            console.error('Formulaire non trouvé pour l\'échantillon: ' + envoiEchantillonId);
+            alert('Erreur: Formulaire non trouvé');
+            return;
+        }
+
+        console.log('Formulaire trouvé:', form);
+
+        // Désactiver le bouton pendant l'envoi
+        var btnValider = document.querySelector('#verificationForm_' + envoiEchantillonId + ' .btn-success');
+        if (btnValider) {
+            btnValider.disabled = true;
+            btnValider.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Validation...';
+        }
+
+        // Créer FormData pour l'envoi AJAX
+        var formData = new FormData(form);
+
+        // Envoyer via AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Réponse reçue:', data);
+
+            if (data.success) {
+                alert(data.message);
+                // Masquer le formulaire
+                document.getElementById('verificationForm_' + envoiEchantillonId).style.display = 'none';
+
+                // Recharger la page après 2 secondes
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                alert('Erreur: ' + data.message);
+                // Réactiver le bouton
+                if (btnValider) {
+                    btnValider.disabled = false;
+                    btnValider.innerHTML = '<i class="fa fa-check"></i> Valider';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur technique lors de la validation');
+            // Réactiver le bouton
+            if (btnValider) {
+                btnValider.disabled = false;
+                btnValider.innerHTML = '<i class="fa fa-check"></i> Valider';
+            }
+        });
+    }
+</script>
+
+<style>
+    .critere-panel {
+        margin-bottom: 20px;
+        border-left: 4px solid #ddd;
+        transition: border-color 0.3s ease;
+    }
+
+        .critere-panel:hover {
+            border-left-color: #337ab7;
+        }
+
+        .critere-panel .panel-heading {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .critere-panel .panel-title {
+            color: #495057;
+            font-weight: 600;
+        }
+
+            .critere-panel .panel-title i {
+                margin-right: 8px;
+                width: 16px;
+                text-align: center;
+            }
+
+    .form-control-static {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .radio-group .radio {
+        margin-bottom: 8px;
+    }
+
+        .radio-group .radio label {
+            font-weight: normal;
+            cursor: pointer;
+            padding-left: 25px;
+        }
+
+    .conformite-indicator {
+        margin-top: 10px;
+        padding: 5px 0;
+    }
+
+        .conformite-indicator .label {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+    #resumeVerification {
+        border-left: 4px solid #f0ad4e;
+    }
+
+        #resumeVerification .panel-heading {
+            background-color: #fcf8e3;
+            color: #8a6d3b;
+        }
+</style>

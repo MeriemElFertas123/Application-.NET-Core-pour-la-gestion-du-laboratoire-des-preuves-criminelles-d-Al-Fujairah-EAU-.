@@ -1,0 +1,209 @@
+﻿
+@{
+    ViewData["Title"] = "Détails de l'Envoi";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-eye"></i> Détails du Bon d'Envoi N° @Model.NumeroBon
+                    </h4>
+                    <div class="btn-group">
+                        <a asp-action="TelechargerBon" asp-route-id="@Model.Id"
+                           class="btn btn-light btn-sm">
+                            <i class="fas fa-download"></i> Télécharger
+                        </a>
+                        <button type="button"
+                                class="btn btn-light btn-sm"
+                                onclick="imprimerBon(@Model.Id)">
+                            <i class="fas fa-print"></i> Imprimer
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Informations générales -->
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-info-circle"></i> Informations générales</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Numéro de bon :</strong></td>
+                                    <td>@Model.NumeroBon</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Affaire :</strong></td>
+                                    <td>@Model.NomAffaire</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date de création :</strong></td>
+                                    <td>@Model.DateCreation.ToString("dd/MM/yyyy à HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date d'envoi prévue :</strong></td>
+                                    <td>@Model.DateEnvoiPrevue.ToString("dd/MM/yyyy")</td>
+                                </tr>
+
+                                <tr>
+                                    <td><strong>Créé par :</strong></td>
+                                    <td>@Model.CreePar</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Statut :</strong></td>
+                                    <td>
+                                        @switch (Model.StatutEnvoi)
+                                        {
+                                            case "En préparation":
+                                                <span class="badge bg-warning">@Model.StatutEnvoi</span>
+                                                break;
+                                            case "Envoyé":
+                                                <span class="badge bg-success">@Model.StatutEnvoi</span>
+                                                break;
+                                            case "Reçu":
+                                                <span class="badge bg-info">@Model.StatutEnvoi</span>
+                                                break;
+                                            case "Transmis":
+                                                <span class="badge bg-primary">@Model.StatutEnvoi</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@Model.StatutEnvoi</span>
+                                                break;
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Informations laboratoire -->
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-flask"></i> Laboratoire de destination</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Nom :</strong></td>
+                                    <td>@Model.NomLaboratoire</td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.AdresseLaboratoire))
+                                {
+                                    <tr>
+                                        <td><strong>Adresse :</strong></td>
+                                        <td>@Model.AdresseLaboratoire</td>
+                                    </tr>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.ContactLaboratoire))
+                                {
+                                    <tr>
+                                        <td><strong>Contact :</strong></td>
+                                        <td>@Model.ContactLaboratoire</td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><strong>Type d'analyse :</strong></td>
+                                    <td>@Model.TypeAnalyse</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Observations -->
+                    @if (!string.IsNullOrEmpty(Model.ObservationsEnvoi))
+                    {
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-comment"></i> Observations</h5>
+                                <div class="alert alert-light">
+                                    @Html.Raw(Model.ObservationsEnvoi.Replace("\n", "<br/>"))
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Liste des échantillons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5><i class="fas fa-vial"></i> Échantillons envoyés (@Model.EchantillonsEnvoyes.Count)</h5>
+                            @if (Model.EchantillonsEnvoyes?.Any() == true)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Description</th>
+                                                <th>État</th>
+                                                <th>Date de collecte</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var echantillon in Model.EchantillonsEnvoyes)
+                                            {
+                                                <tr>
+                                                    <td><strong>@echantillon.Code</strong></td>
+                                                    <td>@echantillon.Description</td>
+                                                    <td>
+                                                        <span class="badge bg-info">@echantillon.Etat</span>
+                                                    </td>
+                                                    <td>@echantillon.DateCollecte.ToString("dd/MM/yyyy")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Aucun échantillon associé à cet envoi.
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a asp-action="MesEnvois" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                                </a>
+                                <div class="btn-group">
+                                    @if (Model.StatutEnvoi == "En préparation")
+                                    {
+                                        <a asp-action="PreparerEnvoi" asp-route-affaireId="@Model.Id"
+                                           class="btn btn-warning">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </a>
+                                    }
+                                    <a asp-action="TelechargerBon" asp-route-id="@Model.Id"
+                                       class="btn btn-success">
+                                        <i class="fas fa-download"></i> Télécharger PDF
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-info"
+                                            onclick="imprimerBon(@Model.Id)">
+                                        <i class="fas fa-print"></i> Imprimer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function imprimerBon(bonId) {
+            var printUrl = '@Url.Action("ImprimerBon")' + '?id=' + bonId;
+            var printWindow = window.open(printUrl, '_blank', 'width=800,height=600');
+
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        }
+    </script>
+}

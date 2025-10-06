@@ -1,0 +1,617 @@
+﻿@model WebApplication1.ViewModels.CloturerAffaireViewModel
+
+@{
+    ViewData["Title"] = "Clôturer une affaire";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="cloturer-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-lock"></i> Clôture d'affaire</h1>
+            <p class="subtitle">Finaliser le traitement d'une affaire avec rapport de clôture</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="notification success">
+            <i class="fas fa-check-circle"></i>
+            <span>@TempData["SuccessMessage"]</span>
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="notification error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>@TempData["ErrorMessage"]</span>
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+    }
+
+    <form asp-controller="Affaires" asp-action="Cloturer" method="post" class="cloturer-form">
+        @Html.AntiForgeryToken()
+
+        <div class="form-layout">
+            <!-- Section Sélection d'affaire -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-folder-open"></i> Sélection de l'affaire</h3>
+                </div>
+
+                <div class="section-content">
+
+                    <!-- Détails de l'affaire sélectionnée -->
+                    <div class="affaire-details" id="affaireDetails" style="display: none;">
+                        <div class="details-card">
+                            <div class="details-header">
+                                <h4><i class="fas fa-info-circle"></i> Détails de l'affaire</h4>
+                            </div>
+                            <div class="details-content">
+                                <div class="detail-item">
+                                    <label>Titre :</label>
+                                    <span id="affaireTitre"></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Description :</label>
+                                    <span id="affaireDescription"></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Statut actuel :</label>
+                                    <span id="affaireStatut" class="status-badge"></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Priorité :</label>
+                                    <span id="affairePriorite" class="priority-badge"></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Date d'ouverture :</label>
+                                    <span id="affaireDateOuverture"></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Enquêteur responsable :</label>
+                                    <span id="affaireEnqueteur"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <!-- Section Actions -->
+            <div class="action-section">
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary" id="cloturerButton" disabled>
+                        <i class="fas fa-lock"></i>
+                        <span>Clôturer l'affaire</span>
+                    </button>
+                    <a asp-controller="Affaires" asp-action="Index" class="btn btn-secondary">Annuler</a>
+                    <a href="#" class="btn btn-outline" id="previewButton">Prévisualiser</a>
+                </div>
+
+                <div class="warning-notice">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Attention : La clôture d'une affaire est une action définitive. Assurez-vous que tous les éléments sont corrects avant de valider.</span>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de prévisualisation -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye"></i> Prévisualisation du rapport de clôture
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-content">
+                    <h6>Affaire : <span id="previewTitre"></span></h6>
+                    <p><strong>Statut de résolution :</strong> <span id="previewStatut"></span></p>
+                    <p><strong>Date de clôture :</strong> <span id="previewDate"></span></p>
+
+                    <h6>Résumé des actions :</h6>
+                    <p id="previewActions"></p>
+
+                    <h6>Résultats obtenus :</h6>
+                    <p id="previewResultats"></p>
+
+                    <h6>Recommandations :</h6>
+                    <p id="previewRecommandations"></p>
+
+                    <h6>Notes complémentaires :</h6>
+                    <p id="previewNotes"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Données simulées des affaires (en réalité, ceci viendrait du serveur)
+            const affairesData = {
+                1: {
+                    titre: "Vol à main armée - Banque Centrale",
+                    description: "Vol à main armée dans une agence bancaire avec prise d'otages",
+                    statut: "Enquête Active",
+                    priorite: "Urgente",
+                    dateOuverture: "2024-01-15",
+                    enqueteur: "Inspecteur Martin Dubois"
+                },
+                2: {
+                    titre: "Fraude informatique - Entreprise TechCorp",
+                    description: "Détournement de fonds via système informatique",
+                    statut: "Ouverte",
+                    priorite: "Haute",
+                    dateOuverture: "2024-02-20",
+                    enqueteur: "Enquêteur Sarah Johnson"
+                }
+            };
+
+            // Gestion de la sélection d'affaire
+            $('#affaireSelect').change(function () {
+                const affaireId = $(this).val();
+                const affaireDetails = $('#affaireDetails');
+
+                if (affaireId && affairesData[affaireId]) {
+                    const affaire = affairesData[affaireId];
+
+                    $('#affaireTitre').text(affaire.titre);
+                    $('#affaireDescription').text(affaire.description);
+                    $('#affaireStatut').text(affaire.statut).attr('class', 'status-badge status-' + affaire.statut.toLowerCase().replace(/\s+/g, ''));
+                    $('#affairePriorite').text(affaire.priorite).attr('class', 'priority-badge priority-' + affaire.priorite.toLowerCase());
+                    $('#affaireDateOuverture').text(new Date(affaire.dateOuverture).toLocaleDateString('fr-FR'));
+                    $('#affaireEnqueteur').text(affaire.enqueteur);
+
+                    affaireDetails.slideDown();
+                } else {
+                    affaireDetails.slideUp();
+                }
+
+                updateUI();
+            });
+
+            // Fonction pour valider le formulaire
+            function validateForm() {
+                const affaireId = $('#affaireSelect').val();
+                const statutResolution = $('select[name="StatutResolution"]').val();
+                const dateCloture = $('input[name="DateCloture"]').val();
+                const resumeActions = $('textarea[name="ResumeActions"]').val().trim();
+                const resultatsObtenus = $('textarea[name="ResultatsObtenus"]').val().trim();
+
+                return affaireId && statutResolution && dateCloture && resumeActions && resultatsObtenus;
+            }
+
+            // Mettre à jour l'interface
+            function updateUI() {
+                const isValid = validateForm();
+                $('#cloturerButton').prop('disabled', !isValid);
+            }
+
+            // Validation en temps réel
+            $('select, input, textarea').on('change input', updateUI);
+
+            // Gestion de la prévisualisation
+            $('#previewButton').click(function (e) {
+                e.preventDefault();
+
+                if (!validateForm()) {
+                    alert('Veuillez remplir tous les champs obligatoires avant la prévisualisation.');
+                    return;
+                }
+
+                const affaireId = $('#affaireSelect').val();
+                const affaire = affairesData[affaireId];
+
+                $('#previewTitre').text(affaire.titre);
+                $('#previewStatut').text($('select[name="StatutResolution"] option:selected').text());
+                $('#previewDate').text(new Date($('input[name="DateCloture"]').val()).toLocaleDateString('fr-FR'));
+                $('#previewActions').text($('textarea[name="ResumeActions"]').val());
+                $('#previewResultats').text($('textarea[name="ResultatsObtenus"]').val());
+                $('#previewRecommandations').text($('textarea[name="Recommandations"]').val() || 'Aucune recommandation');
+                $('#previewNotes').text($('textarea[name="NotesComplementaires"]').val() || 'Aucune note complémentaire');
+
+                $('#previewModal').modal('show');
+            });
+
+            // Confirmation avant clôture
+            $('#cloturerButton').click(function (e) {
+                if (!validateForm()) {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                    e.preventDefault();
+                    return;
+                }
+
+                const affaireId = $('#affaireSelect').val();
+                const affaire = affairesData[affaireId];
+                const statutResolution = $('select[name="StatutResolution"] option:selected').text();
+
+                if (!confirm(`Confirmer la clôture de l'affaire "${affaire.titre}" avec le statut "${statutResolution}" ?\n\nCette action est définitive.`)) {
+                    e.preventDefault();
+                }
+            });
+
+            // Initialisation
+            updateUI();
+        });
+    </script>
+}
+
+<style>
+    /* Variables CSS */
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+        --text-color: #495057;
+        --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        --shadow-hover: 0 4px 20px rgba(0,0,0,0.15);
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+    }
+
+    .cloturer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 40px 0;
+        background: linear-gradient(135deg, #c0392b, #e74c3c);
+        color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+
+    .header-content h1 {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: 300;
+    }
+
+    .header-content i {
+        margin-right: 15px;
+    }
+
+    .subtitle {
+        margin: 10px 0 0 0;
+        font-size: 1.1em;
+        opacity: 0.9;
+    }
+
+    .notification {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        animation: slideIn 0.3s ease;
+    }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .notification i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .notification .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+            .notification .close-btn:hover {
+                opacity: 1;
+            }
+
+    .form-layout {
+        display: grid;
+        gap: 30px;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+        .section-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+    .section-header {
+        background: var(--light-gray);
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .section-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.3em;
+        }
+
+        .section-header i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+
+    .section-content {
+        padding: 20px;
+    }
+
+    .affaire-select {
+        margin-bottom: 20px;
+    }
+
+    .affaire-details {
+        margin-top: 20px;
+    }
+
+    .details-card {
+        background: #f8f9fa;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+    }
+
+    .details-header {
+        background: var(--secondary-color);
+        color: white;
+        padding: 15px;
+    }
+
+        .details-header h4 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+    .details-content {
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .detail-item label {
+            font-weight: bold;
+            color: var(--text-color);
+            min-width: 120px;
+        }
+
+    .status-badge, .priority-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+
+    .status-enquêteactive {
+        background: #e1f5fe;
+        color: #0277bd;
+    }
+
+    .status-ouverte {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+
+    .priority-urgente {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .priority-haute {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .resolution-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .resolution-item {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rapport-section {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 8px;
+    }
+
+        .form-label i {
+            margin-right: 8px;
+            color: var(--secondary-color);
+        }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        background: white;
+        transition: var(--transition);
+    }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+    .action-section {
+        background: white;
+        padding: 30px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 24px;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+        min-width: 150px;
+        justify-content: center;
+    }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+    .btn-primary {
+        background: var(--danger-color);
+        color: white;
+    }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+    .btn-secondary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+        .btn-secondary:hover {
+            background: #1a252f;
+            transform: translateY(-1px);
+        }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+    .warning-notice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        background: #fff3cd;
+        color: #856404;
+        border-radius: var(--border-radius);
+        font-size: 0.9em;
+    }
+
+        .warning-notice i {
+            margin-right: 10px;
+            color: var(--warning-color);
+        }
+
+    .text-danger {
+        color: var(--danger-color) !important;
+    }
+
+    .validation-error {
+        color: var(--danger-color);
+        font-size: 0.9em;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+    }
+
+    .modal-header {
+        background: var(--light-gray);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-content h6 {
+        color: var(--primary-color);
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    .preview-content p {
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+</style>

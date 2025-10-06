@@ -1,0 +1,1207 @@
+﻿@model WebApplication1.ViewModels.CloturerAffaireViewModel
+@{
+    ViewBag.Title = "Cloture de l'affaire";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clôture des Affaires - Système de Scellé Judiciaire</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+            .stats-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+            .stats-card.total {
+                border-left-color: var(--info-color);
+            }
+
+            .stats-card.ready {
+                border-left-color: var(--success-color);
+            }
+
+            .stats-card.pending {
+                border-left-color: var(--warning-color);
+            }
+
+            .stats-card.blocked {
+                border-left-color: var(--danger-color);
+            }
+
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .affaire-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+            .affaire-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            padding: 1.5rem;
+        }
+
+        .affaire-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .affaire-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ouverte {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-enqueteactive {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .status-suspendue {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-resolue {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-nonresolue {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .priority-faible {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .priority-moyenne {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+
+        .priority-haute {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-urgente {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%
+
+        {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+
+        100% {
+            opacity: 1;
+        }
+
+        }
+
+        .progress-section {
+            margin: 1.5rem 0;
+        }
+
+        .progress-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+            .checklist-item.completed {
+                background: #e8f5e8;
+                border-left-color: var(--success-color);
+            }
+
+            .checklist-item.pending {
+                background: #fff3e0;
+                border-left-color: var(--warning-color);
+            }
+
+            .checklist-item.blocked {
+                background: #ffebee;
+                border-left-color: var(--danger-color);
+            }
+
+        .checklist-icon {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .checklist-text {
+            flex: 1;
+            margin: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .btn-custom {
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn-custom::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transition: left 0.5s;
+            }
+
+            .btn-custom:hover::before {
+                left: 100%;
+            }
+
+        .btn-close-affaire {
+            background: linear-gradient(135deg, var(--success-color) 0%, #157347 100%);
+            color: white;
+        }
+
+            .btn-close-affaire:hover {
+                background: linear-gradient(135deg, #157347 0%, var(--success-color) 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(25, 135, 84, 0.3);
+            }
+
+        .btn-preview {
+            background: linear-gradient(135deg, var(--info-color) 0%, #0baccc 100%);
+            color: white;
+        }
+
+            .btn-preview:hover {
+                background: linear-gradient(135deg, #0baccc 0%, var(--info-color) 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(13, 202, 240, 0.3);
+            }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+            .btn-cancel:hover {
+                background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+            }
+
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .filter-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
+            }
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .search-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 86, 179, 0.3);
+            }
+
+        .alert-custom {
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .confirmation-icon {
+            font-size: 4rem;
+            color: var(--warning-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        @@media (max-width: 768px) {
+            .affaire-meta
+
+        {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @@keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0%
+
+        {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement en cours...</p>
+        </div>
+    </div>
+
+    <!-- En-tête de la page -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="page-title">
+                        <i class="fas fa-gavel"></i> Clôture des Affaires
+                    </h1>
+                    <p class="page-subtitle">Gérez la finalisation et l'archivage des affaires terminées</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light btn-lg" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+    </div>
+    <!-- Filtres de recherche -->
+    @using (Html.BeginForm("CloturerAffaire", "Retour", FormMethod.Get))
+    {
+        <div class="filter-section fade-in">
+            <h3 class="filter-title">
+                <i class="fas fa-filter"></i> Filtres de Recherche
+            </h3>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Statut</label>
+                    @Html.DropDownList("statut", new SelectList(Enum.GetValues(typeof(WebApplication1.Models.StatutAffaire)).Cast<WebApplication1.Models.StatutAffaire>().Select(v => new SelectListItem
+                    {
+                        Text = v.ToString(),
+                                Value = v.ToString()
+                                }), "Value", "Text"), "Tous les statuts", new { @class = "form-select" })
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Priorité</label>
+                @Html.DropDownList("priorite", new SelectList(Enum.GetValues(typeof(WebApplication1.Models.Priorite)).Cast<WebApplication1.Models.Priorite>().Select(v => new SelectListItem
+                                {
+                        Text = v.ToString(),
+                                Value = v.ToString()
+                                }), "Value", "Text"), "Toutes les priorités", new { @class = "form-select" })
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Date d'ouverture</label>
+                @Html.TextBox("dateOuverture", "", new { @class = "form-control", @type = "date" })
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Recherche par titre/description</label>
+                @Html.TextBox("searchText", "", new { @class = "form-control", @placeholder = "Tapez votre recherche..." })
+            </div>
+            <div class="col-md-6 mb-3 d-flex align-items-end">
+                <button type="submit" class="btn search-btn w-100">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </div>
+        </div>
+    </div>
+        }
+
+    <!-- Liste des affaires -->
+    <div id="affairesList" class="fade-in">
+        @if (Model != null && Model.Affaires != null && Model.Affaires.Any())
+        {
+            foreach (var affaire in Model.Affaires)
+            {
+                // CORRECTION : Une affaire peut être clôturée si elle est ouverte/enquête active
+                bool peutEtreCloturee = affaire.Statut == WebApplication1.Models.StatutAffaire.Ouverte ||
+                affaire.Statut == WebApplication1.Models.StatutAffaire.EnqueteActive;
+
+                <div class="affaire-card" data-affaire-id="@affaire.Id">
+                    <div class="card-header-custom">
+                        <div class="affaire-title">
+                            <i class="fas fa-folder-open"></i> @(string.IsNullOrEmpty(affaire.NumeroAffaire) ? $"AFF-{affaire.Id:000}" : affaire.NumeroAffaire): @affaire.Titre
+                        </div>
+                        <div class="affaire-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Ouverture: @affaire.DateOuverture.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Enquêteur: @(string.IsNullOrEmpty(affaire.NomEnqueteur) ? "Non assigné" : affaire.NomEnqueteur)</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(affaire.Lieu))
+                            {
+                                <div class="meta-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Lieu: @affaire.Lieu</span>
+                                </div>
+                            }
+                            <div class="meta-item">
+                                <span class="status-badge status-@affaire.Statut.ToString().ToLower()">@affaire.Statut.ToString()</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="priority-badge priority-@affaire.Priorite.ToString().ToLower()">@affaire.Priorite.ToString()</span>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle"></i>
+                            @(string.IsNullOrEmpty(affaire.Description) ? "Aucune description disponible" : affaire.Description)
+                        </p>
+                    </div>
+                    <div class="card-body">
+
+                        @if (!peutEtreCloturee)
+                        {
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Attention :</strong> Cette affaire ne peut pas être clôturée dans son état actuel.
+                            </div>
+                        }
+                    </div>
+                    <div class="action-buttons">
+                        @if (peutEtreCloturee)
+                        {
+                            <button class="btn btn-custom btn-close-affaire" onclick="checkPrerequisAndShow(@affaire.Id)">
+                                <i class="fas fa-gavel"></i> Clôturer Définitivement
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-custom btn-close-affaire" disabled>
+                                <i class="fas fa-lock"></i> Clôture Non Disponible
+                            </button>
+                        }
+                        <button class="btn btn-custom btn-preview" onclick="previewClosure(@affaire.Id)">
+                            <i class="fas fa-eye"></i> Aperçu
+                        </button>
+                        <button class="btn btn-custom btn-cancel" onclick="viewDetails(@affaire.Id)">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-3x mb-3"></i>
+                <h4>Aucune affaire à clôturer</h4>
+                <p>Il n'y a actuellement aucune affaire prête à être clôturée selon les critères sélectionnés.</p>
+            </div>
+        }
+    </div>
+    </div>
+
+    <!-- Modal de Confirmation de Clôture - VERSION MODIFIÉE SANS VÉRIFICATIONS -->
+    <div class="modal fade" id="closeConfirmationModal" tabindex="-1" aria-labelledby="closeConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="closeConfirmationModalLabel">
+                        <i class="fas fa-gavel"></i> Confirmation de Clôture d'Affaire
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="confirmation-icon text-center">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold">Êtes-vous sûr de vouloir clôturer cette affaire ?</h4>
+                        <p class="text-muted">Cette action est irréversible et archivera définitivement l'affaire.</p>
+                    </div>
+
+                    <!-- Section des détails de l'affaire - maintenant sur toute la largeur -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-folder-open text-primary"></i> Affaire à Clôturer
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="card-text">
+                                                <strong>Titre :</strong> <span id="affaireTitre"></span><br>
+                                                <strong>Statut :</strong> <span id="affaireStatut"></span><br>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="card-text">
+                                                <strong>Date d'ouverture :</strong> <span id="affaireDateOuverture"></span><br>
+                                                <strong>Enquêteur :</strong> <span id="affaireEnqueteur"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="motifCloture" class="form-label fw-bold">
+                            <i class="fas fa-edit"></i> Motif de Clôture *
+                        </label>
+                        <select class="form-select" id="motifCloture" required>
+                            <option value="">Sélectionnez un motif...</option>
+                            <option value="resolue_condamnation">Affaire résolue - Condamnation</option>
+                            <option value="resolue_acquittement">Affaire résolue - Acquittement</option>
+                            <option value="resolue_classement">Affaire résolue - Classement sans suite</option>
+                            <option value="non_resolue_preuves">Non résolue - Preuves insuffisantes</option>
+                            <option value="non_resolue_prescription">Non résolue - Prescription</option>
+                            <option value="autre">Autre motif</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4" id="autreMotifDiv" style="display: none;">
+                        <label for="autreMotif" class="form-label fw-bold">
+                            <i class="fas fa-pen"></i> Précisez le motif
+                        </label>
+                        <textarea class="form-control" id="autreMotif" rows="3" placeholder="Veuillez préciser le motif de clôture..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="commentaireCloture" class="form-label fw-bold">
+                            <i class="fas fa-comment"></i> Commentaires de Clôture
+                        </label>
+                        <textarea class="form-control" id="commentaireCloture" rows="4" placeholder="Ajoutez des commentaires sur la clôture de cette affaire..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Information :</strong> Après la clôture, l'affaire sera archivée et ne pourra plus être modifiée. Tous les documents seront conservés selon la réglementation en vigueur.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="confirmClosure()">
+                        <i class="fas fa-gavel"></i> Confirmer la Clôture
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'Aperçu -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="previewModalLabel">
+                        <i class="fas fa-eye"></i> Aperçu de l'Affaire
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info-circle"></i> Informations Générales
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="previewGeneralInfo">
+                                        <!-- Contenu dynamique -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-4">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-vial"></i> Preuves et Analyses
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="previewProofInfo">
+                                        <!-- Contenu dynamique -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-tasks"></i> État de Progression
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="previewProgress">
+                                        <!-- Contenu dynamique -->
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Fermer
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="printPreview()">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Succès -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="successModalLabel">
+                        <i class="fas fa-check-circle"></i> Clôture Réussie
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4>Affaire Clôturée avec Succès !</h4>
+                    <p class="text-muted">L'affaire a été définitivement clôturée et archivée dans le système.</p>
+
+                    <div class="alert alert-success">
+                        <strong>Numéro de clôture :</strong> <span id="numeroReference"></span><br>
+                        <strong>Date de clôture :</strong> <span id="dateCloture"></span>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                        <i class="fas fa-check"></i> Continuer
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="generateCloseReport()">
+                        <i class="fas fa-file-pdf"></i> Générer Rapport
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentAffaireId = null;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function () {
+            // Gestion du motif "Autre"
+            document.getElementById('motifCloture').addEventListener('change', function () {
+                const autreMotifDiv = document.getElementById('autreMotifDiv');
+                if (this.value === 'autre') {
+                    autreMotifDiv.style.display = 'block';
+                } else {
+                    autreMotifDiv.style.display = 'none';
+                }
+            });
+
+            // Animation au chargement
+            setTimeout(function () {
+                document.querySelectorAll('.fade-in').forEach(function (element) {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                });
+            }, 100);
+        });
+
+        // Vérifier les prérequis et afficher la modal de confirmation
+        function checkPrerequisAndShow(affaireId) {
+            currentAffaireId = affaireId;
+
+            fetch('/Retour/VerifierPrerequisCloture?affaireId=' + affaireId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.peutEtreCloturee) {
+                            showCloseConfirmation(affaireId);
+                        } else {
+                            showNotification('warning', 'Cette affaire ne peut pas encore être clôturée. Veuillez vérifier les prérequis.');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showNotification('error', 'Erreur lors de la vérification des prérequis');
+                });
+        }
+
+        // Afficher la modal de confirmation de clôture - VERSION SIMPLIFIÉE SANS VÉRIFICATIONS
+        function showCloseConfirmation(affaireId) {
+            // Récupérer les détails de l'affaire depuis le DOM
+            const affaireCard = document.querySelector(`[data-affaire-id="${affaireId}"]`);
+            if (!affaireCard) return;
+
+            const titre = affaireCard.querySelector('.affaire-title').textContent.trim();
+            const metaItems = affaireCard.querySelectorAll('.meta-item span');
+
+            let dateOuverture = '', enqueteur = '', statut = '';
+            metaItems.forEach(item => {
+                const text = item.textContent;
+                if (text.includes('Ouverture:')) dateOuverture = text.replace('Ouverture: ', '');
+                if (text.includes('Enquêteur:')) enqueteur = text.replace('Enquêteur: ', '');
+            });
+
+            const statutBadge = affaireCard.querySelector('.status-badge');
+            if (statutBadge) statut = statutBadge.textContent;
+
+            // Remplir les détails dans la modal
+            document.getElementById('affaireTitre').textContent = titre;
+            document.getElementById('affaireStatut').textContent = statut;
+            document.getElementById('affaireDateOuverture').textContent = dateOuverture;
+            document.getElementById('affaireEnqueteur').textContent = enqueteur;
+
+            const modal = new bootstrap.Modal(document.getElementById('closeConfirmationModal'));
+            modal.show();
+        }
+
+        // Confirmer la clôture
+        function confirmClosure() {
+            const motif = document.getElementById('motifCloture').value;
+            const commentaire = document.getElementById('commentaireCloture').value;
+
+            if (!motif) {
+                alert('Veuillez sélectionner un motif de clôture.');
+                return;
+            }
+
+            if (motif === 'autre' && !document.getElementById('autreMotif').value.trim()) {
+                alert('Veuillez préciser le motif de clôture.');
+                return;
+            }
+
+            const finalMotif = motif === 'autre' ? document.getElementById('autreMotif').value : motif;
+
+            showLoading();
+
+            // Appel AJAX pour clôturer l'affaire
+            fetch('/Retour/ClotureDefinitive', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `affaireId=${currentAffaireId}&motifCloture=${encodeURIComponent(finalMotif)}&commentaireCloture=${encodeURIComponent(commentaire)}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+
+                    if (data.success) {
+                        // Fermer le modal de confirmation
+                        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('closeConfirmationModal'));
+                        confirmModal.hide();
+
+                        // Afficher le modal de succès
+                        document.getElementById('numeroReference').textContent = data.numeroReference;
+                        document.getElementById('dateCloture').textContent = data.dateCloture;
+
+                        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        successModal.show();
+
+                        // Masquer l'affaire de la liste
+                        const affaireCard = document.querySelector(`[data-affaire-id="${currentAffaireId}"]`);
+                        if (affaireCard) {
+                            affaireCard.style.transition = 'all 0.5s ease';
+                            affaireCard.style.opacity = '0';
+                            affaireCard.style.transform = 'translateX(-100%)';
+                            setTimeout(() => {
+                                affaireCard.remove();
+                                updateStats();
+                            }, 500);
+                        }
+
+                        // Réinitialiser le formulaire
+                        document.getElementById('motifCloture').value = '';
+                        document.getElementById('commentaireCloture').value = '';
+                        document.getElementById('autreMotif').value = '';
+                        document.getElementById('autreMotifDiv').style.display = 'none';
+                    } else {
+                        showNotification('error', data.message || 'Erreur lors de la clôture de l\'affaire');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Erreur:', error);
+                    showNotification('error', 'Erreur de communication avec le serveur');
+                });
+        }
+
+        // Aperçu de l'affaire
+        function previewClosure(affaireId) {
+            showLoading();
+
+            fetch('/Retour/GetAffaireDetails?affaireId=' + affaireId)
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+
+                    if (data.success) {
+                        const affaire = data.affaire;
+
+                        // Remplir les informations générales
+                        document.getElementById('previewGeneralInfo').innerHTML = `
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Titre :</strong> ${affaire.titre || 'Non spécifié'}</p>
+                                            <p><strong>Numéro :</strong> ${affaire.numeroAffaire || 'AFF-' + affaire.id.toString().padStart(3, '0')}</p>
+                                            <p><strong>Statut :</strong> <span class="badge bg-info">${affaire.statut}</span></p>
+                                            <p><strong>Priorité :</strong> <span class="badge bg-warning">${affaire.priorite}</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Date d'ouverture :</strong> ${affaire.dateOuverture}</p>
+                                            <p><strong>Enquêteur :</strong> ${affaire.enqueteur}</p>
+                                            <p><strong>Lieu :</strong> ${affaire.lieu || 'Non spécifié'}</p>
+                                            <p><strong>Peut être clôturée :</strong> <span class="badge ${data.peutEtreCloturee ? 'bg-success' : 'bg-danger'}">${data.peutEtreCloturee ? 'Oui' : 'Non'}</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <p><strong>Description :</strong></p>
+                                        <p class="text-muted">${affaire.description || 'Aucune description disponible'}</p>
+                                    </div>
+                                `;
+
+                        // Remplir les preuves et analyses
+                        let preuvesHtml = '<h6>Preuves collectées :</h6>';
+                        if (data.preuves && data.preuves.length > 0) {
+                            preuvesHtml += '<ul>';
+                            data.preuves.forEach(preuve => {
+                                preuvesHtml += `<li><i class="fas fa-vial text-primary me-2"></i>${preuve.description || 'Preuve #' + preuve.id} (${preuve.type || 'Type non spécifié'}) - <span class="badge bg-secondary">${preuve.statut}</span></li>`;
+                            });
+                            preuvesHtml += '</ul>';
+                        } else {
+                            preuvesHtml += '<p class="text-muted">Aucune preuve collectée</p>';
+                        }
+
+                        preuvesHtml += '<h6 class="mt-3">Analyses :</h6>';
+                        if (data.analyses && data.analyses.length > 0) {
+                            preuvesHtml += '<ul>';
+                            data.analyses.forEach(analyse => {
+                                preuvesHtml += `<li><i class="fas fa-microscope text-info me-2"></i>${analyse.type || 'Analyse #' + analyse.id} - <span class="badge bg-secondary">${analyse.statut}</span> (${analyse.dateCreation})</li>`;
+                            });
+                            preuvesHtml += '</ul>';
+                        } else {
+                            preuvesHtml += '<p class="text-muted">Aucune analyse disponible</p>';
+                        }
+
+                        document.getElementById('previewProofInfo').innerHTML = preuvesHtml;
+
+                        // Calculer le pourcentage de progression
+                        let progression = 25; // Base
+                        if (data.analyses && data.analyses.length > 0) {
+                            const analysesCompletes = data.analyses.filter(a => a.statut === 'Validee' || a.statut === 'Terminee').length;
+                            progression = Math.round((analysesCompletes / data.analyses.length) * 100);
+                        }
+
+                        // Remplir la progression
+                        const progressHtml = `
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: ${progression}%" aria-valuenow="${progression}" aria-valuemin="0" aria-valuemax="100">${progression}%</div>
+                                    </div>
+                                    <p class="small text-muted">État global de l'affaire</p>
+                                    <div class="mt-3">
+                                        <p><strong>Nombre de preuves :</strong> ${data.preuves ? data.preuves.length : 0}</p>
+                                        <p><strong>Nombre d'analyses :</strong> ${data.analyses ? data.analyses.length : 0}</p>
+                                        <p><strong>Statut :</strong> ${data.peutEtreCloturee ? 'Prête à clôturer' : 'Non prête à cloturer'}</p>
+                                    </div>
+                                `;
+                        document.getElementById('previewProgress').innerHTML = progressHtml;
+
+
+                        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                        modal.show();
+                    } else {
+                        showNotification('error', 'Impossible de récupérer les détails de l\'affaire');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Erreur:', error);
+                    showNotification('error', 'Erreur lors du chargement des détails');
+                });
+        }
+
+        // Voir les détails d'une affaire
+        function viewDetails(affaireId) {
+            showNotification('info', `Redirection vers les détails de l'affaire ${affaireId}...`);
+            // Vous pouvez rediriger vers une page de détails
+            // window.location.href = '/Affaires/Details/' + affaireId;
+        }
+
+        // Actualiser les données
+        function refreshData() {
+            showLoading();
+            setTimeout(function () {
+                location.reload();
+            }, 1000);
+        }
+
+        // Générer un rapport de clôture
+        function generateCloseReport() {
+            showNotification('info', 'Génération du rapport de clôture en cours...');
+            // Ici vous pouvez ajouter la logique pour générer un PDF ou un rapport
+            setTimeout(function () {
+                showNotification('success', 'Rapport de clôture généré avec succès');
+            }, 2000);
+        }
+
+        // Imprimer l'aperçu
+        function printPreview() {
+            window.print();
+        }
+
+        // Fonctions utilitaires
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showNotification(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' :
+                type === 'info' ? 'alert-info' :
+                    type === 'warning' ? 'alert-warning' : 'alert-danger';
+            const icon = type === 'success' ? 'fa-check-circle' :
+                type === 'info' ? 'fa-info-circle' :
+                    type === 'warning' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle';
+
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                        <i class="fas ${icon} me-2"></i>${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+            document.body.appendChild(notification);
+
+            // Auto-dismiss après 5 secondes
+            setTimeout(function () {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function updateStats() {
+            // Diminuer le nombre d'affaires prêtes
+            const readyElement = document.querySelector('.stats-card.ready .stat-number');
+            if (readyElement) {
+                const currentValue = parseInt(readyElement.textContent);
+                readyElement.textContent = Math.max(0, currentValue - 1);
+
+                // Animation
+                readyElement.style.transform = 'scale(1.2)';
+                readyElement.style.color = '#28a745';
+                setTimeout(function () {
+                    readyElement.style.transform = 'scale(1)';
+                    readyElement.style.color = '';
+                }, 300);
+            }
+        }
+
+        // Raccourcis clavier
+        document.addEventListener('keydown', function (e) {
+            // Échap pour fermer les modals
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const instance = bootstrap.Modal.getInstance(modal);
+                    if (instance) instance.hide();
+                });
+            }
+
+            // Ctrl+R pour actualiser
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+
+            // F3 pour recherche
+            if (e.key === 'F3') {
+                e.preventDefault();
+                const searchInput = document.querySelector('input[name="searchText"]');
+                if (searchInput) searchInput.focus();
+            }
+        });
+
+        // Animation des cartes au scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        document.querySelectorAll('.affaire-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>

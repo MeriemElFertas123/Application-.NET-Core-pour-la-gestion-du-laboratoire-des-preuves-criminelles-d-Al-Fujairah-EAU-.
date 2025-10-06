@@ -1,0 +1,2805 @@
+﻿@{
+    ViewBag.Title = "gestion des rapports";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Rapports - Système de Scellé Judiciaire</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .btn-sign {
+            background-color: #7b1fa2;
+            color: white;
+        }
+
+            .btn-sign:hover {
+                background-color: #9c27b0;
+            }
+
+        /* Styles pour la signature électronique */
+        .signature-steps {
+            margin-bottom: 2rem;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+            .step-indicator::before {
+                content: '';
+                position: absolute;
+                top: 20px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: #e9ecef;
+                z-index: 1;
+            }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-number {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .step-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .signature-step-content {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+            .signature-step-content.active {
+                display: block;
+            }
+
+        .verification-checklist .form-check {
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+            .verification-checklist .form-check:hover {
+                border-color: var(--primary-color);
+                background: rgba(0, 86, 179, 0.05);
+            }
+
+        .verification-checklist .form-check-input:checked + .form-check-label {
+            color: var(--success-color);
+        }
+
+        .auth-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .auth-method-card {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .auth-method-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+                transition: left 0.6s ease;
+            }
+
+            .auth-method-card:hover::before {
+                left: 100%;
+            }
+
+            .auth-method-card:hover {
+                border-color: var(--primary-color);
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+            .auth-method-card.selected {
+                border-color: var(--primary-color);
+                background: rgba(0, 86, 179, 0.05);
+                transform: scale(1.05);
+            }
+
+        .auth-method-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-method-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .auth-method-desc {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .signature-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 2rem;
+            background: #f8f9fa;
+        }
+
+        .signature-preview {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .signature-header {
+            text-align: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        .signer-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .signer-photo {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-right: 2rem;
+        }
+
+        .signer-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .signer-title {
+            font-size: 1rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .signer-credentials {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        .signature-metadata {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metadata-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .hash-display {
+            background: #e9ecef;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .signature-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .signature-seal {
+            display: flex;
+            align-items: center;
+            color: var(--primary-color);
+        }
+
+            .signature-seal i {
+                font-size: 2rem;
+                margin-right: 1rem;
+            }
+
+        .seal-text {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            line-height: 1.2;
+        }
+
+        .qr-code-signature {
+            text-align: center;
+        }
+
+        .qr-placeholder {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+
+        .signature-options .form-check {
+            padding: 0.75rem;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+            .signature-options .form-check:hover {
+                border-color: var(--primary-color);
+                background: rgba(0, 86, 179, 0.05);
+            }
+
+        .signature-verification {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .verification-code {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+            .verification-code code {
+                background: none;
+                color: var(--primary-color);
+                font-weight: bold;
+            }
+
+        /* Animations pour les notifications de signature */
+        .signature-success-animation {
+            animation: signatureSuccess 1s ease-in-out;
+        }
+
+        keyframes signatureSuccess {
+            0%
+
+        {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        }
+
+        /* Styles pour les formulaires d'auth */
+        .auth-form {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .biometric-scanner {
+            text-align: center;
+            padding: 2rem;
+            border: 2px dashed #28a745;
+            border-radius: 10px;
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+            .biometric-scanner.active {
+                border-color: #007bff;
+                background: rgba(0, 123, 255, 0.05);
+                animation: pulse 2s infinite;
+            }
+
+        .smartcard-reader {
+            text-align: center;
+            padding: 2rem;
+            border: 2px dashed #17a2b8;
+            border-radius: 10px;
+            background: rgba(23, 162, 184, 0.05);
+        }
+
+            .smartcard-reader.connected {
+                border-color: #28a745;
+                background: rgba(40, 167, 69, 0.05);
+            }
+
+        .certificate-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .certificate-valid {
+            color: #28a745;
+        }
+
+        .certificate-invalid {
+            color: #dc3545;
+        }
+
+        media (max-width: 768px) {
+            .auth-methods
+
+        {
+            grid-template-columns: 1fr;
+        }
+
+        .signer-info {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .signer-photo {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+
+        .signature-footer {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        }
+
+        :root {
+            --primary-color: #0056b3;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            --secondary-color: #6c757d;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            color: white;
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .page-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100px;
+                height: 100px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 50%;
+                transform: translate(20px, -20px);
+            }
+
+        .page-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .quick-actions {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,86,179,0.1);
+        }
+
+        .action-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .action-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+                transition: left 0.6s ease;
+            }
+
+            .action-card:hover::before {
+                left: 100%;
+            }
+
+            .action-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            }
+
+            .action-card.analysis {
+                border-color: var(--success-color);
+            }
+
+                .action-card.analysis:hover {
+                    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+                    border-color: var(--success-color);
+                }
+
+            .action-card.technical {
+                border-color: var(--info-color);
+            }
+
+                .action-card.technical:hover {
+                    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                    border-color: var(--info-color);
+                }
+
+            .action-card.expert {
+                border-color: var(--warning-color);
+            }
+
+                .action-card.expert:hover {
+                    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+                    border-color: var(--warning-color);
+                }
+
+            .action-card.custom {
+                border-color: var(--secondary-color);
+            }
+
+                .action-card.custom:hover {
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border-color: var(--secondary-color);
+                }
+
+        .action-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover .action-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .action-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .action-description {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .reports-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .reports-table {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .table {
+            margin: 0;
+        }
+
+            .table thead th {
+                background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+                color: white;
+                border: none;
+                font-weight: 600;
+                padding: 1.2rem;
+                font-size: 0.95rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .table tbody td {
+                padding: 1.2rem;
+                vertical-align: middle;
+                border-color: #f1f3f4;
+            }
+
+            .table tbody tr {
+                transition: all 0.3s ease;
+            }
+
+                .table tbody tr:hover {
+                    background-color: #f8f9fa;
+                    transform: scale(1.01);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                }
+
+        .status-badge {
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-draft {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-pending {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-validated {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-signed {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .status-archived {
+            background-color: #f5f5f5;
+            color: #616161;
+        }
+
+        .type-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .type-analysis {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .type-technical {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-expert {
+            background-color: #fff8e1;
+            color: #f57c00;
+        }
+
+        .priority-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .priority-low {
+            background-color: var(--success-color);
+        }
+
+        .priority-medium {
+            background-color: var(--warning-color);
+        }
+
+        .priority-high {
+            background-color: var(--danger-color);
+        }
+
+        .priority-urgent {
+            background-color: var(--danger-color);
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+        }
+
+        keyframes pulse {
+            0%
+
+        {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .btn-action {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn-action::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                background: rgba(255,255,255,0.3);
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+                transition: all 0.3s ease;
+            }
+
+            .btn-action:hover::before {
+                width: 100px;
+                height: 100px;
+            }
+
+        .btn-view {
+            background-color: var(--info-color);
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-download {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .filters-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.15);
+                transform: translateY(-1px);
+            }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);
+        }
+
+            .btn-primary-custom:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0, 86, 179, 0.4);
+            }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            color: white;
+            border: none;
+            padding: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-wizard {
+            position: relative;
+        }
+
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+            .wizard-steps::before {
+                content: '';
+                position: absolute;
+                top: 20px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: #e9ecef;
+                z-index: 1;
+            }
+
+        .wizard-step {
+            background: white;
+            border: 3px solid #e9ecef;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 2;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+            .wizard-step.active {
+                background: var(--primary-color);
+                border-color: var(--primary-color);
+                color: white;
+                transform: scale(1.2);
+            }
+
+            .wizard-step.completed {
+                background: var(--success-color);
+                border-color: var(--success-color);
+                color: white;
+            }
+
+        .step-label {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+            .step-content.active {
+                display: block;
+            }
+
+        keyframes fadeInUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            }
+
+            .stat-card.total {
+                border-left-color: var(--info-color);
+            }
+
+            .stat-card.draft {
+                border-left-color: var(--warning-color);
+            }
+
+            .stat-card.validated {
+                border-left-color: var(--success-color);
+            }
+
+            .stat-card.archived {
+                border-left-color: var(--secondary-color);
+            }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0041a3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        keyframes spin {
+            0%
+
+        {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease;
+        }
+
+        keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        media (max-width: 768px) {
+            .page-title
+
+        {
+            font-size: 2rem;
+        }
+
+        .action-card {
+            margin-bottom: 1rem;
+        }
+
+        .wizard-steps {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+            .wizard-steps::before {
+                display: none;
+            }
+
+        .table-responsive {
+            border-radius: 15px;
+        }
+
+        }
+
+        .report-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+        }
+
+            .report-preview:hover {
+                border-color: var(--primary-color);
+                background: rgba(0, 86, 179, 0.05);
+            }
+
+        .preview-icon {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .template-card {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .template-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 4px;
+                height: 100%;
+                background: var(--primary-color);
+                transform: translateX(-4px);
+                transition: transform 0.3s ease;
+            }
+
+            .template-card:hover::before,
+            .template-card.selected::before {
+                transform: translateX(0);
+            }
+
+            .template-card:hover,
+            .template-card.selected {
+                border-color: var(--primary-color);
+                background: rgba(0, 86, 179, 0.05);
+                transform: translateX(5px);
+            }
+
+        .template-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .template-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner"></div>
+            <p class="mt-3">Traitement en cours...</p>
+        </div>
+
+        <!-- Modal de Signature Électronique -->
+        <div class="modal fade" id="electronicSignatureModal" tabindex="-1" aria-labelledby="electronicSignatureModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-purple text-white" style="background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%);">
+                        <h5 class="modal-title" id="electronicSignatureModalLabel">
+                            <i class="fas fa-signature"></i> Signature Électronique du Rapport
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Informations du rapport à signer -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-file-alt text-primary me-2"></i>
+                                    Rapport à Signer
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Référence :</strong> <span id="signReportRef"></span></p>
+                                        <p><strong>Titre :</strong> <span id="signReportTitle"></span></p>
+                                        <p><strong>Type :</strong> <span id="signReportType"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Affaire :</strong> <span id="signReportCase"></span></p>
+                                        <p><strong>Date création :</strong> <span id="signReportDate"></span></p>
+                                        <p><strong>Statut :</strong> <span id="signReportStatus"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étapes de signature -->
+                        <div class="signature-steps mb-4">
+                            <div class="step-indicator">
+                                <div class="step active" data-step="verification">
+                                    <div class="step-number">1</div>
+                                    <div class="step-title">Vérification</div>
+                                </div>
+                                <div class="step" data-step="authentication">
+                                    <div class="step-number">2</div>
+                                    <div class="step-title">Authentification</div>
+                                </div>
+                                <div class="step" data-step="signature">
+                                    <div class="step-number">3</div>
+                                    <div class="step-title">Signature</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 1: Vérification du contenu -->
+                        <div class="signature-step-content active" id="stepVerification">
+                            <h6 class="mb-3">
+                                <i class="fas fa-check-double text-success me-2"></i>
+                                Vérification du Contenu
+                            </h6>
+
+                            <div class="verification-checklist">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="verifyContent" required>
+                                    <label class="form-check-label" for="verifyContent">
+                                        <strong>J'ai vérifié le contenu du rapport</strong><br>
+                                        <small class="text-muted">Le contenu est exact, complet et reflète fidèlement mes analyses</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="verifyMethodology" required>
+                                    <label class="form-check-label" for="verifyMethodology">
+                                        <strong>Les méthodologies utilisées sont conformes</strong><br>
+                                        <small class="text-muted">Les procédures suivies respectent les standards scientifiques</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="verifyConclusions" required>
+                                    <label class="form-check-label" for="verifyConclusions">
+                                        <strong>Les conclusions sont justifiées</strong><br>
+                                        <small class="text-muted">Les conclusions découlent logiquement des résultats obtenus</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="verifyResponsibility" required>
+                                    <label class="form-check-label" for="verifyResponsibility">
+                                        <strong>J'assume la responsabilité de ce rapport</strong><br>
+                                        <small class="text-muted">Je certifie l'authenticité et l'exactitude du contenu</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Information :</strong> Une fois signé, ce rapport ne pourra plus être modifié.
+                                Assurez-vous que tout le contenu est correct avant de procéder à la signature.
+                            </div>
+                        </div>
+
+                        <!-- Étape 2: Authentification -->
+                        <div class="signature-step-content" id="stepAuthentication">
+                            <h6 class="mb-3">
+                                <i class="fas fa-shield-alt text-warning me-2"></i>
+                                Authentification Sécurisée
+                            </h6>
+
+                            <!-- Méthodes d'authentification -->
+                            <div class="auth-methods mb-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="auth-method-card" onclick="selectAuthMethod('password')">
+                                            <div class="auth-method-icon">
+                                                <i class="fas fa-key text-primary"></i>
+                                            </div>
+                                            <div class="auth-method-title">Mot de Passe</div>
+                                            <div class="auth-method-desc">Authentification par mot de passe sécurisé</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="auth-method-card" onclick="selectAuthMethod('certificate')">
+                                            <div class="auth-method-icon">
+                                                <i class="fas fa-certificate text-success"></i>
+                                            </div>
+                                            <div class="auth-method-title">Certificat Numérique</div>
+                                            <div class="auth-method-desc">Certificat X.509 installé sur le poste</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="auth-method-card" onclick="selectAuthMethod('smartcard')">
+                                            <div class="auth-method-icon">
+                                                <i class="fas fa-id-card text-info"></i>
+                                            </div>
+                                            <div class="auth-method-title">Carte à Puce</div>
+                                            <div class="auth-method-desc">Carte d'identité électronique ou carte professionnelle</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="auth-method-card" onclick="selectAuthMethod('biometric')">
+                                            <div class="auth-method-icon">
+                                                <i class="fas fa-fingerprint text-danger"></i>
+                                            </div>
+                                            <div class="auth-method-title">Biométrie</div>
+                                            <div class="auth-method-desc">Empreinte digitale ou reconnaissance faciale</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Formulaire d'authentification dynamique -->
+                            <div id="authForm">
+                                <div class="alert alert-secondary text-center">
+                                    <i class="fas fa-hand-point-up me-2"></i>
+                                    Sélectionnez une méthode d'authentification ci-dessus
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 3: Signature -->
+                        <div class="signature-step-content" id="stepSignature">
+                            <h6 class="mb-3">
+                                <i class="fas fa-pen-fancy text-purple me-2"></i>
+                                Application de la Signature
+                            </h6>
+
+                            <!-- Zone de signature -->
+                            <div class="signature-zone mb-4">
+                                <div class="signature-preview">
+                                    <div class="signature-header">
+                                        <h6 class="mb-1">Signature Électronique</h6>
+                                        <small class="text-muted">Rapport signé numériquement</small>
+                                    </div>
+
+                                    <div class="signature-content">
+                                        <div class="signer-info">
+                                            <div class="signer-photo">
+                                                <i class="fas fa-user-circle"></i>
+                                            </div>
+                                            <div class="signer-details">
+                                                <div class="signer-name">Dr. Martin DUBOIS</div>
+                                                <div class="signer-title">Expert Judiciaire</div>
+                                                <div class="signer-credentials">
+                                                    Inscrit près la Cour d'Appel de Casablanca<br>
+                                                    N° Expert: EJ-2024-001
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="signature-metadata">
+                                            <div class="metadata-row">
+                                                <strong>Date de signature :</strong> <span id="signatureDate"></span>
+                                            </div>
+                                            <div class="metadata-row">
+                                                <strong>Lieu :</strong> Laboratoire Central - Casablanca
+                                            </div>
+                                            <div class="metadata-row">
+                                                <strong>Méthode :</strong> <span id="selectedAuthMethod">Non sélectionnée</span>
+                                            </div>
+                                            <div class="metadata-row">
+                                                <strong>Empreinte numérique :</strong>
+                                                <code class="hash-display">SHA256: A1B2C3D4E5F6...</code>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="signature-footer">
+                                        <div class="signature-seal">
+                                            <i class="fas fa-stamp"></i>
+                                            <div class="seal-text">
+                                                <div>SCEAU ÉLECTRONIQUE</div>
+                                                <div>LABORATOIRE JUDICIAIRE</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="qr-code-signature">
+                                            <div class="qr-placeholder">
+                                                <i class="fas fa-qrcode"></i>
+                                            </div>
+                                            <small>Code QR de vérification</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Options de signature -->
+                            <div class="signature-options mb-3">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="timestampSignature" checked>
+                                    <label class="form-check-label" for="timestampSignature">
+                                        <strong>Horodatage sécurisé</strong><br>
+                                        <small class="text-muted">Ajouter un timestamp cryptographique certifié</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="blockchainSignature">
+                                    <label class="form-check-label" for="blockchainSignature">
+                                        <strong>Ancrage blockchain</strong><br>
+                                        <small class="text-muted">Enregistrer l'empreinte dans une blockchain pour preuve d'antériorité</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notifyParties" checked>
+                                    <label class="form-check-label" for="notifyParties">
+                                        <strong>Notification automatique</strong><br>
+                                        <small class="text-muted">Notifier les parties concernées de la signature du rapport</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-success">
+                                <i class="fas fa-shield-check me-2"></i>
+                                <strong>Sécurité :</strong> Cette signature électronique respecte les standards
+                                eIDAS et a la même valeur légale qu'une signature manuscrite.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="previousSignatureStep()" id="prevSignBtn" style="display: none;">
+                            <i class="fas fa-arrow-left"></i> Précédent
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextSignatureStep()" id="nextSignBtn">
+                            Suivant <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="finalizeSignature()" id="signBtn" style="display: none;">
+                            <i class="fas fa-signature"></i> Signer le Rapport
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmation de Signature -->
+        <div class="modal fade" id="signatureSuccessModal" tabindex="-1" aria-labelledby="signatureSuccessModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="signatureSuccessModalLabel">
+                            <i class="fas fa-check-circle"></i> Signature Réussie
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-certificate text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4>Rapport Signé avec Succès !</h4>
+                        <p class="text-muted">Le rapport a été signé électroniquement et est maintenant authentifié.</p>
+
+                        <div class="alert alert-success">
+                            <div class="row text-start">
+                                <div class="col-6">
+                                    <strong>Référence :</strong> <span id="successReportRef"></span><br>
+                                    <strong>Signataire :</strong> Dr. Martin DUBOIS<br>
+                                    <strong>Date :</strong> <span id="successSignDate"></span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Méthode :</strong> <span id="successAuthMethod"></span><br>
+                                    <strong>Certificat :</strong> Valide<br>
+                                    <strong>Horodatage :</strong> Certifié
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="signature-verification mt-3">
+                            <h6>Vérification de Signature</h6>
+                            <div class="verification-code">
+                                <code>Verification Code: SIG-2024-<span id="verificationCode"></span></code>
+                            </div>
+                            <small class="text-muted">
+                                Ce code permet de vérifier l'authenticité de la signature sur le portail de vérification
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                            <i class="fas fa-check"></i> Continuer
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="downloadSignedReport()">
+                            <i class="fas fa-file-pdf"></i> Télécharger Rapport Signé
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="viewSignatureDetails()">
+                            <i class="fas fa-info-circle"></i> Détails Signature
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- En-tête de la page -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="page-title">
+                        <i class="fas fa-file-alt"></i> Gestion des Rapports
+                    </h1>
+                    <p class="page-subtitle">Créez, gérez et archivez vos rapports d'expertise scientifique</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light btn-lg" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistiques -->
+        <div class="stats-grid fade-in">
+            <div class="stat-card total">
+                <div class="stat-number">245</div>
+                <div class="stat-label">Total Rapports</div>
+            </div>
+            <div class="stat-card draft">
+                <div class="stat-number">23</div>
+                <div class="stat-label">Brouillons</div>
+            </div>
+            <div class="stat-card validated">
+                <div class="stat-number">198</div>
+                <div class="stat-label">Validés</div>
+            </div>
+            <div class="stat-card archived">
+                <div class="stat-number">24</div>
+                <div class="stat-label">Archivés</div>
+            </div>
+        </div>
+
+        <!-- Actions Rapides -->
+        <div class="quick-actions fade-in">
+            <h3 class="section-title">
+                <i class="fas fa-rocket"></i> Créer un Nouveau Rapport
+            </h3>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="action-card analysis" onclick="startReportWizard('analysis')">
+                        <i class="fas fa-microscope action-icon text-success"></i>
+                        <h5 class="action-title">Rapport d'Analyse</h5>
+                        <p class="action-description">Rapport détaillé des analyses scientifiques et techniques effectuées</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="action-card technical" onclick="startReportWizard('technical')">
+                        <i class="fas fa-cogs action-icon text-info"></i>
+                        <h5 class="action-title">Rapport Technique</h5>
+                        <p class="action-description">Documentation technique des procédures et méthodes utilisées</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="action-card expert" onclick="startReportWizard('expert')">
+                        <i class="fas fa-user-graduate action-icon text-warning"></i>
+                        <h5 class="action-title">Rapport d'Expertise</h5>
+                        <p class="action-description">Rapport d'expert judiciaire avec conclusions et recommandations</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="action-card custom" onclick="startReportWizard('custom')">
+                        <i class="fas fa-edit action-icon text-secondary"></i>
+                        <h5 class="action-title">Rapport Personnalisé</h5>
+                        <p class="action-description">Créez un rapport sur mesure selon vos besoins spécifiques</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-section fade-in">
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Type de Rapport</label>
+                    <select class="form-select" id="filterType">
+                        <option value="">Tous les types</option>
+                        <option value="analysis">Rapport d'Analyse</option>
+                        <option value="technical">Rapport Technique</option>
+                        <option value="expert">Rapport d'Expertise</option>
+                        <option value="custom">Personnalisé</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Statut</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">Tous les statuts</option>
+                        <option value="draft">Brouillon</option>
+                        <option value="pending">En attente</option>
+                        <option value="validated">Validé</option>
+                        <option value="signed">Signé</option>
+                        <option value="archived">Archivé</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Période</label>
+                    <select class="form-select" id="filterPeriod">
+                        <option value="">Toutes les périodes</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="quarter">Ce trimestre</option>
+                        <option value="year">Cette année</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <button type="button" class="btn btn-primary-custom w-100" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des Rapports -->
+        <div class="reports-section fade-in">
+            <h3 class="section-title">
+                <i class="fas fa-list"></i> Mes Rapports
+            </h3>
+            <div class="table-responsive reports-table">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Type</th>
+                            <th>Affaire</th>
+                            <th>Date Création</th>
+                            <th>Statut</th>
+                            <th>Priorité</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong>RAP-2024-001</strong><br>
+                                <small class="text-muted">Analyse ADN - Séquençage</small>
+                            </td>
+                            <td>
+                                <span class="type-badge type-analysis">
+                                    <i class="fas fa-microscope"></i> Analyse
+                                </span>
+                            </td>
+                            <td>
+                                <strong>AFF-2024-001</strong><br>
+                                <small class="text-muted">Fraude documentaire</small>
+                            </td>
+                            <td>15/01/2024</td>
+                            <td>
+                                <span class="status-badge status-validated">
+                                    <i class="fas fa-check-circle"></i> Validé
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-high"></span>
+                                Haute
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" onclick="viewReport('RAP-2024-001')" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-edit" onclick="editReport('RAP-2024-001')" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="downloadReport('RAP-2024-001')" title="Télécharger">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-sign" onclick="signReport('RAP-2024-001')" title="Signer électroniquement" style="background-color: #7b1fa2; color: white;">
+                                        <i class="fas fa-signature"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>RAP-2024-015</strong><br>
+                                <small class="text-muted">Expertise Technique</small>
+                            </td>
+                            <td>
+                                <span class="type-badge type-technical">
+                                    <i class="fas fa-cogs"></i> Technique
+                                </span>
+                            </td>
+                            <td>
+                                <strong>AFF-2024-008</strong><br>
+                                <small class="text-muted">Contrefaçon médicaments</small>
+                            </td>
+                            <td>22/02/2024</td>
+                            <td>
+                                <span class="status-badge status-pending">
+                                    <i class="fas fa-clock"></i> En attente
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-urgent"></span>
+                                Urgente
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" onclick="viewReport('RAP-2024-015')" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-edit" onclick="editReport('RAP-2024-015')" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="downloadReport('RAP-2024-015')" title="Télécharger">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action btn-sign" onclick="signReport('RAP-2024-015')" title="Signer électroniquement" style="background-color: #7b1fa2; color: white;">
+                                        <i class="fas fa-signature"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>RAP-2024-032</strong><br>
+                                <small class="text-muted">Expertise Judiciaire</small>
+                            </td>
+                            <td>
+                                <span class="type-badge type-expert">
+                                    <i class="fas fa-user-graduate"></i> Expertise
+                                </span>
+                            </td>
+                            <td>
+                                <strong>AFF-2024-023</strong><br>
+                                <small class="text-muted">Vol données personnelles</small>
+                            </td>
+                            <td>05/03/2024</td>
+                            <td>
+                                <span class="status-badge status-signed">
+                                    <i class="fas fa-stamp"></i> Signé
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-medium"></span>
+                                Moyenne
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" onclick="viewReport('RAP-2024-032')" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="downloadReport('RAP-2024-032')" title="Télécharger">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>RAP-2024-047</strong><br>
+                                <small class="text-muted">Brouillon - Analyse toxicologique</small>
+                            </td>
+                            <td>
+                                <span class="type-badge type-analysis">
+                                    <i class="fas fa-microscope"></i> Analyse
+                                </span>
+                            </td>
+                            <td>
+                                <strong>AFF-2024-035</strong><br>
+                                <small class="text-muted">Empoisonnement suspect</small>
+                            </td>
+                            <td>12/03/2024</td>
+                            <td>
+                                <span class="status-badge status-draft">
+                                    <i class="fas fa-edit"></i> Brouillon
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-high"></span>
+                                Haute
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" onclick="viewReport('RAP-2024-047')" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-edit" onclick="editReport('RAP-2024-047')" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="deleteReport('RAP-2024-047')" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>RAP-2024-053</strong><br>
+                                <small class="text-muted">Rapport complet - Balistique</small>
+                            </td>
+                            <td>
+                                <span class="type-badge type-expert">
+                                    <i class="fas fa-user-graduate"></i> Expertise
+                                </span>
+                            </td>
+                            <td>
+                                <strong>AFF-2024-041</strong><br>
+                                <small class="text-muted">Homicide par arme à feu</small>
+                            </td>
+                            <td>18/03/2024</td>
+                            <td>
+                                <span class="status-badge status-archived">
+                                    <i class="fas fa-archive"></i> Archivé
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge priority-low"></span>
+                                Faible
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" onclick="viewReport('RAP-2024-053')" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-download" onclick="downloadReport('RAP-2024-053')" title="Télécharger">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Navigation des pages" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Précédent</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal Assistant de Création de Rapport -->
+    <div class="modal fade" id="reportWizardModal" tabindex="-1" aria-labelledby="reportWizardModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportWizardModalLabel">
+                        <i class="fas fa-magic"></i> Assistant de Création de Rapport
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-wizard">
+                        <!-- Étapes du Wizard -->
+                        <div class="wizard-steps">
+                            <div class="wizard-step active" data-step="1">
+                                1
+                                <span class="step-label">Type & Modèle</span>
+                            </div>
+                            <div class="wizard-step" data-step="2">
+                                2
+                                <span class="step-label">Informations</span>
+                            </div>
+                            <div class="wizard-step" data-step="3">
+                                3
+                                <span class="step-label">Contenu</span>
+                            </div>
+                            <div class="wizard-step" data-step="4">
+                                4
+                                <span class="step-label">Aperçu</span>
+                            </div>
+                        </div>
+
+                        <!-- Étape 1: Sélection du type et modèle -->
+                        <div class="step-content active" id="step1">
+                            <h4 class="mb-4">
+                                <i class="fas fa-list"></i> Choisissez le Type de Rapport
+                            </h4>
+                            <div class="template-selector" id="templateSelector">
+                                <div class="template-card" data-type="analysis">
+                                    <div class="template-title">
+                                        <i class="fas fa-microscope text-success me-2"></i>
+                                        Rapport d'Analyse
+                                    </div>
+                                    <div class="template-description">
+                                        Rapport détaillé des analyses scientifiques avec méthodologie, résultats et conclusions.
+                                    </div>
+                                </div>
+                                <div class="template-card" data-type="technical">
+                                    <div class="template-title">
+                                        <i class="fas fa-cogs text-info me-2"></i>
+                                        Rapport Technique
+                                    </div>
+                                    <div class="template-description">
+                                        Documentation technique des procédures, équipements et méthodes utilisées.
+                                    </div>
+                                </div>
+                                <div class="template-card" data-type="expert">
+                                    <div class="template-title">
+                                        <i class="fas fa-user-graduate text-warning me-2"></i>
+                                        Rapport d'Expertise
+                                    </div>
+                                    <div class="template-description">
+                                        Rapport d'expert judiciaire avec conclusions définitives et recommandations.
+                                    </div>
+                                </div>
+                                <div class="template-card" data-type="custom">
+                                    <div class="template-title">
+                                        <i class="fas fa-edit text-secondary me-2"></i>
+                                        Rapport Personnalisé
+                                    </div>
+                                    <div class="template-description">
+                                        Créez un rapport sur mesure selon vos besoins spécifiques et contraintes.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 2: Informations générales -->
+                        <div class="step-content" id="step2">
+                            <h4 class="mb-4">
+                                <i class="fas fa-info-circle"></i> Informations Générales
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Titre du Rapport *</label>
+                                    <input type="text" class="form-control" id="reportTitle" placeholder="Saisissez le titre..." required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Affaire Associée *</label>
+                                    <select class="form-select" id="associatedCase" required>
+                                        <option value="">Sélectionnez une affaire...</option>
+                                        <option value="AFF-2024-001">AFF-2024-001 - Fraude documentaire</option>
+                                        <option value="AFF-2024-008">AFF-2024-008 - Contrefaçon médicaments</option>
+                                        <option value="AFF-2024-023">AFF-2024-023 - Vol données personnelles</option>
+                                        <option value="AFF-2024-035">AFF-2024-035 - Empoisonnement suspect</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Priorité</label>
+                                    <select class="form-select" id="reportPriority">
+                                        <option value="low">Faible</option>
+                                        <option value="medium" selected>Moyenne</option>
+                                        <option value="high">Haute</option>
+                                        <option value="urgent">Urgente</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Date Limite</label>
+                                    <input type="date" class="form-control" id="reportDeadline">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Langue</label>
+                                    <select class="form-select" id="reportLanguage">
+                                        <option value="fr" selected>Français</option>
+                                        <option value="ar">العربية</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold">Description/Objectif</label>
+                                    <textarea class="form-control" id="reportDescription" rows="4" placeholder="Décrivez l'objectif et le contexte du rapport..."></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Demandeur</label>
+                                    <input type="text" class="form-control" id="reportRequester" placeholder="Nom du demandeur...">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Référence Externe</label>
+                                    <input type="text" class="form-control" id="externalReference" placeholder="Numéro de procédure, etc...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 3: Contenu et structure -->
+                        <div class="step-content" id="step3">
+                            <h4 class="mb-4">
+                                <i class="fas fa-edit"></i> Contenu et Structure
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Sections à Inclure</label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionIntroduction" checked>
+                                                    <label class="form-check-label" for="sectionIntroduction">
+                                                        Introduction
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionMethodology" checked>
+                                                    <label class="form-check-label" for="sectionMethodology">
+                                                        Méthodologie
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionResults" checked>
+                                                    <label class="form-check-label" for="sectionResults">
+                                                        Résultats
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionAnalysis" checked>
+                                                    <label class="form-check-label" for="sectionAnalysis">
+                                                        Analyse et Discussion
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionConclusions" checked>
+                                                    <label class="form-check-label" for="sectionConclusions">
+                                                        Conclusions
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionRecommendations">
+                                                    <label class="form-check-label" for="sectionRecommendations">
+                                                        Recommandations
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionAnnexes" checked>
+                                                    <label class="form-check-label" for="sectionAnnexes">
+                                                        Annexes
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="sectionBibliography">
+                                                    <label class="form-check-label" for="sectionBibliography">
+                                                        Bibliographie
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Échantillons/Preuves à Inclure</label>
+                                        <select class="form-select" id="includedSamples" multiple size="4">
+                                            <option value="ECH-001">ECH-001 - Contrat falsifié</option>
+                                            <option value="ECH-002">ECH-002 - Signature suspecte</option>
+                                            <option value="ECH-003">ECH-003 - Documents comptables</option>
+                                            <option value="ECH-015">ECH-015 - Comprimés suspects</option>
+                                            <option value="ECH-016">ECH-016 - Emballages contrefaits</option>
+                                        </select>
+                                        <small class="form-text text-muted">Maintenez Ctrl pour sélectionner plusieurs éléments</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Analyses à Référencer</label>
+                                        <select class="form-select" id="includedAnalyses" multiple size="3">
+                                            <option value="ANA-001">ANA-001 - Analyse graphologique</option>
+                                            <option value="ANA-002">ANA-002 - Analyse chimique papier</option>
+                                            <option value="ANA-003">ANA-003 - Analyse spectroscopique</option>
+                                            <option value="ANA-015">ANA-015 - Analyse toxicologique</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-lightbulb"></i> Options Avancées
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="includeImages" checked>
+                                                <label class="form-check-label" for="includeImages">
+                                                    Inclure images/photos
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="includeCharts">
+                                                <label class="form-check-label" for="includeCharts">
+                                                    Générer graphiques
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="includeQRCode" checked>
+                                                <label class="form-check-label" for="includeQRCode">
+                                                    Code QR de traçabilité
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="digitalSignature" checked>
+                                                <label class="form-check-label" for="digitalSignature">
+                                                    Signature numérique
+                                                </label>
+                                            </div>
+
+                                            <hr>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Format de Sortie</label>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="outputFormat" id="formatPDF" value="pdf" checked>
+                                                    <label class="form-check-label" for="formatPDF">
+                                                        PDF
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="outputFormat" id="formatWord" value="docx">
+                                                    <label class="form-check-label" for="formatWord">
+                                                        Word (DOCX)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 4: Aperçu et validation -->
+                        <div class="step-content" id="step4">
+                            <h4 class="mb-4">
+                                <i class="fas fa-eye"></i> Aperçu du Rapport
+                            </h4>
+                            <div class="report-preview" id="reportPreview">
+                                <div class="preview-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <h5>Aperçu du Rapport</h5>
+                                <p class="text-muted">L'aperçu du rapport sera généré ici en fonction de vos sélections</p>
+                                <button class="btn btn-outline-primary" onclick="generatePreview()">
+                                    <i class="fas fa-refresh"></i> Générer l'Aperçu
+                                </button>
+                            </div>
+
+                            <div id="previewContent" style="display: none;">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0" id="previewTitle">Titre du Rapport</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Affaire :</strong> <span id="previewCase"></span></p>
+                                                <p><strong>Type :</strong> <span id="previewType"></span></p>
+                                                <p><strong>Priorité :</strong> <span id="previewPriority"></span></p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Date limite :</strong> <span id="previewDeadline"></span></p>
+                                                <p><strong>Demandeur :</strong> <span id="previewRequester"></span></p>
+                                                <p><strong>Langue :</strong> <span id="previewLanguage"></span></p>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <p><strong>Description :</strong></p>
+                                        <p class="text-muted" id="previewDescription"></p>
+
+                                        <hr>
+
+                                        <h6>Sections incluses :</h6>
+                                        <ul id="previewSections" class="list-unstyled"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">
+                        <i class="fas fa-arrow-left"></i> Précédent
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep()" id="nextBtn">
+                        Suivant <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="createReport()" id="createBtn" style="display: none;">
+                        <i class="fas fa-plus"></i> Créer le Rapport
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Visualisation -->
+    <div class="modal fade" id="viewReportModal" tabindex="-1" aria-labelledby="viewReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewReportModalLabel">
+                        <i class="fas fa-file-alt"></i> Visualisation du Rapport
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reportViewer">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <p class="mt-2">Chargement du rapport...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="printReport()">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="downloadCurrentReport()">
+                        <i class="fas fa-download"></i> Télécharger
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmation de Suppression -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">
+                        <i class="fas fa-exclamation-triangle"></i> Confirmation de Suppression
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-trash-alt text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h5 class="text-center">Êtes-vous sûr de vouloir supprimer ce rapport ?</h5>
+                    <p class="text-center text-muted">Cette action est irréversible. Le rapport sera définitivement supprimé du système.</p>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Attention :</strong> La suppression d'un rapport validé ou signé peut avoir des conséquences légales.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i> Supprimer Définitivement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedReportType = null;
+        let reportToDelete = null;
+
+        // Données fictives
+        const reportsData = {
+            'RAP-2024-001': {
+                title: 'Analyse ADN - Séquençage',
+                type: 'analysis',
+                case: 'AFF-2024-001',
+                status: 'validated',
+                created: '15/01/2024',
+                priority: 'high'
+            },
+            'RAP-2024-015': {
+                title: 'Expertise Technique',
+                type: 'technical',
+                case: 'AFF-2024-008',
+                status: 'pending',
+                created: '22/02/2024',
+                priority: 'urgent'
+            },
+            'RAP-2024-032': {
+                title: 'Expertise Judiciaire',
+                type: 'expert',
+                case: 'AFF-2024-023',
+                status: 'signed',
+                created: '05/03/2024',
+                priority: 'medium'
+            }
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function () {
+            // Animation des éléments au chargement
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach(element => {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                });
+            }, 100);
+
+            // Gestion des sélecteurs de template
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.addEventListener('click', function () {
+                    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedReportType = this.dataset.type;
+                });
+            });
+        });
+
+        // Fonctions du Wizard
+        function startReportWizard(type = null) {
+            if (type) {
+                selectedReportType = type;
+                document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('reportWizardModal'));
+            modal.show();
+
+            // Reset wizard
+            currentStep = 1;
+            updateWizardStep();
+        }
+
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < 4) {
+                    currentStep++;
+                    updateWizardStep();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizardStep();
+            }
+        }
+
+        function updateWizardStep() {
+            // Mise à jour des indicateurs d'étape
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Mise à jour du contenu
+            document.querySelectorAll('.step-content').forEach((content, index) => {
+                content.classList.remove('active');
+                if (index + 1 === currentStep) {
+                    content.classList.add('active');
+                }
+            });
+
+            // Mise à jour des boutons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const createBtn = document.getElementById('createBtn');
+
+            prevBtn.style.display = currentStep > 1 ? 'inline-block' : 'none';
+            nextBtn.style.display = currentStep < 4 ? 'inline-block' : 'none';
+            createBtn.style.display = currentStep === 4 ? 'inline-block' : 'none';
+        }
+
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1:
+                    if (!selectedReportType) {
+                        showNotification('warning', 'Veuillez sélectionner un type de rapport.');
+                        return false;
+                    }
+                    return true;
+
+                case 2:
+                    const title = document.getElementById('reportTitle').value.trim();
+                    const associatedCase = document.getElementById('associatedCase').value;
+
+                    if (!title) {
+                        showNotification('warning', 'Le titre du rapport est requis.');
+                        document.getElementById('reportTitle').focus();
+                        return false;
+                    }
+
+                    if (!associatedCase) {
+                        showNotification('warning', 'Veuillez sélectionner une affaire associée.');
+                        document.getElementById('associatedCase').focus();
+                        return false;
+                    }
+                    return true;
+
+                case 3:
+                    return true; // Pas de validation obligatoire pour l'étape 3
+
+                case 4:
+                    return true;
+
+                default:
+                    return true;
+            }
+        }
+
+        function generatePreview() {
+            showLoading();
+
+            setTimeout(() => {
+                hideLoading();
+
+                // Collecter les données du formulaire
+                const title = document.getElementById('reportTitle').value || 'Sans titre';
+                const associatedCase = document.getElementById('associatedCase').value || 'Non spécifiée';
+                const priority = document.getElementById('reportPriority').value;
+                const deadline = document.getElementById('reportDeadline').value || 'Non définie';
+                const requester = document.getElementById('reportRequester').value || 'Non spécifié';
+                const language = document.getElementById('reportLanguage').value;
+                const description = document.getElementById('reportDescription').value || 'Aucune description';
+
+                // Remplir l'aperçu
+                document.getElementById('previewTitle').textContent = title;
+                document.getElementById('previewCase').textContent = associatedCase;
+                document.getElementById('previewType').textContent = getReportTypeName(selectedReportType);
+                document.getElementById('previewPriority').textContent = getPriorityName(priority);
+                document.getElementById('previewDeadline').textContent = deadline;
+                document.getElementById('previewRequester').textContent = requester;
+                document.getElementById('previewLanguage').textContent = getLanguageName(language);
+                document.getElementById('previewDescription').textContent = description;
+
+                // Sections incluses
+                const sections = [];
+                document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                    const label = checkbox.nextElementSibling.textContent.trim();
+                    if (checkbox.id.startsWith('section')) {
+                        sections.push(`<li><i class="fas fa-check text-success me-2"></i>${label}</li>`);
+                    }
+                });
+                document.getElementById('previewSections').innerHTML = sections.join('');
+
+                // Afficher l'aperçu
+                document.getElementById('reportPreview').style.display = 'none';
+                document.getElementById('previewContent').style.display = 'block';
+
+                showNotification('success', 'Aperçu généré avec succès');
+            }, 1500);
+        }
+
+        function createReport() {
+            showLoading();
+
+            setTimeout(() => {
+                hideLoading();
+
+                // Générer un numéro de rapport
+                const reportNumber = 'RAP-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+
+                showNotification('success', `Rapport ${reportNumber} créé avec succès !`);
+
+                // Fermer le modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('reportWizardModal'));
+                modal.hide();
+
+                // Réinitialiser le formulaire
+                resetWizard();
+
+                // Simuler l'ajout dans la liste (optionnel)
+                setTimeout(() => {
+                    showNotification('info', 'Redirection vers l\'éditeur de rapport...');
+                }, 1000);
+
+            }, 2000);
+        }
+
+        function resetWizard() {
+            currentStep = 1;
+            selectedReportType = null;
+            document.querySelectorAll('.template-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById('reportWizardModal').querySelectorAll('input, select, textarea').forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.checked = false;
+                } else {
+                    input.value = '';
+                }
+            });
+            // Réinitialiser les valeurs par défaut
+            document.getElementById('reportPriority').value = 'medium';
+            document.getElementById('reportLanguage').value = 'fr';
+            document.querySelectorAll('#sectionIntroduction, #sectionMethodology, #sectionResults, #sectionAnalysis, #sectionConclusions, #sectionAnnexes, #includeImages, #includeQRCode, #digitalSignature, #formatPDF').forEach(input => {
+                input.checked = true;
+            });
+            updateWizardStep();
+        }
+
+        // Fonctions de gestion des rapports
+        function viewReport(reportId) {
+            showLoading();
+
+            setTimeout(() => {
+                hideLoading();
+
+                // Simuler le chargement du contenu
+                const reportData = reportsData[reportId];
+                if (reportData) {
+                    document.getElementById('viewReportModalLabel').innerHTML = `
+                                <i class="fas fa-file-alt"></i> ${reportData.title} - ${reportId}
+                            `;
+
+                    document.getElementById('reportViewer').innerHTML = `
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">${reportData.title}</h5>
+                                        <small>${reportId} - ${reportData.case}</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <p><strong>Type :</strong> ${getReportTypeName(reportData.type)}</p>
+                                                <p><strong>Statut :</strong> ${getStatusName(reportData.status)}</p>
+                                                <p><strong>Priorité :</strong> ${getPriorityName(reportData.priority)}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Créé le :</strong> ${reportData.created}</p>
+                                                <p><strong>Affaire :</strong> ${reportData.case}</p>
+                                                <p><strong>Auteur :</strong> Dr. Martin Dubois</p>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <h6><i class="fas fa-list-ul me-2"></i>Table des Matières</h6>
+                                        <ol class="mb-4">
+                                            <li>Introduction</li>
+                                            <li>Méthodologie</li>
+                                            <li>Résultats d'analyse</li>
+                                            <li>Discussion et interprétation</li>
+                                            <li>Conclusions</li>
+                                            <li>Annexes</li>
+                                        </ol>
+
+                                        <h6><i class="fas fa-file-alt me-2"></i>Résumé Exécutif</h6>
+                                        <p class="text-muted">
+                                            Ce rapport présente les résultats des analyses effectuées sur les échantillons
+                                            collectés dans le cadre de l'affaire ${reportData.case}. Les analyses ont été
+                                            menées selon les protocoles standards et les conclusions sont basées sur des
+                                            méthodes scientifiquement validées.
+                                        </p>
+
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Note :</strong> Ceci est un aperçu simplifié. Le rapport complet contient
+                                            tous les détails techniques, graphiques et annexes nécessaires.
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+
+                    const modal = new bootstrap.Modal(document.getElementById('viewReportModal'));
+                    modal.show();
+                }
+            }, 1000);
+        }
+
+        function editReport(reportId) {
+            showNotification('info', `Ouverture de l'éditeur pour le rapport ${reportId}...`);
+            // Simuler la redirection vers l'éditeur
+        }
+
+        function downloadReport(reportId) {
+            showLoading();
+
+            setTimeout(() => {
+                hideLoading();
+                showNotification('success', `Téléchargement du rapport ${reportId} démarré`);
+
+                // Simuler le téléchargement
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = `${reportId}_rapport.pdf`;
+                link.click();
+            }, 1500);
+        }
+
+        function deleteReport(reportId) {
+            reportToDelete = reportId;
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+
+        function confirmDelete() {
+            if (reportToDelete) {
+                showLoading();
+
+                setTimeout(() => {
+                    hideLoading();
+
+                    // Supprimer la ligne du tableau
+                    const rows = document.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        if (row.textContent.includes(reportToDelete)) {
+                            row.style.transition = 'all 0.5s ease';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(-100%)';
+                            setTimeout(() => row.remove(), 500);
+                        }
+                    });
+
+                    showNotification('success', `Rapport ${reportToDelete} supprimé avec succès`);
+
+                    // Fermer le modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                    modal.hide();
+
+                    reportToDelete = null;
+
+                    // Mettre à jour les statistiques
+                    updateStats(-1);
+                }, 1500);
+            }
+        }
+
+        // Fonctions utilitaires
+        function applyFilters() {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('success', 'Filtres appliqués avec succès');
+            }, 1000);
+        }
+
+        function refreshData() {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('success', 'Données actualisées');
+            }, 1500);
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function downloadCurrentReport() {
+            showNotification('success', 'Téléchargement du rapport en cours...');
+        }
+
+        function updateStats(delta = 0) {
+            const totalElement = document.querySelector('.stat-card.total .stat-number');
+            if (totalElement) {
+                const currentTotal = parseInt(totalElement.textContent);
+                totalElement.textContent = Math.max(0, currentTotal + delta);
+
+                // Animation
+                totalElement.style.transform = 'scale(1.1)';
+                totalElement.style.color = '#dc3545';
+                setTimeout(() => {
+                    totalElement.style.transform = 'scale(1)';
+                    totalElement.style.color = '';
+                }, 300);
+            }
+        }
+
+        // Fonctions d'aide pour les noms
+        function getReportTypeName(type) {
+            const types = {
+                'analysis': 'Rapport d\'Analyse',
+                'technical': 'Rapport Technique',
+                'expert': 'Rapport d\'Expertise',
+                'custom': 'Rapport Personnalisé'
+            };
+            return types[type] || type;
+        }
+
+        function getPriorityName(priority) {
+            const priorities = {
+                'low': 'Faible',
+                'medium': 'Moyenne',
+                'high': 'Haute',
+                'urgent': 'Urgente'
+            };
+            return priorities[priority] || priority;
+        }
+
+        function getLanguageName(language) {
+            const languages = {
+                'fr': 'Français',
+                'ar': 'العربية',
+                'en': 'English'
+            };
+            return languages[language] || language;
+        }
+
+        function getStatusName(status) {
+            const statuses = {
+                'draft': 'Brouillon',
+                'pending': 'En attente',
+                'validated': 'Validé',
+                'signed': 'Signé',
+                'archived': 'Archivé'
+            };
+            return statuses[status] || status;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showNotification(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' :
+                type === 'info' ? 'alert-info' :
+                    type === 'warning' ? 'alert-warning' : 'alert-danger';
+            const icon = type === 'success' ? 'fa-check-circle' :
+                type === 'info' ? 'fa-info-circle' :
+                    type === 'warning' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle';
+
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px; max-width: 500px;';
+            notification.innerHTML = `
+                        <i class="fas ${icon} me-2"></i>${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+            document.body.appendChild(notification);
+
+            // Auto-dismiss après 5 secondes
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Raccourcis clavier
+        document.addEventListener('keydown', function (e) {
+            // Échap pour fermer les modals
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const instance = bootstrap.Modal.getInstance(modal);
+                    if (instance) instance.hide();
+                });
+            }
+
+            // Ctrl+N pour nouveau rapport
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                startReportWizard();
+            }
+
+            // Ctrl+R pour actualiser
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+
+            // F3 pour recherche
+            if (e.key === 'F3') {
+                e.preventDefault();
+                document.getElementById('filterType').focus();
+            }
+        });
+
+        // Animation au scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        // Observer les éléments animés
+        document.querySelectorAll('.fade-in').forEach(element => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            element.style.transition = 'all 0.6s ease';
+            observer.observe(element);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+﻿@model IEnumerable<WebApplication1.Models.Stockage.Echantillon>
+
+@{
+    ViewBag.Title = "Liste des Échantillons";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-vial"></i> Liste des Échantillons</h4>
+                <div class="float-right">
+                    <a href="@Url.Action("Create")" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus"></i> Nouvel Échantillon
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (Model != null && Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Numéro</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th>Date Réception</th>
+                                    <th>Affaire</th>
+                                    <th>Fichier</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.NumeroEchantillon</td>
+                                        <td>@Html.Raw(GetTypeBadge(item.Type))</td>
+                                        <td>@Html.Raw(GetStatusBadge(item.Statut))</td>
+                                        <td>@item.DateReception.ToString("dd/MM/yyyy")</td>
+                                        <td>@(item.Affaire?.Titre ?? "Non assigné")</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(item.NomFichier))
+                                            {
+                                                <div class="file-info">
+                                                    <i class="@GetFileIcon(item.TypeMime)"></i>
+                                                    <span class="file-name" title="@item.NomFichier">@item.NomFichier</span>
+                                                    <br>
+                                                    <small class="text-muted">@item.TailleFichierFormatee</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Aucun fichier</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-info" title="Détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-sm btn-warning" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                @if (!string.IsNullOrEmpty(item.NomFichier))
+                                                {
+                                                    <a href="@Url.Action("DownloadFile", new { id = item.Id })" class="btn btn-sm btn-success" title="Télécharger">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                }
+                                                <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-sm btn-danger" title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Aucun échantillon trouvé.
+                        <a href="@Url.Action("Create")" class="btn btn-primary btn-sm ml-2">
+                            <i class="fas fa-plus"></i> Créer le premier échantillon
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetTypeBadge(WebApplication1.Models.Stockage.TypeEchantillon type)
+    {
+        switch (type)
+        {
+            case WebApplication1.Models.Stockage.TypeEchantillon.Sang:
+                return "<span class='badge bg-danger'><i class='fas fa-tint'></i> Sang</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Salive:
+                return "<span class='badge bg-info'><i class='fas fa-teeth'></i> Salive</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Urine:
+                return "<span class='badge bg-warning text-dark'><i class='fas fa-flask'></i> Urine</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Tissu:
+                return "<span class='badge bg-success'><i class='fas fa-dna'></i> Tissu</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Solide:
+                return "<span class='badge bg-primary'><i class='fas fa-cube'></i> Solide</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Liquide:
+                return "<span class='badge bg-blue'><i class='fas fa-tint'></i> Liquide</span>";
+            case WebApplication1.Models.Stockage.TypeEchantillon.Autre:
+                return "<span class='badge bg-secondary'><i class='fas fa-vial'></i> Autre</span>";
+            default:
+                return "<span class='badge bg-light text-dark'>Inconnu</span>";
+        }
+    }
+
+    public string GetStatusBadge(WebApplication1.Models.Stockage.StatutEchantillon statut)
+    {
+        switch (statut)
+        {
+            case WebApplication1.Models.Stockage.StatutEchantillon.EnAttente:
+                return "<span class='badge bg-warning'>En attente</span>";
+            case WebApplication1.Models.Stockage.StatutEchantillon.EnAnalyse:
+                return "<span class='badge bg-primary'>En analyse</span>";
+            case WebApplication1.Models.Stockage.StatutEchantillon.AnalyseTerminee:
+                return "<span class='badge bg-success'>Terminé</span>";
+            case WebApplication1.Models.Stockage.StatutEchantillon.Archive:
+                return "<span class='badge bg-secondary'>Archivé</span>";
+            default:
+                return "<span class='badge bg-light text-dark'>Inconnu</span>";
+        }
+    }
+
+    public string GetFileIcon(string mimeType)
+    {
+        if (string.IsNullOrEmpty(mimeType))
+            return "fas fa-file";
+
+        if (mimeType.StartsWith("image/"))
+            return "fas fa-file-image text-success";
+        else if (mimeType.StartsWith("video/"))
+            return "fas fa-file-video text-primary";
+        else if (mimeType.StartsWith("audio/"))
+            return "fas fa-file-audio text-info";
+        else if (mimeType.Contains("pdf"))
+            return "fas fa-file-pdf text-danger";
+        else if (mimeType.Contains("word") || mimeType.Contains("document"))
+            return "fas fa-file-word text-primary";
+        else if (mimeType.Contains("excel") || mimeType.Contains("sheet"))
+            return "fas fa-file-excel text-success";
+        else if (mimeType.Contains("zip") || mimeType.Contains("rar"))
+            return "fas fa-file-archive text-warning";
+        else
+            return "fas fa-file text-secondary";
+    }
+}
+
+<style>
+    .file-info {
+        max-width: 150px;
+    }
+
+    .file-name {
+        font-size: 0.9em;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+    }
+
+    .btn-group .btn {
+        margin-right: 2px;
+    }
+
+    .table th {
+        vertical-align: middle;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.8em;
+    }
+
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        border-bottom: 1px solid #ddd;
+        padding: 1rem;
+        position: relative;
+    }
+
+    .float-right {
+        float: right;
+    }
+</style>

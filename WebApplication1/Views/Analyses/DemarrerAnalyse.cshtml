@@ -1,0 +1,194 @@
+﻿@model WebApplication1.Models.Stockage.Echantillon
+
+@{
+    ViewData["Title"] = "Démarrer l'Analyse";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-play-circle"></i> Démarrer l'Analyse
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Informations de l'échantillon -->
+                    <div class="mb-4">
+                        <h5>Informations de l'échantillon</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-5">Numéro :</dt>
+                                    <dd class="col-sm-7">
+                                        <span class="badge bg-info badge-lg">@Model.NumeroEchantillon</span>
+                                    </dd>
+
+                                    <dt class="col-sm-5">Type :</dt>
+                                    <dd class="col-sm-7">@Model.Type</dd>
+
+                                    <dt class="col-sm-5">Description :</dt>
+                                    <dd class="col-sm-7">@Model.Description</dd>
+
+                                    <dt class="col-sm-5">Date réception :</dt>
+                                    <dd class="col-sm-7">@Model.DateReception.ToString("dd/MM/yyyy")</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-5">Priorité :</dt>
+                                    <dd class="col-sm-7">
+                                        @switch (Model.Priorite)
+                                        {
+                                            case WebApplication1.Models.Stockage.PrioriteEchantillon.Urgent:
+                                                <span class="badge bg-danger">URGENT</span>
+                                                break;
+
+                                            case WebApplication1.Models.Stockage.PrioriteEchantillon.Normal:
+                                                <span class="badge bg-info">NORMALE</span>
+                                                break;
+                                            case WebApplication1.Models.Stockage.PrioriteEchantillon.Critique:
+                                                <span class="badge bg-secondary">CRITIQUE</span>
+                                                break;
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-5">Date limite :</dt>
+                                    <dd class="col-sm-7">
+                                        @if (Model.DateLimite.HasValue)
+                                        {
+                                            var joursRestants = (Model.DateLimite.Value - DateTime.Now).Days;
+                                            <span class="@(joursRestants <= 2 ? "text-danger fw-bold" : joursRestants <= 7 ? "text-warning" : "text-success")">
+                                                @Model.DateLimite.Value.ToString("dd/MM/yyyy")
+                                                @if (joursRestants >= 0)
+                                                {
+                                                    <small>(@joursRestants jour(s) restant(s))</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-danger fw-bold">(DÉPASSÉE)</small>
+                                                }
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Non définie</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-5">Statut actuel :</dt>
+                                    <dd class="col-sm-7">
+                                        <span class="badge bg-success">@Model.Statut</span>
+                                    </dd>
+
+                                    <dt class="col-sm-5">Analyste :</dt>
+                                    <dd class="col-sm-7">@Model.Analyste?.nom</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analyses prévues -->
+                    @if (Model.Analyses != null && Model.Analyses.Any())
+                    {
+                        <div class="mb-4">
+                            <h5>Analyses prévues</h5>
+                            <div class="list-group">
+                                @foreach (var analyse in Model.Analyses)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between align-items-center">
+                                            <h6 class="mb-1">@analyse.Nom</h6>
+                                            <span class="badge bg-secondary">@analyse.TypeAnalyse</span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(analyse.Methode))
+                                        {
+                                            <p class="mb-1"><small class="text-muted">Méthode : @analyse.Methode</small></p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <h5>Analyses prévues</h5>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Les analyses seront créées automatiquement lors du démarrage.
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Informations complémentaires -->
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h5>Commentaires de réception</h5>
+                            <div class="alert alert-light">
+                                @Model.Description
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Localisation stockage -->
+                    @if (Model.Stockage != null)
+                    {
+                        <div class="mb-4">
+                            <h5>Localisation</h5>
+                            <p class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i>
+                                @Model.Stockage.Zone - @Model.Stockage.Emplacement
+                            </p>
+                        </div>
+                    }
+
+                    <!-- Confirmation et actions -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Attention :</strong> Une fois l'analyse démarrée, l'échantillon passera au statut "En Analyse"
+                        et ne pourra plus être modifié par d'autres analystes.
+                    </div>
+
+                    <div class="text-center">
+                        <form asp-action="DemarrerAnalyse" asp-controller="Analyses" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="echantillonId" value="@Model.Id" />
+
+                            <button type="submit" class="btn btn-success btn-lg me-3"
+                                    onclick="return confirm('Êtes-vous sûr de vouloir démarrer l\'analyse de cet échantillon ?')">
+                                <i class="fas fa-play-circle"></i> Démarrer l'Analyse
+                            </button>
+                        </form>
+
+                        <a href="@Url.Action("MesEchantillons")" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Retour à mes échantillons
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-lg {
+        font-size: 1.1em;
+        padding: 0.5em 1em;
+    }
+
+    .card-header h4 {
+        margin-bottom: 0;
+    }
+
+    .list-group-item h6 {
+        color: #495057;
+    }
+
+    dt {
+        font-weight: 600;
+    }
+</style>

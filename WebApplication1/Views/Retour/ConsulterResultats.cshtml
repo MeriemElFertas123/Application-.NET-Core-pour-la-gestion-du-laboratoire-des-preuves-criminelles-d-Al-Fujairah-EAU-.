@@ -1,0 +1,75 @@
+﻿@model IEnumerable<WebApplication1.Models.Analyse.Analyse>
+@{
+    ViewBag.Title = "Consulter les résultats d'analyse";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<h2>Résultats d'analyse de vos affaires</h2>
+
+@if (Model.Any())
+{
+    // Regrouper les analyses par échantillon
+    var groupedByEchantillon = Model.GroupBy(a => a.Echantillon.NumeroEchantillon);
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Numéro d'affaire</th>
+                <th>Numéro d'échantillon</th>
+                <th>Type d'analyse</th>
+                <th>Date d'analyse</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var groupe in groupedByEchantillon)
+            {
+                var firstAnalyse = groupe.First();
+                var rowCount = groupe.Count();
+
+                <tr>
+                    <td rowspan="@rowCount">@firstAnalyse.Echantillon.Affaire.NumeroAffaire</td>
+                    <td rowspan="@rowCount">@firstAnalyse.Echantillon.NumeroEchantillon</td>
+                    <td>@firstAnalyse.TypeAnalyse</td>
+                    <td>@firstAnalyse.DateAnalyse</td>
+                    <td>@firstAnalyse.Statut</td>
+                    <td>
+                        @if (firstAnalyse.FichierContenu != null)
+                        {
+                            <a href="@Url.Action("TelechargerResultat", "Retour", new { id = firstAnalyse.Id })"
+                               class="btn btn-primary btn-sm" title="Télécharger le fichier">
+                                <i class="glyphicon glyphicon-download"></i> Télécharger
+                            </a>
+                        }
+                    </td>
+                </tr>
+
+                // Afficher les autres analyses du même échantillon
+                foreach (var analyse in groupe.Skip(1))
+                {
+                    <tr>
+                        <td>@analyse.TypeAnalyse</td>
+                        <td>@analyse.DateAnalyse</td>
+                        <td>@analyse.Statut</td>
+                        <td>
+                            @if (analyse.FichierContenu != null)
+                            {
+                                <a href="@Url.Action("TelechargerResultat", "Retour", new { id = analyse.Id })"
+                                   class="btn btn-primary btn-sm" title="Télécharger le fichier">
+                                    <i class="glyphicon glyphicon-download"></i> Télécharger
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">
+        Aucun résultat d'analyse disponible pour vos affaires.
+    </div>
+}

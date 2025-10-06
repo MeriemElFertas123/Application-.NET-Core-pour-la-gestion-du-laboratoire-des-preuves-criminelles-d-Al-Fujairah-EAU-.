@@ -1,0 +1,480 @@
+﻿@model WebApplication1.Models.Technicien
+@{
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+    ViewBag.Title = "Tableau de Bord - Technicien de Laboratoire";
+    var echantillonsStockes = ViewBag.EchantillonsStockes ?? 0;
+    var echantillonsRecus = ViewBag.EchantillonsRecus ?? 0;
+    var echantillonsVerifies = ViewBag.EchantillonsVerifies ?? 0;
+    var totalEchantillons = ViewBag.TotalEchantillons ?? 0;
+    var echantillonsUrgents = ViewBag.EchantillonsUrgents ?? 0;
+    var echantillonsAujourdhui = ViewBag.EchantillonsAujourdhui ?? 0;
+    var echantillonsRecents = ViewBag.EchantillonsRecents ?? new List<dynamic>();
+    var echantillonsUrgentsDetails = ViewBag.EchantillonsUrgentsDetails ?? new List<dynamic>();
+    var statsParType = ViewBag.StatsParType ?? new List<dynamic>();
+    var technicienNom = ViewBag.TechnicienNom ?? "";
+    var technicienPrenom = ViewBag.TechnicienPrenom ?? "";
+    var technicienEmail = ViewBag.TechnicienEmail ?? "";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dashboard-container {
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 2rem 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #28a745;
+        }
+
+        .welcome-section h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .specialite-badge {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .date-section {
+            text-align: right;
+            color: #6c757d;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            }
+
+            .stat-card.stocke {
+                border-left-color: #17a2b8;
+            }
+
+            .stat-card.recu {
+                border-left-color: #28a745;
+            }
+
+            .stat-card.verifie {
+                border-left-color: #007bff;
+            }
+
+            .stat-card.urgent {
+                border-left-color: #dc3545;
+            }
+
+            .stat-card.today {
+                border-left-color: #ffc107;
+            }
+
+            .stat-card.total {
+                border-left-color: #6c757d;
+            }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            flex: 1;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .icon-cyan {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+
+        .icon-green {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+
+        .icon-blue {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+
+        .icon-red {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .icon-yellow {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+        }
+
+        .icon-gray {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+        }
+
+        .value-cyan {
+            color: #17a2b8;
+        }
+
+        .value-green {
+            color: #28a745;
+        }
+
+        .value-blue {
+            color: #007bff;
+        }
+
+        .value-red {
+            color: #dc3545;
+        }
+
+        .value-yellow {
+            color: #ffc107;
+        }
+
+        .value-gray {
+            color: #6c757d;
+        }
+
+        media (max-width: 1200px) {
+            .main-content
+
+        {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        }
+
+        media (max-width: 768px) {
+            .dashboard-header
+
+        {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .main-content {
+            grid-template-columns: 1fr;
+        }
+
+        }
+    </style>
+}
+
+<div class="dashboard-container">
+    <div class="content-wrapper">
+        <!-- Messages d'alerte -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div class="welcome-section">
+                <h1><i class="fas fa-flask"></i> @technicienPrenom @technicienNom</h1>
+                <p>Technicien de Laboratoire</p>
+                <span class="specialite-badge">
+                    <i class="fas fa-microscope"></i> Spécialité: Gestion des Échantillons
+                </span>
+            </div>
+            <div class="date-section">
+                <p><strong>@DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</strong></p>
+                <p>@DateTime.Now.ToString("HH:mm")</p>
+                @if (!string.IsNullOrEmpty(technicienEmail))
+                {
+                    <p><i class="fas fa-envelope"></i> @technicienEmail</p>
+                }
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card recu">
+                <div class="stat-header">
+                    <span class="stat-title">Échantillons reçus</span>
+                    <div class="stat-icon icon-green">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-green">@echantillonsRecus</div>
+                <p class="stat-description">Échantillons reçus et en attente de traitement</p>
+            </div>
+
+            <div class="stat-card verifie">
+                <div class="stat-header">
+                    <span class="stat-title">Échantillons vérifiés</span>
+                    <div class="stat-icon icon-blue">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-blue">@echantillonsVerifies</div>
+                <p class="stat-description">Échantillons vérifiés et prêts pour stockage</p>
+            </div>
+
+            <div class="stat-card stocke">
+                <div class="stat-header">
+                    <span class="stat-title">Échantillons stockés</span>
+                    <div class="stat-icon icon-cyan">
+                        <i class="fas fa-archive"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-cyan">@echantillonsStockes</div>
+                <p class="stat-description">Échantillons correctement stockés et archivés</p>
+            </div>
+
+            <div class="stat-card total">
+                <div class="stat-header">
+                    <span class="stat-title">Total échantillons</span>
+                    <div class="stat-icon icon-gray">
+                        <i class="fas fa-vials"></i>
+                    </div>
+                </div>
+                <div class="stat-value value-gray">@totalEchantillons</div>
+                <p class="stat-description">Total des échantillons dans le système</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation d'entrée pour les cartes
+            const cards = document.querySelectorAll('.stat-card, .section-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Animation des compteurs
+            animateCounters();
+
+            // Actualisation automatique des données toutes les 30 secondes
+            setInterval(function() {
+                refreshDashboardData();
+            }, 30000);
+        });
+
+        // Animation des compteurs de statistiques
+        function animateCounters() {
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(value => {
+                const finalValue = parseInt(value.textContent);
+                if (finalValue > 0) {
+                    let currentValue = 0;
+                    const increment = Math.ceil(finalValue / 20);
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= finalValue) {
+                            value.textContent = finalValue;
+                            clearInterval(timer);
+                        } else {
+                            value.textContent = currentValue;
+                        }
+                    }, 50);
+                }
+            });
+        }
+
+        // Fonction pour vérifier un échantillon via AJAX
+        async function verifierEchantillon(id) {
+            if (!confirm('Êtes-vous sûr de vouloir marquer cet échantillon comme vérifié ?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("VerifierEchantillon", "Technicien")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('success', result.message);
+                    updateEchantillonStatus(id, 'Verifie');
+                } else {
+                    showNotification('error', result.message);
+                }
+            } catch (error) {
+                showNotification('error', 'Une erreur s\'est produite lors de la vérification.');
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Fonction pour stocker un échantillon via AJAX
+        async function stockerEchantillon(id, stockageId = null) {
+            if (!confirm('Êtes-vous sûr de vouloir stocker cet échantillon ?')) {
+                return;
+            }
+
+            const data = { id: id };
+            if (stockageId) {
+                data.stockageId = stockageId;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("StockerEchantillon", "Technicien")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('success', result.message);
+                    updateEchantillonStatus(id, 'Stocke');
+                } else {
+                    showNotification('error', result.message);
+                }
+            } catch (error) {
+                showNotification('error', 'Une erreur s\'est produite lors du stockage.');
+                console.error('Erreur:', error);
+            }
+        }
+
+        // Afficher une notification
+        function showNotification(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show`;
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                <i class="${icon}"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Masquer après 3 secondes
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Actualiser les données du dashboard
+        async function refreshDashboardData() {
+            try {
+                const response = await fetch('@Url.Action("StatistiquesHebdomadaires", "Technicien")');
+                const data = await response.json();
+
+                if (data && !data.error) {
+                    console.log('Données actualisées:', data);
+                    // Ici vous pourriez mettre à jour des graphiques ou autres données dynamiques
+                }
+            } catch (error) {
+                console.log('Erreur lors de l\'actualisation:', error);
+            }
+        }
+    </script>
+}

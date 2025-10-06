@@ -1,0 +1,161 @@
+﻿@model WebApplication1.Models.AttributionViewModel
+
+@{
+    ViewData["Title"] = "Attribuer des Permissions";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-shield"></i> Attribuer des Permissions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <form asp-action="Attribuer" asp-controller="Permissions" method="post" class="form-horizontal">
+                        @Html.AntiForgeryToken()
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Utilisateur :</label>
+                            <div class="col-md-10">
+                                <select asp-for="SelectedUserId" asp-items="Model.Users" class="form-control" id="userSelect">
+                                    <option value="">-- Sélectionnez un utilisateur --</option>
+                                </select>
+                                <span asp-validation-for="SelectedUserId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Permissions :</label>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card border-secondary mb-3">
+                                            <div class="card-header">
+                                                <h5>Permissions Disponibles</h5>
+                                                <button type="button" class="btn btn-sm btn-outline-primary float-right ml-2" onclick="selectAll()">Tout Sélectionner</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary float-right" onclick="deselectAll()">Tout Désélectionner</button>
+                                            </div>
+                                            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                                @for (int i = 0; i < Model.AvailablePermissions.Count; i++)
+                                                {
+                                                    var perm = Model.AvailablePermissions[i];
+                                                    string checkboxId = "perm_" + perm.Id;
+
+                                                    <div class="form-check mb-2">
+                                                        <input type="hidden" asp-for="AvailablePermissions[i].Id" />
+                                                        <input type="hidden" asp-for="AvailablePermissions[i].Name" />
+                                                        <input type="checkbox"
+                                                               asp-for="AvailablePermissions[i].IsSelected"
+                                                               id="@checkboxId"
+                                                               class="form-check-input permission-checkbox"
+                                                               value="true" />
+                                                        <label class="form-check-label" for="@checkboxId">@perm.Name</label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="card border-info mb-3">
+                                            <div class="card-header">
+                                                <h5>Permissions Actuelles</h5>
+                                            </div>
+                                            <div class="card-body" id="currentPermissions">
+                                                <p class="text-muted">Sélectionnez un utilisateur pour voir ses permissions actuelles</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-10 offset-md-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                                <a asp-action="Index" asp-controller="Permissions" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Annuler
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function selectAll() {
+            $('.permission-checkbox').prop('checked', true);
+        }
+
+        function deselectAll() {
+            $('.permission-checkbox').prop('checked', false);
+        }
+
+        $('#userSelect').change(function () {
+            var userId = $(this).val();
+            if (userId) {
+                loadUserPermissions(userId);
+            } else {
+                $('#currentPermissions').html('<p class="text-muted">Sélectionnez un utilisateur pour voir ses permissions actuelles</p>');
+                $('.permission-checkbox').prop('checked', false);
+            }
+        });
+
+        function loadUserPermissions(userId) {
+            $.get('@Url.Action("GetUserPermissions", "Permissions")', { userId: userId }, function (data) {
+                if (data.success) {
+                    var html = '';
+                    if (data.permissions.length > 0) {
+                        html += '<ul class="list-group">';
+                        data.permissions.forEach(function (permId) {
+                            var permName = $('label[for="perm_' + permId + '"]').text();
+                            html += '<li class="list-group-item"><i class="fas fa-check text-success"></i> ' + permName + '</li>';
+                        });
+                        html += '</ul>';
+                    } else {
+                        html = '<p class="text-muted">Aucune permission attribuée</p>';
+                    }
+
+                    $('#currentPermissions').html(html);
+                    $('.permission-checkbox').prop('checked', false);
+
+                    data.permissions.forEach(function (permId) {
+                        $('#perm_' + permId).prop('checked', true);
+                    });
+                } else {
+                    $('#currentPermissions').html('<p class="text-danger">Erreur lors du chargement des permissions.</p>');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            var preselectedUserId = $('#userSelect').val();
+            if (preselectedUserId) {
+                loadUserPermissions(preselectedUserId);
+            }
+        });
+    </script>
+}

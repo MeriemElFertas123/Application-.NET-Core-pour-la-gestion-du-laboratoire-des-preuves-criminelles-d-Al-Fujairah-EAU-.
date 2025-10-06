@@ -1,0 +1,471 @@
+﻿@model WebApplication1.Models.Envoi.VerificationEchantillonViewModel
+
+<form asp-action="TraiterVerification" asp-controller="Envoi" method="post" id="verificationForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="EnvoiEchantillonId" />
+
+    <div class="row">
+        <!-- Section des Critères de Vérification -->
+        <div class="col-md-6">
+            <h6 class="mb-3">
+                <i class="fas fa-clipboard-check text-primary"></i> Critères à Vérifier
+            </h6>
+
+            <div id="criteresVerification">
+                @for (int i = 0; i < Model.CriteresVerification.Count; i++)
+                {
+                    <div class="panel panel-default critere-card" style="margin-bottom: 15px;">
+                        <div class="panel-heading">
+                            <div class="checkbox">
+                                <input type="checkbox" asp-for="CriteresVerification[i].EstVerifie"
+                                       class="critere-checkbox" id="critere_@i" />
+                                <input type="hidden" asp-for="CriteresVerification[i].Nom" />
+                                <input type="hidden" asp-for="CriteresVerification[i].ValeurAttendue" />
+
+                                <label for="critere_@i" style="font-weight: bold; margin-left: 5px;">
+                                    @Model.CriteresVerification[i].Nom
+                                </label>
+                                <small class="text-muted" style="display: block; margin-left: 20px;">
+                                    Valeur attendue: @Model.CriteresVerification[i].ValeurAttendue
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="panel-body critere-details" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Valeur Constatée *</label>
+                                        <input type="text" asp-for="CriteresVerification[i].ValeurConstatee"
+                                               class="form-control" placeholder="Saisir la valeur observée" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Conformité</label>
+                                        <div class="checkbox">
+                                            <input type="checkbox" asp-for="CriteresVerification[i].EstConforme"
+                                                   id="conforme_@i" />
+                                            <label for="conforme_@i">
+                                                Conforme
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label">Observations</label>
+                                <textarea asp-for="CriteresVerification[i].Observations"
+                                          class="form-control" rows="2"
+                                          placeholder="Remarques particulières..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Section de Comparaison et Informations -->
+        <div class="col-md-6">
+            <h6 class="mb-3">
+                <i class="fas fa-info-circle text-primary"></i> Informations de l'Échantillon
+            </h6>
+
+            <!-- Informations générales -->
+            <div class="panel panel-info" style="margin-bottom: 15px;">
+                <div class="panel-heading">
+                    <h6 class="panel-title">Détails de l'Échantillon</h6>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-condensed">
+                        <tr>
+                            <td><strong>Code QR:</strong></td>
+                            <td>@Model.EchantillonInfo.CodeQR</td>
+                        </tr>
+                        <tr>
+                            <td><strong>N° Affaire:</strong></td>
+                            <td>@Model.EchantillonInfo.NumeroAffaire</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Enquêteur:</strong></td>
+                            <td>@Model.EchantillonInfo.NomEnqueteur</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Description:</strong></td>
+                            <td>@Model.EchantillonInfo.DescriptionEchantillon</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Caractéristiques attendues -->
+            <div class="panel panel-default" style="margin-bottom: 15px;">
+                <div class="panel-heading">
+                    <h6 class="panel-title">Caractéristiques Attendues</h6>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-condensed">
+                        <tr>
+                            <td><strong>Poids:</strong></td>
+                            <td>@Model.EchantillonInfo.Poids g</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Couleur:</strong></td>
+                            <td>@(Model.EchantillonInfo.Couleur ?? "Non spécifié")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Emballage:</strong></td>
+                            <td>@Model.EchantillonInfo.Emballage</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Conditions:</strong></td>
+                            <td>@Model.EchantillonInfo.ConditionsStockage</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Résultat de la vérification -->
+            <div class="panel panel-primary" id="resultatVerification" style="display: none; margin-bottom: 15px;">
+                <div class="panel-heading" id="resultatHeader">
+                    <h6 class="panel-title" id="resultatTitre">Résultat de la Vérification</h6>
+                </div>
+                <div class="panel-body">
+                    <div id="resultatContenu">
+                        <!-- Le contenu sera mis à jour dynamiquement -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes du technicien -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h6 class="panel-title">
+                        <i class="fas fa-sticky-note"></i> Notes du Technicien
+                    </h6>
+                </div>
+                <div class="panel-body">
+                    <textarea asp-for="NotesVerification" class="form-control" rows="4"
+                              placeholder="Saisir vos observations, remarques et conclusions..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section des actions conditionnelles -->
+    <div id="sectionRefus" class="panel panel-warning" style="display: none; margin-top: 20px;">
+        <div class="panel-heading">
+            <h6 class="panel-title">
+                <i class="fas fa-exclamation-triangle"></i> Gestion du Refus
+            </h6>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Action Recommandée *</label>
+                        <select asp-for="ActionSiRefus" class="form-control" required>
+                            <option value="">-- Sélectionner une action --</option>
+                            <option value="return">Retourner à l'enquêteur</option>
+                            <option value="contact">Contacter l'enquêteur</option>
+                            <option value="archive">Archiver comme non-conforme</option>
+                            <option value="resample">Demander un nouveau prélèvement</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Priorité du Suivi</label>
+                        <select class="form-control" name="PrioriteRefus">
+                            <option value="normal">Normal</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="critique">Critique</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label">Notes Détaillées du Refus *</label>
+                <textarea asp-for="NotesRefus" class="form-control" rows="3"
+                          placeholder="Décrire précisément les non-conformités et les raisons du refus..."
+                          required></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="modal-footer" style="margin-top: 20px;">
+        <div class="row">
+            <div class="col-md-6">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+            </div>
+            <div class="col-md-6 text-right">
+                <button type="button" class="btn btn-danger" id="btnRefuser" style="display: none; margin-right: 10px;">
+                    <i class="fas fa-times-circle"></i> Refuser l'Échantillon
+                </button>
+                <button type="button" class="btn btn-success" id="btnAccepter" style="display: none;">
+                    <i class="fas fa-check-circle"></i> Accepter et Stocker
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Gestion des checkboxes de critères
+            $('.critere-checkbox').change(function() {
+                var detailsDiv = $(this).closest('.panel').find('.panel-body');
+
+                if ($(this).is(':checked')) {
+                    detailsDiv.slideDown();
+                } else {
+                    detailsDiv.slideUp();
+                    // Réinitialiser les valeurs
+                    detailsDiv.find('input[type="text"], textarea').val('');
+                    detailsDiv.find('input[type="checkbox"]').prop('checked', false);
+                }
+
+                mettreAJourResultat();
+                mettreAJourBoutons();
+            });
+
+            // Gestion des changements de conformité
+            $('input[id^="conforme_"]').change(function() {
+                mettreAJourResultat();
+            });
+
+            // Gestion des valeurs constatées
+            $('input[name*="ValeurConstatee"]').on('input', function() {
+                mettreAJourResultat();
+            });
+
+            // Bouton Accepter
+            $('#btnAccepter').click(function() {
+                if (validerFormulaire()) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'EstAccepte',
+                        value: 'true'
+                    }).appendTo('#verificationForm');
+
+                    $('#verificationForm').submit();
+                }
+            });
+
+            // Bouton Refuser
+            $('#btnRefuser').click(function() {
+                if (validerFormulaireRefus()) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'EstAccepte',
+                        value: 'false'
+                    }).appendTo('#verificationForm');
+
+                    $('#verificationForm').submit();
+                }
+            });
+
+            function mettreAJourResultat() {
+                var criteresVerifies = $('.critere-checkbox:checked').length;
+                var criteresConformes = $('input[id^="conforme_"]:checked').length;
+                var criteresNonConformes = criteresVerifies - criteresConformes;
+
+                if (criteresVerifies > 0) {
+                    $('#resultatVerification').show();
+
+                    var contenu =
+                        '<div class="row text-center">' +
+                            '<div class="col-md-4">' +
+                                '<div class="well well-sm">' +
+                                    '<h4 class="text-primary">' + criteresVerifies + '</h4>' +
+                                    '<small>Vérifiés</small>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="col-md-4">' +
+                                '<div class="well well-sm">' +
+                                    '<h4 class="text-success">' + criteresConformes + '</h4>' +
+                                    '<small>Conformes</small>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="col-md-4">' +
+                                '<div class="well well-sm">' +
+                                    '<h4 class="text-danger">' + criteresNonConformes + '</h4>' +
+                                    '<small>Non Conformes</small>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+
+                    $('#resultatContenu').html(contenu);
+
+                    // Mettre à jour l'en-tête selon le résultat
+                    if (criteresNonConformes === 0 && criteresVerifies > 0) {
+                        $('#resultatHeader').removeClass('panel-danger panel-warning').addClass('panel-success');
+                        $('#resultatTitre').text('✓ Échantillon Conforme');
+                    } else if (criteresNonConformes > 0) {
+                        $('#resultatHeader').removeClass('panel-success panel-warning').addClass('panel-danger');
+                        $('#resultatTitre').text('✗ Non-Conformités Détectées');
+                    } else {
+                        $('#resultatHeader').removeClass('panel-success panel-danger').addClass('panel-warning');
+                        $('#resultatTitre').text('⚠ Vérification en Cours');
+                    }
+                } else {
+                    $('#resultatVerification').hide();
+                }
+            }
+
+            function mettreAJourBoutons() {
+                var criteresVerifies = $('.critere-checkbox:checked').length;
+                var criteresConformes = $('input[id^="conforme_"]:checked').length;
+                var criteresNonConformes = criteresVerifies - criteresConformes;
+
+                if (criteresVerifies > 0) {
+                    if (criteresNonConformes === 0) {
+                        $('#btnAccepter').show();
+                        $('#btnRefuser').hide();
+                        $('#sectionRefus').hide();
+                    } else {
+                        $('#btnAccepter').hide();
+                        $('#btnRefuser').show();
+                        $('#sectionRefus').show();
+                    }
+                } else {
+                    $('#btnAccepter').hide();
+                    $('#btnRefuser').hide();
+                    $('#sectionRefus').hide();
+                }
+            }
+
+            function validerFormulaire() {
+                var isValid = true;
+                var errorMessages = [];
+
+                // Vérifier qu'au moins un critère est vérifié
+                if ($('.critere-checkbox:checked').length === 0) {
+                    errorMessages.push("Veuillez vérifier au moins un critère.");
+                    isValid = false;
+                }
+
+                // Vérifier que les valeurs constatées sont saisies
+                $('.critere-checkbox:checked').each(function() {
+                    var index = $(this).attr('id').split('_')[1];
+                    var valeurConstatee = $('input[name*="CriteresVerification[' + index + '].ValeurConstatee"]').val();
+
+                    if (!valeurConstatee || valeurConstatee.trim() === '') {
+                        var nomCritere = $('input[name*="CriteresVerification[' + index + '].Nom"]').val();
+                        errorMessages.push('Veuillez saisir la valeur constatée pour: ' + nomCritere);
+                        isValid = false;
+                    }
+                });
+
+                if (errorMessages.length > 0) {
+                    alert('Erreurs de validation:\n- ' + errorMessages.join('\n- '));
+                }
+
+                return isValid;
+            }
+
+            function validerFormulaireRefus() {
+                if (!validerFormulaire()) return false;
+
+                var isValid = true;
+                var errorMessages = [];
+
+                // Vérifier l'action recommandée
+                if (!$('select[name="ActionSiRefus"]').val()) {
+                    errorMessages.push("Veuillez sélectionner une action recommandée.");
+                    isValid = false;
+                }
+
+                // Vérifier les notes de refus
+                if (!$('textarea[name="NotesRefus"]').val().trim()) {
+                    errorMessages.push("Veuillez saisir les notes détaillées du refus.");
+                    isValid = false;
+                }
+
+                if (errorMessages.length > 0) {
+                    alert('Erreurs de validation:\n- ' + errorMessages.join('\n- '));
+                }
+
+                return isValid;
+            }
+        });
+    </script>
+
+    <style>
+        .critere-card {
+            transition: all 0.3s ease;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+            .critere-card:hover {
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+
+        .well {
+            min-height: 20px;
+            padding: 19px;
+            margin-bottom: 20px;
+            background-color: #f5f5f5;
+            border: 1px solid #e3e3e3;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+        }
+
+        .well-sm {
+            padding: 9px;
+            border-radius: 3px;
+        }
+
+        .checkbox input[type="checkbox"]:checked + label {
+            font-weight: bold;
+            color: #337ab7;
+        }
+
+        .panel-success > .panel-heading {
+            background-color: #5cb85c;
+            border-color: #5cb85c;
+            color: white;
+        }
+
+        .panel-danger > .panel-heading {
+            background-color: #d9534f;
+            border-color: #d9534f;
+            color: white;
+        }
+
+        .panel-warning > .panel-heading {
+            background-color: #f0ad4e;
+            border-color: #f0ad4e;
+            color: white;
+        }
+
+        #sectionRefus {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+
+            to {
+                opacity: 1;
+                max-height: 400px;
+            }
+        }
+
+        .modal-footer {
+            padding: 15px;
+            text-align: right;
+            border-top: 1px solid #e5e5e5;
+        }
+    </style>
+}

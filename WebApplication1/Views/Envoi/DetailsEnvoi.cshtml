@@ -1,0 +1,418 @@
+﻿@model WebApplication1.Models.Envoi.EnvoiComplet
+
+@{
+    ViewData["Title"] = "Détails de l'Envoi";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-eye"></i> Détails de l'Envoi #@Model.Id</h4>
+                    <div>
+                        <a href="@Url.Action("MesEnvois")" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <!-- Informations générales de l'envoi -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations Générales</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Numéro d'envoi:</dt>
+                                        <dd class="col-sm-8">@Model.Id</dd>
+
+                                        <dt class="col-sm-4">Affaire:</dt>
+                                        <dd class="col-sm-8">AFF-@Model.AffaireId.ToString("D4") - @Model.Affaire?.Titre</dd>
+
+                                        <dt class="col-sm-4">Type d'analyse:</dt>
+                                        <dd class="col-sm-8">@Model.TypeAnalyseDemandee</dd>
+
+                                        <dt class="col-sm-4">Date prévue:</dt>
+                                        <dd class="col-sm-8">@Model.DateEnvoiPrevue.ToString("dd/MM/yyyy")</dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Date effective:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (Model.DateEnvoiEffective > DateTime.MinValue)
+                                            {
+                                                @Model.DateEnvoiEffective.ToString("dd/MM/yyyy HH:mm")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Non envoyé</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-4">Statut envoi:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge @GetStatusBadgeClass(Model.StatutEnvoi)">@Model.StatutEnvoi</span>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Statut échantillon:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge @GetEchantillonStatusBadgeClass(Model.StatutEchantillon)">@Model.StatutEchantillon</span>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Nombre échantillons:</dt>
+                                        <dd class="col-sm-8">@Model.NombreEchantillons</dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.ObservationsEnvoi))
+                            {
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <dt>Observations:</dt>
+                                        <dd>@Model.ObservationsEnvoi</dd>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Informations de l'échantillon principal -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-vial"></i> Informations de l'Échantillon Principal</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Code QR:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="font-monospace">@Model.CodeQR</span>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('@Model.CodeQR')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Poids:</dt>
+                                        <dd class="col-sm-8">@Model.Poids g</dd>
+
+                                        <dt class="col-sm-4">Couleur:</dt>
+                                        <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Couleur) ? "Non spécifié" : Model.Couleur)</dd>
+
+                                        <dt class="col-sm-4">Emballage:</dt>
+                                        <dd class="col-sm-8">@Model.Emballage</dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Conditions stockage:</dt>
+                                        <dd class="col-sm-8">@Model.ConditionsStockage</dd>
+
+                                        <dt class="col-sm-4">Emplacement:</dt>
+                                        <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Emplacement) ? "Non défini" : Model.Emplacement)</dd>
+
+                                        <dt class="col-sm-4">Date préparation:</dt>
+                                        <dd class="col-sm-8">@Model.DatePreparation.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                                        <dt class="col-sm-4">Date réception:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (Model.DateReception.HasValue)
+                                            {
+                                                @Model.DateReception.Value.ToString("dd/MM/yyyy HH:mm")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Non reçu</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.ObservationsEchantillon))
+                            {
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <dt>Observations échantillon:</dt>
+                                        <dd>@Model.ObservationsEchantillon</dd>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Échantillons associés -->
+                    @if (Model.Echantillons?.Any() == true)
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-vials"></i> Échantillons Associés (@Model.Echantillons.Count)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Description</th>
+                                                <th>Type</th>
+                                                <th>Statut</th>
+                                                <th>Lieu collecte</th>
+                                                <th>Responsable</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var echantillon in Model.Echantillons)
+                                            {
+                                                <tr>
+                                                    <td>@echantillon.NumeroEchantillon</td>
+                                                    <td>@echantillon.Description</td>
+                                                    <td>@echantillon.Type</td>
+                                                    <td>
+                                                        <span class="badge @GetEchantillonStatusBadgeClass(echantillon.Statut.ToString())">
+                                                            @echantillon.Statut
+                                                        </span>
+                                                    </td>
+                                                    <td>@echantillon.LieuCollecte</td>
+                                                    <td>@echantillon.ResponsableCollecte</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Informations de vérification -->
+                    @if (Model.DateVerification.HasValue || !string.IsNullOrEmpty(Model.VerifiePar))
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-check-circle"></i> Informations de Vérification</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    @if (Model.DateVerification.HasValue)
+                                    {
+                                        <div class="col-md-6">
+                                            <dl class="row">
+                                                <dt class="col-sm-4">Date vérification:</dt>
+                                                <dd class="col-sm-8">@Model.DateVerification.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                                            </dl>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.VerifiePar))
+                                    {
+                                        <div class="col-md-6">
+                                            <dl class="row">
+                                                <dt class="col-sm-4">Vérifié par:</dt>
+                                                <dd class="col-sm-8">@Model.VerifiePar</dd>
+                                            </dl>
+                                        </div>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.NotesVerification))
+                                {
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <dt>Notes de vérification:</dt>
+                                            <dd>@Model.NotesVerification</dd>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-cogs"></i> Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="imprimerDetails(@Model.Id)">
+                                    <i class="fas fa-print"></i> Imprimer
+                                </button>
+
+                                @if (Model.StatutEnvoi == "Préparé")
+                                {
+                                    <button type="button" class="btn btn-success" onclick="confirmerEnvoi(@Model.Id)">
+                                        <i class="fas fa-paper-plane"></i> Confirmer l'envoi
+                                    </button>
+                                    <a href="@Url.Action("ModifierEnvoi", new { id = Model.Id })" class="btn btn-warning">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    <button type="button" class="btn btn-danger" onclick="supprimerEnvoi(@Model.Id)">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                }
+
+                                @if (Model.StatutEchantillon == "Envoyé" || Model.StatutEchantillon == "Reçu")
+                                {
+                                    <a href="@Url.Action("MesEnvois")" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Retour
+                                    </a>
+                                }
+
+                                @if (Model.StatutEchantillon == "Reçu")
+                                {
+                                    <button type="button" class="btn btn-primary" onclick="verifierEchantillon(@Model.Id)">
+                                        <i class="fas fa-search"></i> Vérifier
+                                    </button>
+                                }
+
+                                @if (Model.StatutEchantillon == "Conforme")
+                                {
+                                    <button type="button" class="btn btn-success" onclick="procederStockage(@Model.Id)">
+                                        <i class="fas fa-archive"></i> Procéder au stockage
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('success', 'Code QR copié dans le presse-papier');
+            }, function(err) {
+                showToast('error', 'Erreur lors de la copie');
+            });
+        }
+
+        function imprimerDetails(envoiId) {
+            var printUrl = '@Url.Action("ImprimerBon")' + '?id=' + envoiId;
+            var printWindow = window.open(printUrl, '_blank', 'width=800,height=600,scrollbars=yes');
+
+            printWindow.onload = function() {
+                setTimeout(function() {
+                    printWindow.print();
+                }, 500);
+            };
+        }
+
+        function confirmerEnvoi(envoiId) {
+            if (confirm('Êtes-vous sûr de vouloir confirmer cet envoi ? Cette action est irréversible.')) {
+                $.post('@Url.Action("ConfirmerEnvoi")', { id: envoiId }, function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                }).fail(function() {
+                    showToast('error', 'Erreur lors de la confirmation');
+                });
+            }
+        }
+
+        function supprimerEnvoi(envoiId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet envoi ? Cette action est irréversible.')) {
+                $.post('@Url.Action("SupprimerEnvoi")', { id: envoiId }, function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        setTimeout(function() {
+                            window.location.href = '@Url.Action("MesEnvois")';
+                        }, 2000);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                }).fail(function() {
+                    showToast('error', 'Erreur lors de la suppression');
+                });
+            }
+        }
+
+        function verifierEchantillon(envoiId) {
+            // Ouvrir la modal de vérification
+            $('#verificationModal').modal('show');
+            // Charger les données de vérification via AJAX
+            $.get('@Url.Action("VerifierEchantillon")', { id: envoiId }, function(data) {
+                $('#verificationModal .modal-body').html(data);
+            });
+        }
+
+        function procederStockage(envoiId) {
+            var notes = prompt('Notes pour le stockage (optionnel):');
+            $.post('@Url.Action("ProcederAuStockage")', {
+                envoiEchantillonId: envoiId,
+                notesStockage: notes
+            }, function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showToast('error', response.message);
+                }
+            }).fail(function() {
+                showToast('error', 'Erreur lors du stockage');
+            });
+        }
+
+        function showToast(type, message) {
+            // Implémentation simple d'un toast
+            var toast = `<div class="alert alert-${type} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+            $('body').append(toast);
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 3000);
+        }
+    </script>
+}
+
+@functions {
+    public string GetStatusBadgeClass(string statut)
+    {
+        return statut switch
+        {
+            "Préparé" => "bg-warning text-dark",
+            "Envoyé" => "bg-success",
+            "Reçu" => "bg-info",
+            "Transmis" => "bg-primary",
+            _ => "bg-secondary"
+        };
+    }
+
+    public string GetEchantillonStatusBadgeClass(string statut)
+    {
+        return statut switch
+        {
+            "Préparé" => "bg-warning text-dark",
+            "Envoyé" => "bg-info",
+            "Reçu" => "bg-primary",
+            "Conforme" => "bg-success",
+            "Non-conforme" => "bg-danger",
+            "Stocké" => "bg-dark",
+            "Vérifié" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}

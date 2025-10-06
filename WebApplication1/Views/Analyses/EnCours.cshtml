@@ -1,0 +1,28 @@
+﻿@model IEnumerable<WebApplication1.Models.Stockage.Echantillon>
+
+@{
+    ViewData["Title"] = "Analyses en Cours";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container">
+    <h2><i class="fas fa-spinner"></i> @ViewData["Title"]</h2>
+
+    <div class="list-group">
+        @foreach (var item in Model)
+        {
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">@item.NumeroEchantillon </h5>
+                    <small>Démarré le @item.DateDebutAnalyse</small>
+                </div>
+                <p class="mb-1">@item.Description</p>
+                <div>
+                    <a asp-action="SaisirResultats" asp-route-id="@item.Id" class="btn btn-success btn-sm">
+                        <i class="fas fa-edit"></i> Saisir résultats
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,172 @@
+﻿@model IEnumerable<WebApplication1.Models.Technicien>
+
+@{
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+    ViewData["Title"] = "Liste des Techniciens";
+}
+
+<style>
+    .techniciens-container {
+        background: white;
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .header-section {
+        text-align: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .create-btn {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 1rem;
+        display: inline-block;
+    }
+
+        .create-btn:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+
+    .table-container {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+        .modern-table thead {
+            background: #f8f9fa;
+        }
+
+        .modern-table th, .modern-table td {
+            padding: 1rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: middle;
+        }
+
+    .action-links {
+        display: flex;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    .action-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid #007bff;
+        background: #007bff;
+        color: white;
+        min-width: 70px;
+        text-align: center;
+        text-decoration: none;
+    }
+
+        .action-btn:hover {
+            background: #0056b3;
+            color: white;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .password-mask {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 2px;
+        color: #6c757d;
+    }
+</style>
+
+<div class="techniciens-container">
+    <div class="content-wrapper">
+        <div class="header-section">
+            <h1 class="page-title">Liste des Techniciens</h1>
+            <a asp-action="Create" class="create-btn">Ajouter un nouveau technicien</a>
+        </div>
+
+        <div class="table-container">
+            @if (Model != null && Model.Any())
+            {
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Nom)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Prenom)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Email)</td>
+                                <td>
+                                    <div class="action-links">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="action-btn">Détails</a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn">Modifier</a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn">Supprimer</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <p>Aucun technicien trouvé</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+    </script>
+}

@@ -1,0 +1,661 @@
+﻿@model WebApplication1.ViewModels.AssignAffaireViewModel
+
+@{
+    ViewBag.Title = "Affecter des affaires";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="assign-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-user-plus"></i> Affectation d'affaires</h1>
+            <p class="subtitle">Assignez des affaires à un enquêteur responsable</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="notification success">
+            <i class="fas fa-check-circle"></i>
+            <span>@TempData["SuccessMessage"]</span>
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="notification error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>@TempData["ErrorMessage"]</span>
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+    }
+
+    @using (Html.BeginForm("Index", "Assign", FormMethod.Post, new { @class = "assign-form" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-layout">
+            <!-- Section Affaires -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-folder-open"></i> Affaires disponibles</h3>
+                    <div class="section-actions">
+                        @if (Model.AffairesDisponibles.Any())
+                        {
+                            <label class="select-all-wrapper">
+                                <input type="checkbox" id="selectAll" />
+                                <span class="checkmark"></span>
+                                Sélectionner tout
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="section-content">
+                    @if (Model.AffairesDisponibles.Any())
+                    {
+                        <div class="affaires-grid">
+                            @foreach (var affaire in Model.AffairesDisponibles)
+                            {
+                                <div class="affaire-card">
+                                    <div class="card-header">
+                                        <label class="checkbox-wrapper">
+                                            <input type="checkbox"
+                                                   name="AffairesSelectionnees"
+                                                   value="@affaire.Id"
+                                                   class="affaire-checkbox" />
+                                            <span class="checkmark"></span>
+                                        </label>
+                                        <h4 class="affaire-title">@affaire.Titre</h4>
+                                    </div>
+
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(affaire.Description))
+        {
+            <p class="affaire-description">
+                @(affaire.Description.Length > 120 ? affaire.Description.Substring(0, 120) + "..." : affaire.Description)
+            </p>
+        }
+
+        <div class="affaire-meta">
+            <span class="meta-item priority-@affaire.Priorite.ToString().ToLower()">
+                <i class="fas fa-exclamation-triangle"></i>
+                @affaire.Priorite
+            </span>
+            <span class="meta-item status-@affaire.Statut.ToString().ToLower()">
+                <i class="fas fa-info-circle"></i>
+                @affaire.Statut
+            </span>
+            @if (!string.IsNullOrEmpty(affaire.Lieu))
+            {
+                <span class="meta-item location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    @affaire.Lieu
+                </span>
+            }
+        </div>
+    </div>
+</div>
+                            }
+                        </div>
+                        @Html.ValidationMessageFor(m => m.AffairesSelectionnees, "", new { @class = "validation-error" })
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>Aucune affaire disponible</h3>
+                            <p>Toutes les affaires sont déjà assignées à des enquêteurs.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Section Enquêteur -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-user-tie"></i> Enquêteur responsable</h3>
+                </div>
+
+                <div class="section-content">
+                    <div class="enqueteur-select">
+                        @Html.DropDownListFor(m => m.EnqueteurId,
+                            new SelectList(Model.Enqueteurs, "idEnqueteur", "nom"),
+                            "-- Sélectionner un enquêteur --",
+                            new { @class = "form-select" })
+                        @Html.ValidationMessageFor(m => m.EnqueteurId, "", new { @class = "validation-error" })
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Actions -->
+            <div class="action-section">
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary" id="assignButton" disabled>
+                        <i class="fas fa-user-plus"></i>
+                        <span>Affecter les affaires</span>
+                    </button>
+                    @Html.ActionLink("Voir l'historique", "History", null, new { @class = "btn btn-secondary" })
+                    @Html.ActionLink("Retour aux affaires", "Index", "Affaires", null, new { @class = "btn btn-outline" })
+                </div>
+
+                <div class="selection-summary" id="selectionSummary" style="display: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="summaryText">Aucune sélection</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- IMPORTANT: Inclusion de jQuery avant le script personnalisé -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Fonction pour vérifier l'état du bouton et mettre à jour le résumé
+        function updateUI() {
+            var selectedAffaires = $('input[name="AffairesSelectionnees"]:checked').length;
+            var selectedEnqueteur = $('#EnqueteurId').val();
+            var enqueteurName = $('#EnqueteurId option:selected').text();
+
+            // Mettre à jour le bouton
+            var isValid = selectedAffaires > 0 && selectedEnqueteur !== '' && selectedEnqueteur !== null;
+            $('#assignButton').prop('disabled', !isValid);
+
+            // Mettre à jour le résumé
+            var summary = $('#selectionSummary');
+            var summaryText = $('#summaryText');
+
+            if (selectedAffaires > 0 || (selectedEnqueteur !== '' && selectedEnqueteur !== null)) {
+                summary.show();
+                if (selectedAffaires > 0 && selectedEnqueteur !== '' && selectedEnqueteur !== null) {
+                    summaryText.text(selectedAffaires + ' affaire(s) → ' + enqueteurName);
+                    summary.removeClass('partial').addClass('complete');
+                } else if (selectedAffaires > 0) {
+                    summaryText.text(selectedAffaires + ' affaire(s) sélectionnée(s)');
+                    summary.removeClass('complete').addClass('partial');
+                } else {
+                    summaryText.text('Enquêteur: ' + enqueteurName);
+                    summary.removeClass('complete').addClass('partial');
+                }
+            } else {
+                summary.hide();
+            }
+
+            // Mettre à jour les cartes d'affaires
+            $('.affaire-card').each(function () {
+                var checkbox = $(this).find('input[name="AffairesSelectionnees"]');
+                if (checkbox.is(':checked')) {
+                    $(this).addClass('selected');
+                } else {
+                    $(this).removeClass('selected');
+                }
+            });
+        }
+
+        // Sélectionner/désélectionner tout
+        $('#selectAll').change(function () {
+            $('input[name="AffairesSelectionnees"]').prop('checked', $(this).is(':checked'));
+            updateUI();
+        });
+
+        // Gestion des cases à cocher individuelles
+        $(document).on('change', 'input[name="AffairesSelectionnees"]', function () {
+            updateUI();
+
+            // Mettre à jour la case "Sélectionner tout"
+            var totalCheckboxes = $('input[name="AffairesSelectionnees"]').length;
+            var checkedCheckboxes = $('input[name="AffairesSelectionnees"]:checked').length;
+
+            $('#selectAll').prop('checked', checkedCheckboxes === totalCheckboxes);
+        });
+
+        // Gestion du changement d'enquêteur
+        $('#EnqueteurId').change(function () {
+            updateUI();
+        });
+
+        // Confirmation avant affectation
+        $('#assignButton').click(function (e) {
+            var selectedCount = $('input[name="AffairesSelectionnees"]:checked').length;
+            var enqueteurName = $('#EnqueteurId option:selected').text();
+
+            if (selectedCount === 0) {
+                alert('Veuillez sélectionner au moins une affaire.');
+                e.preventDefault();
+                return;
+            }
+
+            if ($('#EnqueteurId').val() === '' || $('#EnqueteurId').val() === null) {
+                alert('Veuillez sélectionner un enquêteur.');
+                e.preventDefault();
+                return;
+            }
+
+            if (!confirm('Confirmer l\'affectation de ' + selectedCount + ' affaire(s) à ' + enqueteurName + ' ?')) {
+                e.preventDefault();
+            }
+        });
+
+        // Animation des cartes au survol
+        $('.affaire-card').hover(
+            function () { $(this).addClass('hover'); },
+            function () { $(this).removeClass('hover'); }
+        );
+
+        // Initialisation
+        updateUI();
+    });
+</script>
+
+<style>
+    /* Variables CSS pour la cohérence */
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+        --text-color: #495057;
+        --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        --shadow-hover: 0 4px 20px rgba(0,0,0,0.15);
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+    }
+
+    .assign-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 40px 0;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+
+    .header-content h1 {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: 300;
+    }
+
+    .header-content i {
+        margin-right: 15px;
+    }
+
+    .subtitle {
+        margin: 10px 0 0 0;
+        font-size: 1.1em;
+        opacity: 0.9;
+    }
+
+    .notification {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        animation: slideIn 0.3s ease;
+    }
+
+    .notification.success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid var(--success-color);
+    }
+
+    .notification.error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid var(--danger-color);
+    }
+
+    .notification i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+
+    .notification .close-btn {
+        margin-left: auto;
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: var(--transition);
+    }
+
+    .notification .close-btn:hover {
+        opacity: 1;
+    }
+
+    .form-layout {
+        display: grid;
+        gap: 30px;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .section-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .section-header {
+        background: var(--light-gray);
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: var(--primary-color);
+        font-size: 1.3em;
+    }
+
+    .section-header i {
+        margin-right: 10px;
+        color: var(--secondary-color);
+    }
+
+    .section-content {
+        padding: 20px;
+    }
+
+    .select-all-wrapper {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--secondary-color);
+    }
+
+    .affaires-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+    }
+
+    .affaire-card {
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        transition: var(--transition);
+        background: white;
+        cursor: pointer;
+    }
+
+    .affaire-card:hover,
+    .affaire-card.hover {
+        border-color: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .affaire-card.selected {
+        border-color: var(--success-color);
+        background: #f8fff8;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .affaire-title {
+        margin: 0;
+        font-size: 1.2em;
+        color: var(--primary-color);
+        flex: 1;
+    }
+
+    .affaire-description {
+        color: var(--text-color);
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+
+    .affaire-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .meta-item {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+
+    .meta-item i {
+        margin-right: 5px;
+        font-size: 0.8em;
+    }
+
+    .priority-urgente { background: #ffebee; color: #c62828; }
+    .priority-haute { background: #fff3e0; color: #ef6c00; }
+    .priority-moyenne { background: #e3f2fd; color: #1976d2; }
+    .priority-faible { background: #f3e5f5; color: #7b1fa2; }
+
+    .status-ouverte { background: #e8f5e8; color: #2e7d32; }
+    .status-enquêteactive { background: #e1f5fe; color: #0277bd; }
+    .status-suspendue { background: #fff8e1; color: #f57c00; }
+    .status-résolue { background: #e8eaf6; color: #3f51b5; }
+    .status-nonrésolue { background: #ffebee; color: #d32f2f; }
+
+    .location { background: #f1f8e9; color: #558b2f; }
+
+    .checkbox-wrapper {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkmark {
+        position: relative;
+        display: inline-block;
+        height: 20px;
+        width: 20px;
+        background-color: white;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        transition: var(--transition);
+    }
+
+    .checkbox-wrapper:hover .checkmark {
+        border-color: var(--secondary-color);
+    }
+
+    .checkbox-wrapper input:checked ~ .checkmark {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+    }
+
+    .checkbox-wrapper input:checked ~ .checkmark:after {
+        content: "";
+        position: absolute;
+        display: block;
+        left: 6px;
+        top: 2px;
+        width: 6px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .enqueteur-select {
+        max-width: 400px;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        background: white;
+        transition: var(--transition);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .action-section {
+        background: white;
+        padding: 30px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 24px;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+        min-width: 150px;
+        justify-content: center;
+    }
+
+    .btn i {
+        margin-right: 8px;
+    }
+
+    .btn-primary {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #2980b9;
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+    }
+
+    .btn-secondary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #1a252f;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .selection-summary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .selection-summary i {
+        margin-right: 10px;
+    }
+
+    .selection-summary.partial {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .selection-summary.complete {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-color);
+    }
+
+    .empty-state i {
+        font-size: 4em;
+        color: var(--border-color);
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        margin-bottom: 10px;
+        color: var(--primary-color);
+    }
+
+    .validation-error {
+        color: var(--danger-color);
+        font-size: 0.9em;
+        margin-top: 10px;
+        display: block;
+    }
+
+</style>
+
+<!-- Font Awesome pour les icônes -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

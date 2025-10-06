@@ -1,0 +1,101 @@
+﻿@model IEnumerable<WebApplication1.Models.Affaire>
+
+@{
+    ViewBag.Title = "Mes Affaires";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+
+<h2>@ViewBag.Title</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Titre)</th>
+            <th>@Html.DisplayNameFor(model => model.Statut)</th>
+            <th>@Html.DisplayNameFor(model => model.Priorite)</th>
+            <th>@Html.DisplayNameFor(model => model.DateOuverture)</th>
+            <th>@Html.DisplayNameFor(model => model.DateFermeture)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Titre)</td>
+                <td>
+                    <span class="label @GetStatutClass(item.Statut)">
+                        @Html.DisplayFor(modelItem => item.Statut)
+                    </span>
+                </td>
+                <td>
+                    <span class="label @GetPrioriteClass(item.Priorite)">
+                        @Html.DisplayFor(modelItem => item.Priorite)
+                    </span>
+                </td>
+                <td>@Html.DisplayFor(modelItem => item.DateOuverture)</td>
+                <td>@(item.DateFermeture.HasValue ? item.DateFermeture.Value.ToShortDateString() : "-")</td>
+                <td>
+                    @Html.ActionLink("Détails", "Details", new { id = item.Id }, new { @class = "btn btn-info btn-xs" })
+                    @if (item.Statut == WebApplication1.Models.StatutAffaire.Ouverte || item.Statut == WebApplication1.Models.StatutAffaire.EnqueteActive)
+                    {
+                        @Html.ActionLink("Modifier", "Edit", new { id = item.Id }, new { @class = "btn btn-primary btn-xs" })
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@functions {
+    // Helper pour les classes CSS selon le statut
+    public string GetStatutClass(WebApplication1.Models.StatutAffaire statut)
+    {
+        switch (statut)
+        {
+            case WebApplication1.Models.StatutAffaire.Ouverte:
+                return "label-primary";
+            case WebApplication1.Models.StatutAffaire.EnqueteActive:
+                return "label-info";
+            case WebApplication1.Models.StatutAffaire.Resolue:
+                return "label-success";
+            case WebApplication1.Models.StatutAffaire.NonResolue:
+                return "label-danger";
+            default:
+                return "label-default";
+        }
+    }
+
+    // Helper pour les classes CSS selon la priorité
+    public string GetPrioriteClass(WebApplication1.Models.Priorite priorite)
+    {
+        switch (priorite)
+        {
+            case WebApplication1.Models.Priorite.Urgente:
+                return "label-danger";
+            case WebApplication1.Models.Priorite.Haute:
+                return "label-warning";
+            case WebApplication1.Models.Priorite.Moyenne:
+                return "label-info";
+            case WebApplication1.Models.Priorite.Faible:
+                return "label-success";
+            default:
+                return "label-default";
+        }
+    }
+}

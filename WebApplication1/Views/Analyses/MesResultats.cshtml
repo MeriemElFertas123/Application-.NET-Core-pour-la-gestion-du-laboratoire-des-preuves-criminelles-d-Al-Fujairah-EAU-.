@@ -1,0 +1,476 @@
+﻿@using WebApplication1.Models.Stockage
+@model IEnumerable<WebApplication1.Models.Stockage.Echantillon>
+
+@{
+    ViewData["Title"] = "Mes Résultats";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="AValider">Retour</a></li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-line"></i> @ViewData["Title"]</h2>
+        <div>
+            <span class="badge bg-success rounded-pill">@Model.Count() résultat(s)</span>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3 text-muted"></i>
+            <h4>Aucun résultat disponible</h4>
+            <p class="text-muted">Vous n'avez pas encore terminé d'analyses.</p>
+            <a asp-action="MesEchantillons" class="btn btn-primary">
+                <i class="fas fa-vial"></i> Voir mes échantillons
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Filtres et options d'export -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="filterStatut">Filtrer par statut :</label>
+                        <select id="filterStatut" class="form-control">
+                            <option value="">Tous les statuts</option>
+                            <option value="AnalyseTerminee">En attente validation</option>
+                            <option value="EnValidation">En validation</option>
+                            <option value="Valide">Validé</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterType">Filtrer par type :</label>
+                        <select id="filterType" class="form-control">
+                            <option value="">Tous les types</option>
+                            @foreach (var type in Model.Select(e => e.Type).Distinct())
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterPeriode">Période :</label>
+                        <select id="filterPeriode" class="form-control">
+                            <option value="">Toute période</option>
+                            <option value="today">Aujourd'hui</option>
+                            <option value="week">Cette semaine</option>
+                            <option value="month">Ce mois</option>
+                            <option value="quarter">Ce trimestre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="btn-group w-100" role="group">
+                            <button id="resetFilters" class="btn btn-outline-secondary" title="Réinitialiser">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé statistique -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card text-center bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">@Model.Count(e => e.Statut == StatutEchantillon.Valide)</h5>
+                        <p class="card-text">Analyses validées</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">@Model.Count(e => e.Statut == StatutEchantillon.AnalyseTerminee)</h5>
+                        <p class="card-text">En attente validation</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-center bg-light">
+                    <div class="card-body">
+                        @{
+                            var tempsMoyen = Model.Where(e => e.DateDebutAnalyse.HasValue && e.DateFinAnalyse.HasValue)
+                            .Select(e => (e.DateFinAnalyse.Value - e.DateDebutAnalyse.Value).TotalHours)
+                            .DefaultIfEmpty(0)
+                            .Average();
+                        }
+                        <h5 class="card-title text-primary">@Math.Round(tempsMoyen, 1)h</h5>
+                        <p class="card-text">Temps moyen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des résultats -->
+        <div id="resultsList">
+            @foreach (var item in Model.OrderByDescending(e => e.DateFinAnalyse))
+            {
+                <div class="card mb-3 resultat-card"
+                     data-statut="@item.Statut"
+                     data-type="@item.Type"
+                     data-date="@item.DateFinAnalyse?.ToString("yyyy-MM-dd")">
+
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">@item.NumeroEchantillon</h5>
+                            <small class="text-muted">@item.Type</small>
+                        </div>
+                        <div>
+                            @switch (item.Statut)
+                            {
+                                case StatutEchantillon.AnalyseTerminee:
+                                    <span class="badge bg-warning badge-lg">En attente validation</span>
+                                    break;
+                                case StatutEchantillon.EnValidation:
+                                    <span class="badge bg-info badge-lg">En validation</span>
+                                    break;
+                                case StatutEchantillon.Valide:
+                                    <span class="badge bg-success badge-lg">Validé</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary badge-lg">@item.Statut</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>Description de l'échantillon</h6>
+                                <p class="text-muted mb-3">@item.Description</p>
+
+                                @if (item.Analyses != null && item.Analyses.Any())
+                                {
+                                    <h6>Résultats des analyses</h6>
+                                    <div class="row">
+                                        @foreach (var analyse in item.Analyses)
+                                        {
+                                            <div class="col-md-4 mb-3">
+                                                <div class="border rounded p-3 h-100 d-flex flex-column">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h6 class="text-primary mb-0">@analyse.Nom</h6>
+                                                        @if (analyse.FichierContenu != null)
+                                                        {
+                                                            <a asp-action="TelechargerRapport" asp-route-analyseId="@analyse.Id"
+                                                               class="btn btn-sm btn-outline-primary"
+                                                               title="Télécharger le rapport complet">
+                                                                <i class="fas fa-file-download"></i> Télécharger
+                                                            </a>
+                                                        }
+                                                    </div>
+
+                                                    @if (!string.IsNullOrEmpty(analyse.TypeAnalyse))
+                                                    {
+                                                        <small class="badge bg-secondary mb-2">@analyse.TypeAnalyse</small>
+                                                    }
+
+                                                    <div class="mt-auto">
+                                                        @if (!string.IsNullOrEmpty(analyse.Conclusion))
+                                                        {
+                                                            <p class="mb-1"><strong>Conclusion :</strong></p>
+                                                            <p class="text-muted small">@analyse.Conclusion</p>
+                                                        }
+
+                                                        @if (!string.IsNullOrEmpty(analyse.Methode))
+                                                        {
+                                                            <p class="mb-0 mt-2">
+                                                                <small class="text-muted"><i class="fas fa-flask"></i> @analyse.Methode</small>
+                                                            </p>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Aucun résultat d'analyse disponible.
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(item.CommentairesAnalyste))
+                                {
+                                    <h6>Observations de l'analyste</h6>
+                                    <div class="alert alert-light">
+                                        @item.CommentairesAnalyste
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-4">
+                                <h6>Informations techniques</h6>
+                                <dl class="row">
+                                    <dt class="col-6">Date réception:</dt>
+                                    <dd class="col-6">@item.DateReception.ToString("dd/MM/yyyy")</dd>
+
+                                    <dt class="col-6">Début analyse:</dt>
+                                    <dd class="col-6">
+                                        @if (item.DateDebutAnalyse.HasValue)
+                                        {
+                                            @item.DateDebutAnalyse.Value.ToString("dd/MM/yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Non définie</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-6">Fin analyse:</dt>
+                                    <dd class="col-6">
+                                        @if (item.DateFinAnalyse.HasValue)
+                                        {
+                                            @item.DateFinAnalyse.Value.ToString("dd/MM/yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Non définie</span>
+                                        }
+                                    </dd>
+
+                                    @if (item.DateDebutAnalyse.HasValue && item.DateFinAnalyse.HasValue)
+                                    {
+                                        <dt class="col-6">Durée:</dt>
+                                        <dd class="col-6">
+                                            @{
+                                                var duree = item.DateFinAnalyse.Value - item.DateDebutAnalyse.Value;
+                                                if (duree.TotalDays >= 1)
+                                                {
+                                                    @($"{duree.Days}j {duree.Hours}h")
+                                                }
+                                                else
+                                                {
+                                                    @($"{duree.Hours}h {duree.Minutes}min")
+                                                }
+                                            }
+                                        </dd>
+                                    }
+
+                                    <dt class="col-6">Priorité:</dt>
+                                    <dd class="col-6">
+                                        @switch (item.Priorite)
+                                        {
+                                            case PrioriteEchantillon.Urgent:
+                                                <span class="badge bg-danger">URGENT</span>
+                                                break;
+                                            case PrioriteEchantillon.Normal:
+                                                <span class="badge bg-info">NORMALE</span>
+                                                break;
+                                            case PrioriteEchantillon.Critique:
+                                                <span class="badge bg-secondary">CRITIQUE</span>
+                                                break;
+                                        }
+                                    </dd>
+                                </dl>
+
+                                @if (item.Stockage != null)
+                                {
+                                    <h6>Localisation</h6>
+                                    <p class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        @item.Stockage.Zone - @item.Stockage.Emplacement
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-light">
+                        <div class="btn-group" role="group">
+                            @if (item.Statut == StatutEchantillon.AnalyseTerminee)
+                            {
+                                <a asp-action="SaisirResultats" asp-route-id="@item.Id"
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </a>
+                            }
+                        </div>
+
+                        <div class="float-end">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i>
+                                Dernière mise à jour: @(item.DateFinAnalyse?.ToString("dd/MM/yyyy HH:mm") ?? "Non définie")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Fonction de filtrage
+            function filterResultats() {
+                var statutFilter = $('#filterStatut').val();
+                var typeFilter = $('#filterType').val();
+                var periodeFilter = $('#filterPeriode').val();
+                var today = new Date();
+
+                $('.resultat-card').each(function() {
+                    var $card = $(this);
+                    var show = true;
+
+                    // Filtre par statut
+                    if (statutFilter && $card.data('statut') !== statutFilter) {
+                        show = false;
+                    }
+
+                    // Filtre par type
+                    if (typeFilter && $card.data('type') !== typeFilter) {
+                        show = false;
+                    }
+
+                    // Filtre par période
+                    if (periodeFilter && $card.data('date')) {
+                        var cardDate = new Date($card.data('date'));
+                        var daysDiff = Math.floor((today - cardDate) / (1000 * 60 * 60 * 24));
+
+                        switch(periodeFilter) {
+                            case 'today':
+                                if (daysDiff > 0) show = false;
+                                break;
+                            case 'week':
+                                if (daysDiff > 7) show = false;
+                                break;
+                            case 'month':
+                                if (daysDiff > 30) show = false;
+                                break;
+                            case 'quarter':
+                                if (daysDiff > 90) show = false;
+                                break;
+                        }
+                    }
+
+                    if (show) {
+                        $card.show();
+                    } else {
+                        $card.hide();
+                    }
+                });
+
+                // Afficher un message si aucun résultat
+                var visibleCards = $('.resultat-card:visible').length;
+                $('#noResults').remove();
+                if (visibleCards === 0) {
+                    $('#resultsList').append(
+                        '<div id="noResults" class="alert alert-warning text-center">' +
+                        '<i class="fas fa-search"></i> Aucun résultat ne correspond aux critères de filtrage.' +
+                        '</div>'
+                    );
+                }
+            }
+
+            // Événements de filtrage
+            $('#filterStatut, #filterType, #filterPeriode').change(filterResultats);
+
+            // Réinitialiser les filtres
+            $('#resetFilters').click(function() {
+                $('#filterStatut, #filterType, #filterPeriode').val('');
+                filterResultats();
+            });
+
+            // Export PDF
+            $('#exportPDF').click(function() {
+                var visibleIds = $('.resultat-card:visible').map(function() {
+                    return $(this).find('.card-header h5').text();
+                }).get();
+
+                if (visibleIds.length === 0) {
+                    alert('Aucun résultat à exporter');
+                    return;
+                }
+
+                // Redirection vers l'action d'export PDF avec les IDs
+                window.location.href = '@Url.Action("ExporterResultatsPDF", "Analyses")' + '?ids=' + visibleIds.join(',');
+            });
+
+            // Export Excel
+            $('#exportExcel').click(function() {
+                var visibleIds = $('.resultat-card:visible').map(function() {
+                    return $(this).find('.card-header h5').text();
+                }).get();
+
+                if (visibleIds.length === 0) {
+                    alert('Aucun résultat à exporter');
+                    return;
+                }
+
+                // Redirection vers l'action d'export Excel avec les IDs
+                window.location.href = '@Url.Action("ExporterResultatsExcel", "Analyses")' + '?ids=' + visibleIds.join(',');
+            });
+
+            // Animation au survol des cartes
+            $('.resultat-card').hover(function() {
+                $(this).addClass('shadow-lg').removeClass('shadow');
+            }, function() {
+                $(this).removeClass('shadow-lg').addClass('shadow');
+            });
+        });
+    </script>
+}
+
+<style>
+    .badge-lg {
+        font-size: 0.9em;
+        padding: 0.5em 0.8em;
+    }
+
+    .card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+    .border {
+        border-color: #e9ecef !important;
+    }
+
+    .btn-group .btn {
+        border-radius: 0;
+    }
+
+        .btn-group .btn:first-child {
+            border-radius: 0.25rem 0 0 0.25rem;
+        }
+
+        .btn-group .btn:last-child {
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+
+    .card-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    dl dt {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .alert-light {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+        color: #6c757d;
+    }
+</style>

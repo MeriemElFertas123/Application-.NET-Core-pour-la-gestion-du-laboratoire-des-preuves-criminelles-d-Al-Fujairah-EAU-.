@@ -1,0 +1,383 @@
+﻿@model WebApplication1.Models.Affaire
+@{
+    ViewBag.Title = "Supprimer l'affaire";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <!-- Messages d'erreur/succès -->
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        Supprimer l'affaire
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Avertissement de suppression -->
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1">Attention - Suppression définitive</h6>
+                                <p class="mb-0">Cette action est irréversible. Toutes les données liées à cette affaire seront définitivement supprimées.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations de l'affaire -->
+                    <h6 class="text-muted mb-3 border-bottom pb-2">Détails de l'affaire</h6>
+
+                    <div class="row">
+                        <!-- Titre -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-heading text-primary me-1"></i>
+                                Titre
+                            </label>
+                            <div class="form-control bg-light">
+                                @Html.DisplayFor(model => model.Titre)
+                            </div>
+                        </div>
+
+                        <!-- Lieu -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-map-marker-alt text-primary me-1"></i>
+                                Lieu
+                            </label>
+                            <div class="form-control bg-light">
+                                @(string.IsNullOrEmpty(Model.Lieu) ? "Non spécifié" : Model.Lieu)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-align-left text-primary me-1"></i>
+                            Description
+                        </label>
+                        <div class="form-control bg-light" style="min-height: 100px;">
+                            @(string.IsNullOrEmpty(Model.Description) ? "Aucune description" : Model.Description)
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Date d'ouverture -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-plus text-primary me-1"></i>
+                                Date d'ouverture
+                            </label>
+                            <div class="form-control bg-light">
+                                @Html.DisplayFor(model => model.DateOuverture)
+                                <small class="text-muted d-block mt-1">
+                                    il y a @((DateTime.Now - Model.DateOuverture).Days) jours
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Date de fermeture -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-minus text-primary me-1"></i>
+                                Date de fermeture
+                            </label>
+                            <div class="form-control bg-light">
+                                @(Model.DateFermeture.HasValue? Html.DisplayFor(model => model.DateFermeture) : "Non fermée")
+                                @if (Model.DateFermeture.HasValue)
+                                {
+                                    <small class="text-muted d-block mt-1">
+                                        Durée: @((Model.DateFermeture.Value - Model.DateOuverture).Days) jours
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Statut -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-flag text-primary me-1"></i>
+                                Statut
+                            </label>
+                            <div class="form-control bg-light">
+                                <span class="badge bg-@(Model.Statut == WebApplication1.Models.StatutAffaire.Ouverte ? "success" :
+                                                                                              Model.Statut == WebApplication1.Models.StatutAffaire.EnqueteActive ? "primary" :
+                                                                                              Model.Statut == WebApplication1.Models.StatutAffaire.Suspendue ? "warning" :
+                                                                                              Model.Statut == WebApplication1.Models.StatutAffaire.Resolue ? "info" : "secondary")">
+                                    @Html.DisplayFor(m => m.Statut)
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Priorité -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-exclamation-triangle text-primary me-1"></i>
+                                Priorité
+                            </label>
+                            <div class="form-control bg-light">
+                                <span class="badge bg-@(Model.Priorite == WebApplication1.Models.Priorite.Urgente ? "danger" :
+                                                                                              Model.Priorite == WebApplication1.Models.Priorite.Haute ? "warning" :
+                                                                                              Model.Priorite == WebApplication1.Models.Priorite.Moyenne ? "primary" : "secondary")">
+                                    @Html.DisplayFor(m => m.Priorite)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Numéro d'affaire -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-hashtag text-primary me-1"></i>
+                            Numéro d'affaire
+                        </label>
+                        <div class="form-control bg-light">
+                            @Html.DisplayFor(model => model.Id)
+                        </div>
+                    </div>
+
+                    <!-- Enquêteur responsable -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-user-tie text-primary me-1"></i>
+                            Enquêteur responsable
+                        </label>
+                        <div class="form-control bg-light">
+                            @if (!string.IsNullOrEmpty(Model.NomEnqueteur))
+                            {
+                                @Html.DisplayFor(m => m.NomEnqueteur)
+                                <small class="text-muted d-block">ID: @Html.DisplayFor(m => m.IdEnqueteurResponsable)</small>
+                            }
+                            else
+                            {
+                                <span class="text-muted">ID: @Html.DisplayFor(m => m.IdEnqueteurResponsable)</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Motifs récurrents -->
+                    @if (Model.MotifsRecurrents.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-tags text-primary me-1"></i>
+                                Motifs récurrents
+                            </label>
+                            <div class="form-control bg-light">
+                                @foreach (var motif in Model.MotifsRecurrents)
+                                {
+                                    <span class="badge bg-info me-1 mb-1">@motif</span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Éléments associés -->
+                    @if (Model.Echantillons.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-vial text-primary me-1"></i>
+                                Éléments associés qui seront supprimés
+                            </label>
+                            <div class="alert alert-warning">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    <div>
+                                        Cette affaire contient <strong>@Model.Echantillons.Count échantillon(s)</strong> qui seront également supprimés.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <hr class="my-4">
+
+                    <!-- Boutons d'action -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour à la liste
+                        </a>
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info me-2">
+                                <i class="fas fa-eye me-2"></i>
+                                Voir les détails
+                            </a>
+                            <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Êtes-vous absolument certain de vouloir supprimer cette affaire ? Cette action est irréversible.');">
+                                    <i class="fas fa-trash-alt me-2"></i>
+                                    Supprimer définitivement
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .card-header {
+        border-bottom: none;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .form-label {
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+        background-color: #f8f9fa !important;
+        min-height: auto;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+    .btn-outline-info {
+        border: 2px solid #0dcaf0;
+        color: #0dcaf0;
+    }
+
+        .btn-outline-info:hover {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: white;
+        }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        border: none;
+    }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .alert-success {
+        background-color: #d1edff;
+        color: #0c5460;
+    }
+
+    hr {
+        border-color: #dee2e6;
+        opacity: 0.5;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.8em;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ajouter une confirmation supplémentaire pour la suppression
+            const deleteForm = document.querySelector('form[asp-action="DeleteConfirmed"]');
+            if (deleteForm) {
+                deleteForm.addEventListener('submit', function (e) {
+                    const isConfirmed = confirm('Êtes-vous absolument certain de vouloir supprimer cette affaire ? Cette action est irréversible.');
+                    if (!isConfirmed) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
+}

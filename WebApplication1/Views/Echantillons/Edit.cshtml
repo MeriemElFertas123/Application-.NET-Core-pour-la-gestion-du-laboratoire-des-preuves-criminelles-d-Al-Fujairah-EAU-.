@@ -1,0 +1,204 @@
+﻿@using WebApplication1.Models.Stockage
+@model WebApplication1.Models.Stockage.Echantillon
+
+@{
+    ViewBag.Title = "Modifier l'Échantillon";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-edit"></i> Modifier l'Échantillon #@Model.Id</h4>
+                <div class="float-right">
+                    <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-light btn-sm">
+                        <i class="fas fa-eye"></i> Voir détails
+                    </a>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm("Edit", "Echantillons", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-info-circle"></i> Informations Générales</h5>
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.NumeroEchantillon, htmlAttributes: new { @class = "control-label" })
+                                @Html.EditorFor(model => model.NumeroEchantillon, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.NumeroEchantillon, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Type, htmlAttributes: new { @class = "control-label" })
+                                @Html.DropDownListFor(
+                                model => model.Type,
+                                                        new SelectList(Enum.GetValues(typeof(TypeEchantillon))),
+                                                        "-- Sélectionner un type --",
+                                                        new { @class = "form-control" }
+                                                        )
+
+                                @Html.ValidationMessageFor(model => model.Type, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "control-label" })
+                                @Html.TextAreaFor(model => model.Description, new { @class = "form-control", rows = 3 })
+                                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-calendar-alt"></i> Dates</h5>
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.DateReception, htmlAttributes: new { @class = "control-label" })
+                                @Html.EditorFor(model => model.DateReception, new { htmlAttributes = new { @class = "form-control", type = "datetime-local" } })
+                                @Html.ValidationMessageFor(model => model.DateReception, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.DateDebutAnalyse, htmlAttributes: new { @class = "control-label" })
+                                @Html.EditorFor(model => model.DateDebutAnalyse, new { htmlAttributes = new { @class = "form-control", type = "datetime-local" } })
+                                @Html.ValidationMessageFor(model => model.DateDebutAnalyse, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.DateFinAnalyse, htmlAttributes: new { @class = "control-label" })
+                                @Html.EditorFor(model => model.DateFinAnalyse, new { htmlAttributes = new { @class = "form-control", type = "datetime-local" } })
+                                @Html.ValidationMessageFor(model => model.DateFinAnalyse, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-users"></i> Assignations</h5>
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.AffaireId, "Affaire", htmlAttributes: new { @class = "control-label" })
+                                @Html.DropDownList("AffaireId", null, htmlAttributes: new { @class = "form-control" })
+                                @Html.ValidationMessageFor(model => model.AffaireId, "", new { @class = "text-danger" })
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-cogs"></i> Paramètres</h5>
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Statut, htmlAttributes: new { @class = "control-label" })
+                            @Html.DropDownListFor(
+                                                        model => model.Statut,
+                                                        new SelectList(Enum.GetValues(typeof(StatutEchantillon))),
+                                                        "-- Sélectionner un type --",
+                                                        new { @class = "form-control" }
+                                                        )
+
+                                @Html.ValidationMessageFor(model => model.Statut, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.Priorite, htmlAttributes: new { @class = "control-label" })
+                            @Html.DropDownListFor(
+                                                        model => model.Priorite,
+                                                        new SelectList(Enum.GetValues(typeof(PrioriteEchantillon))),
+                                                        "-- Sélectionner un type --",
+                                                        new { @class = "form-control" }
+                                                        )
+
+                                @Html.ValidationMessageFor(model => model.Priorite, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(model => model.ConditionsStockage, htmlAttributes: new { @class = "control-label" })
+                                @Html.EditorFor(model => model.ConditionsStockage, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.ConditionsStockage, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5><i class="fas fa-file-upload"></i> Fichier attaché</h5>
+                            <div class="form-group">
+                                <label class="control-label">Nouveau fichier (optionnel)</label>
+                                <input type="file" name="fichier" class="form-control-file" />
+                                @if (!string.IsNullOrEmpty(Model.NomFichier))
+                                {
+                                    <small class="form-text text-muted">
+                                        Fichier actuel: @Model.NomFichier (@Model.TailleFichierFormatee)
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group text-right">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#DateReception').val('@Model.DateReception.ToString("yyyy-MM-ddTHH:mm")');
+
+            @if (Model.DateDebutAnalyse.HasValue)
+            {
+                @:$('#DateDebutAnalyse').val('@Model.DateDebutAnalyse.Value.ToString("yyyy-MM-ddTHH:mm")');
+            }
+
+            @if (Model.DateFinAnalyse.HasValue)
+            {
+                @:$('#DateFinAnalyse').val('@Model.DateFinAnalyse.Value.ToString("yyyy-MM-ddTHH:mm")');
+            }
+        });
+    </script>
+}
+
+<style>
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        border-bottom: 1px solid #ddd;
+        padding: 1rem;
+        position: relative;
+    }
+
+    .float-right {
+        float: right;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .control-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+</style>

@@ -1,0 +1,1124 @@
+﻿@using WebApplication1.Models
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Système de Scellé Judiciaire</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        /* Navbar fixe double niveau - TOUS LES DEUX FIXES */
+        .main-navbar, .secondary-navbar {
+            position: fixed !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s ease-in-out !important;
+        }
+
+        .main-navbar {
+            top: 0 !important;
+            z-index: 1040 !important; /* Plus élevé que la navbar secondaire */
+        }
+
+        .secondary-navbar {
+            top: 56px !important; /* Juste sous la navbar principale */
+            background-color: #0056b3 !important;
+            padding: 8px 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 1030 !important; /* Moins élevé que la navbar principale */
+        }
+
+        /* États cachés pour les navbars */
+        .main-navbar.hidden {
+            transform: translateY(-100%) !important;
+        }
+
+        .secondary-navbar.hidden {
+            transform: translateY(-100%) !important;
+        }
+
+        /* Quand la navbar principale est cachée, la secondaire remonte */
+        .main-navbar.hidden ~ .secondary-navbar:not(.hidden) {
+            top: 0 !important;
+        }
+
+        /* Ajustement spécial pour le cas où seulement la principale est cachée */
+        body.main-hidden:not(.secondary-hidden) .secondary-navbar {
+            top: 0 !important;
+        }
+
+        /* Boutons de toggle flottants */
+        .navbar-toggle-controls {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 1080; /* Au-dessus de tout pour être toujours accessibles */
+            display: flex;
+            gap: 5px;
+        }
+
+        .toggle-btn {
+            background: rgba(0, 86, 179, 0.9);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 14px;
+        }
+
+            .toggle-btn:hover {
+                background: rgba(0, 86, 179, 1);
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+
+            .toggle-btn.active {
+                background: #dc3545;
+            }
+
+                .toggle-btn.active:hover {
+                    background: #c82333;
+                }
+
+        /* Compensation de l'espace pour le contenu - adaptatif */
+        body {
+            padding-top: 120px !important; /* Par défaut: double navbar (56px + 64px) */
+            min-height: 100vh;
+            transition: padding-top 0.3s ease-in-out !important;
+        }
+
+            /* Classes pour ajuster le padding selon l'état des navbars */
+            body.main-hidden:not(.secondary-hidden) {
+                padding-top: 64px !important; /* Seulement navbar secondaire qui remonte en haut */
+            }
+
+            body.secondary-hidden:not(.main-hidden) {
+                padding-top: 56px !important; /* Seulement navbar principale */
+            }
+
+            body.both-hidden {
+                padding-top: 20px !important; /* Aucune navbar */
+            }
+
+        /* Dropdown avec z-index élevé pour passer au-dessus du contenu */
+        .dropdown-menu {
+            z-index: 1060 !important; /* Au-dessus de tout */
+            margin-top: 2px;
+            border: 1px solid rgba(0,0,0,0.15);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.175);
+        }
+
+        /* Dropdown spécifique pour la navbar principale */
+        .main-navbar .dropdown-menu {
+            z-index: 1070 !important; /* Encore plus élevé pour la navbar principale */
+        }
+
+        /* Dropdown pour la navbar secondaire */
+        .secondary-navbar .dropdown-menu {
+            z-index: 1050 !important; /* Élevé mais moins que la navbar principale */
+        }
+
+        /* Styles existants améliorés */
+        .navbar-nav > li > .dropdown-menu {
+            min-width: 280px;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        .dropdown-item.disabled {
+            color: #6c757d;
+            pointer-events: none;
+        }
+
+        .permission-denied {
+            color: #dc3545;
+            font-style: italic;
+        }
+
+        .dropdown-header {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0.25rem 1.5rem;
+            color: #6c757d;
+        }
+
+        .role-badge {
+            font-size: 0.65rem;
+            vertical-align: middle;
+            margin-left: 0.5rem;
+        }
+
+        /* Contenu principal avec marge suffisante */
+        .body-content {
+            padding-top: 20px;
+            padding-bottom: 80px; /* Plus d'espace pour le footer */
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Footer */
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #f8f9fa;
+            padding: 15px 0;
+            border-top: 1px solid #dee2e6;
+            z-index: 1010; /* Plus bas que les navbars */
+        }
+
+        /* SUPPRESSION des indicateurs de phase */
+        .phase-indicator {
+            display: none !important; /* Masquer complètement les numéros de phase */
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Styles pour les navlinks secondaires */
+        .secondary-navbar .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-size: 0.9rem;
+            padding: 8px 15px !important;
+        }
+
+            .secondary-navbar .nav-link:hover {
+                color: white !important;
+                background-color: rgba(255,255,255,0.1);
+                border-radius: 5px;
+            }
+
+        .secondary-navbar .dropdown-menu {
+            margin-top: 5px;
+        }
+
+        /* Animation pour les menus */
+        .dropdown-menu {
+            animation: slideDown 0.2s ease;
+        }
+
+        .mobile-menu-item {
+            display: none; /* Cache par défaut sur desktop */
+        }
+
+        /* Badge pour les notifications */
+        .navbar-nav .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        }
+
+        /* Quick actions button */
+        .quick-actions-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 20px;
+            padding: 5px 15px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+            .quick-actions-btn:hover {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        /* Status icons */
+        .status-icon {
+            margin-right: 5px;
+        }
+
+        .status-sent {
+            color: #007bff;
+        }
+
+        .status-received {
+            color: #28a745;
+        }
+
+        .status-stored {
+            color: #6f42c1;
+        }
+
+        .status-analyzed {
+            color: #dc3545;
+        }
+
+        .status-completed {
+            color: #20c997;
+        }
+
+        /* Ajustements pour éviter les chevauchements */
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Amélioration de la visibilité des menus */
+        .dropdown-toggle::after {
+            margin-left: 0.5em;
+        }
+
+        /* Espacements corrigés */
+        .navbar-nav .nav-item {
+            margin-right: 5px;
+        }
+
+        /* Tooltip pour les boutons de toggle */
+        .toggle-btn[data-bs-toggle="tooltip"] {
+            pointer-events: all;
+        }
+
+        /* Animation pour l'apparition des contrôles */
+        .navbar-toggle-controls {
+            animation: slideInFromRight 0.5s ease-out;
+        }
+
+        keyframes slideInFromRight {
+            from
+
+        {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        }
+
+        /* Indicateur d'état dans les boutons */
+        .toggle-btn .fa-eye-slash {
+            color: #ffc107;
+        }
+
+        /* Responsive adjustments */
+        media (max-width: 991.98px) {
+            .secondary-navbar
+
+        {
+            display: none !important; /* Masquer le menu secondaire sur mobile */
+        }
+
+        body {
+            padding-top: 56px !important; /* Seulement la navbar principale sur mobile */
+        }
+
+            body.main-hidden {
+                padding-top: 20px !important;
+            }
+
+        .navbar-toggle-controls {
+            top: 5px;
+            right: 10px;
+        }
+
+        .toggle-btn {
+            width: 35px;
+            height: 35px;
+            font-size: 12px;
+        }
+
+        }
+
+        /* Mode plein écran amélioré */
+        .fullscreen-mode .body-content {
+            padding-top: 10px;
+        }
+
+        /* Indicateur visuel pour le mode masqué */
+        body.navbar-hidden .container {
+            border-top: 3px solid #007bff;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Contrôles de toggle pour les navbars -->
+    <div class="navbar-toggle-controls">
+        <button type="button" class="toggle-btn" id="toggleMainNavbar"
+                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                title="Masquer/Afficher le menu principal">
+            <i class="fas fa-bars"></i>
+        </button>
+        <button type="button" class="toggle-btn" id="toggleSecondaryNavbar"
+                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                title="Masquer/Afficher le menu secondaire">
+            <i class="fas fa-ellipsis-h"></i>
+        </button>
+    </div>
+
+    <!-- Navbar Principal -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary main-navbar" id="mainNavbar">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-balance-scale"></i> LPJ
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link" asp-controller="Admin" asp-action="Index">
+                                <i class="fas fa-tachometer-alt"></i> Tableau de Bord
+                            </a>
+                        }
+                        else if (User.IsInRole("Enqueteur"))
+                        {
+                            <a class="nav-link" asp-controller="Enqueteurs" asp-action="Dashboard">
+                                <i class="fas fa-tachometer-alt"></i> Tableau de Bord
+                            </a>
+                        }
+                        else if (User.IsInRole("Analyste"))
+                        {
+                            <a class="nav-link" asp-controller="Analystes" asp-action="Index">
+                                <i class="fas fa-tachometer-alt"></i> Tableau de Bord
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="nav-link" asp-controller="Techniciens" asp-action="Dashboard">
+                                <i class="fas fa-tachometer-alt"></i> Tableau de Bord
+                            </a>
+                        }
+                    </li>
+
+                    <!-- Phase en Cours (selon le rôle) - SANS NUMÉROS -->
+                    @if (User.IsInRole("Enqueteur"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Affaires" asp-action="MesAffaires">
+                                <i class="fas fa-folder-open"></i> Mes Affaires
+                            </a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Analyste"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Analyses" asp-action="MesEchantillons">
+                                <i class="fas fa-vial"></i> Mes Échantillons
+                            </a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Analyste"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Analyses" asp-action="Historique">
+                                <i class="fas fa-microscope"></i> Mes Analyses
+                            </a>
+                        </li>
+                    }
+
+                </ul>
+
+                <!-- Menu utilisateur -->
+                <ul class="navbar-nav">
+                    @if (!User.IsInRole("Analyste") && !User.IsInRole("Enqueteur") && !User.IsInRole("Admin") && !User.IsInRole("Technicien"))
+                    {
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge">3</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li class="dropdown-header">Notifications récentes</li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-paper-plane text-info status-icon"></i> Nouvelles preuves envoyées</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-vial text-warning status-icon"></i> Échantillon reçu</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-check text-success status-icon"></i> Analyse terminée</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item text-center" asp-controller="Suivi" asp-action="Notifications">Voir toutes</a></li>
+                            </ul>
+                        </li>
+                    }
+                    <!-- Menu utilisateur -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> @User.Identity.Name
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Profile"><i class="fas fa-user"></i> Mon Profil</a></li>
+                            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/ChangePassword"><i class="fas fa-key"></i> Changer Mot de Passe</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Navbar Secondaire (pour les menus détaillés) - MAINTENANT FIXE AUSSI -->
+    <nav class="navbar navbar-expand-lg navbar-dark secondary-navbar d-none d-lg-block" id="secondaryNavbar">
+        <div class="container">
+            <div class="navbar-nav me-auto">
+
+                <!-- Gestion des Preuves - Visible pour Admin et Enqueteur -->
+                @if (User.IsInRole("Admin") || User.IsInRole("Enqueteur"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-fingerprint"></i> Echantillons
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header"><i class="fas fa-plus"></i> Création</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("ajouter Preuve") == true ? "" : "disabled")"
+                                   asp-controller="Echantillons" asp-action="Create">
+                                    <i class="fas fa-plus status-icon"></i> Ajouter Echantillon
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" asp-controller="Echantillons" asp-action="Index"><i class="fas fa-list status-icon"></i> Consulter/ Modifier</a></li>
+                        </ul>
+                    </li>
+                }
+
+                <!-- Gestion des Affaires - Visible pour Admin et Enqueteur -->
+                @if (User.IsInRole("Admin") || User.IsInRole("Enqueteur"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-folder-open"></i> Affaires
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header"><i class="fas fa-plus-circle"></i> Création</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Creer Affaire") == true ? "" : "disabled")"
+                                   asp-controller="Affaires" asp-action="Create">
+                                    <i class="fas fa-plus-circle status-icon"></i> Créer une Affaire
+                                </a>
+                            </li>
+                           
+                            <li class="dropdown-header"><i class="fas fa-list"></i> Consultation</li>
+                            <li><a class="dropdown-item" asp-controller="Affaires" asp-action="Index"><i class="fas fa-list status-icon"></i> Toutes les Affaires</a></li>
+                            @if (User.IsInRole("Enqueteur"))
+                            {
+                                <li><a class="dropdown-item" asp-controller="Affaires" asp-action="MesAffaires"><i class="fas fa-eye status-icon"></i> Mes Affaires</a></li>
+                            }
+                        </ul>
+                    </li>
+                }
+
+                <!-- Envoi/Transmission - Visible pour Admin et Enqueteur -->
+                @if (User.IsInRole("Admin") || User.IsInRole("Enqueteur"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-paper-plane"></i> Envoi/Transmission
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header"><i class="fas fa-paper-plane"></i> Préparation Envoi</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Preparer Envoi") == true ? "" : "disabled")"
+                                   asp-controller="Envoi" asp-action="PreparerEnvoi">
+                                    <i class="fas fa-box status-icon status-sent"></i> Préparer l'Envoi
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" asp-controller="Envoi" asp-action="MesEnvois"><i class="fas fa-list status-icon"></i> Mes Envois</a></li>
+                            <li><a class="dropdown-item" asp-controller="Envoi" asp-action="HistoriqueEnvois"><i class="fas fa-history status-icon"></i> Historique des Envois</a></li>
+                        </ul>
+                    </li>
+                }
+
+                <!-- Réception - Visible pour Admin et Technicien -->
+                @if (!User.IsInRole("Analyste") && !User.IsInRole("Enqueteur"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-inbox"></i> Réception
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header"><i class="fas fa-inbox"></i> Réception</li>
+  
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Verifier la Correspondance") == true ? "" : "disabled")"
+                                   asp-controller="Recevoir" asp-action="Index">
+                                    <i class="fas fa-check-double status-icon status-received"></i>  Réceptionner
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+
+                <!-- Stockage - Visible pour Admin et Technicien -->
+                @if (!User.IsInRole("Enqueteur") && !User.IsInRole("Analyste"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-warehouse"></i> Stockage
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header"><i class="fas fa-warehouse"></i> Stockage</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Stocker") == true ? "" : "disabled")"
+                                   asp-controller="Stockage" asp-action="Index">
+                                    <i class="fas fa-archive status-icon status-stored"></i> Stocker & Attribuer Emplacement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Consulter Le Plan Stockage") == true ? "" : "disabled")"
+                                   asp-controller="Stockage" asp-action="PlanStockage">
+                                    <i class="fas fa-map-marker-alt status-icon status-stored"></i> Plan de Stockage
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Creer Zone de stockage") == true ? "" : "disabled")"
+                                   asp-controller="Stockage" asp-action="CreateZone">
+                                    <i class="fas fa-plus status-icon"></i> Ajouter Une Zone De Stockage
+                                </a>
+                            </li>
+                            <li class="dropdown-header"><i class="fas fa-cogs"></i> Préparation</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Transferer Vers Analyste") == true ? "" : "disabled")"
+                                   asp-controller="Stockage" asp-action="AttributionAnalyse">
+                                    <i class="fas fa-flask status-icon status-stored"></i> Transférer vers Analyste
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                }
+
+                <!-- Analyses - Visible pour Admin et Analyste -->
+                @if (User.IsInRole("Admin") || User.IsInRole("Analyste"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-microscope"></i> Analyses
+                        </a>
+                        <ul class="dropdown-menu">
+                            <!-- Section Attribution -->
+                            <li class="dropdown-header"><i class="fas fa-user-tag"></i> Mes échantillons</li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Analyses" asp-action="MesEchantillons">
+                                    <i class="fas fa-vial"></i> Échantillons attribués
+                                </a>
+                            </li>
+
+                            <!-- Section Analyse -->
+                            <li class="dropdown-header"><i class="fas fa-search-plus"></i> Analyse</li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Analyses" asp-action="EnCours">
+                                    <i class="fas fa-spinner"></i> Analyses en cours
+                                </a>
+                            </li>
+
+                            <!-- Section Résultats -->
+                            <li class="dropdown-header"><i class="fas fa-chart-line"></i> Résultats</li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Analyses" asp-action="EnCours">
+                                    <i class="fas fa-keyboard"></i> Déposer résultats
+                                </a>
+                            </li>
+
+                            <!-- Section Validation -->
+                            <li class="dropdown-header"><i class="fas fa-check-circle"></i> Validation</li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Analyses" asp-action="AValider">
+                                    <i class="fas fa-check-double"></i> Résultats à valider
+                                </a>
+                            </li>
+
+                            <!-- Section Rapports -->
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Analyses" asp-action="MesRapports">
+                                    <i class="fas fa-file-alt"></i> Mes rapports
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Analyses" asp-action="Historique">
+                                    <i class="fas fa-history"></i> Historique des analyses
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+
+
+                <!-- Retour et Clôture - Visible pour Admin, Analyste et Enqueteur -->
+                @if (User.IsInRole("Admin") || User.IsInRole("Analyste") || User.IsInRole("Enqueteur"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-undo-alt"></i> Retour & Clôture
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header"><i class="fas fa-paper-plane"></i> Consultation De Résultats</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("consulter les resultats") == true ? "" : "disabled")"
+                                   asp-controller="Retour" asp-action="ConsulterResultats">
+                                    <i class="fas fa-paper-plane status-icon"></i> Consulter Les Résultats
+                                </a>
+                            </li>
+                            <li class="dropdown-header"><i class="fas fa-archive"></i> Clôture et Archivage</li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("Cloturer Affaire") == true ? "" : "disabled")"
+                                   asp-controller="Retour" asp-action="CloturerAffaire">
+                                    <i class="fas fa-lock status-icon"></i> Clôturer l'Affaire
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+
+                <!-- Administration - Visible uniquement pour Admin -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i> Administration
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index">
+                                    <i class="fas fa-users-cog status-icon"></i> Gestion des Utilisateurs
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ViewBag.UserPermissions?.Contains("AttribuerDroits") == true ? "" : "disabled")"
+                                   asp-controller="Permissions" asp-action="Attribuer">
+                                    <i class="fas fa-key status-icon"></i> Gestion des Rôles
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+            </div>
+
+            <!-- Actions rapides dans la navbar secondaire -->
+            <div class="navbar-nav">
+                <button type="button" class="btn quick-actions-btn" data-bs-toggle="modal" data-bs-target="#quickSearchModal">
+                    <i class="fas fa-search"></i> Recherche
+                </button>
+                <!-- @if (!User.IsInRole("Enqueteur"))
+                 {
+                         <button type="button" class="btn quick-actions-btn" onclick="window.location.href='@Url.Action("Scanner", "QRCode")'">
+                             <i class="fas fa-qrcode"></i> Scanner
+                         </button>
+                 }
+-->
+            </div>
+        </div>
+    </nav>
+
+    <div class="container body-content">
+        @if (TempData["AccessDenied"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mt-3">
+                <i class="fas fa-ban"></i> @TempData["AccessDenied"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mt-3">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mt-3">
+                <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mt-3">
+                <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["Info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show mt-3">
+                <i class="fas fa-info-circle"></i> @TempData["Info"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @RenderBody()
+    </div>
+
+    <!-- Modal de Recherche Rapide -->
+    <div class="modal fade" id="quickSearchModal" tabindex="-1" aria-labelledby="quickSearchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickSearchModalLabel">
+                        <i class="fas fa-search"></i> Recherche Rapide
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="quickSearch" class="form-label">Rechercher par:</label>
+                        <div class="input-group">
+                            <select class="form-select" id="searchType">
+                                <option value="affaire">N° Affaire</option>
+                                <option value="echantillon">N° Échantillon</option>
+                                <option value="qr">Code QR</option>
+                                <option value="analyse">N° Analyse</option>
+                                <option value="rapport">N° Rapport</option>
+                                <option value="envoi">N° Envoi</option>
+                            </select>
+                            <input type="text" class="form-control" id="quickSearch" placeholder="Entrez le numéro ou code...">
+                            <button class="btn btn-primary" type="button" onclick="performQuickSearch()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Recherche" asp-action="AdvancedSearch" class="btn btn-outline-primary">
+                            <i class="fas fa-search-plus"></i> Recherche Avancée
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialisation des tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Variables pour suivre l'état des navbars
+            let mainNavbarHidden = false;
+            let secondaryNavbarHidden = false;
+
+            // Fonction pour mettre à jour les classes du body
+            function updateBodyClasses() {
+                $('body').removeClass('main-hidden secondary-hidden both-hidden navbar-hidden');
+
+                if (mainNavbarHidden && secondaryNavbarHidden) {
+                    $('body').addClass('both-hidden navbar-hidden');
+                } else if (mainNavbarHidden && !secondaryNavbarHidden) {
+                    $('body').addClass('main-hidden navbar-hidden');
+                } else if (!mainNavbarHidden && secondaryNavbarHidden) {
+                    $('body').addClass('secondary-hidden');
+                }
+            }
+
+            // Fonction pour mettre à jour les icônes des boutons
+            function updateButtonIcons() {
+                // Bouton navbar principale
+                const mainBtn = $('#toggleMainNavbar');
+                const mainIcon = mainBtn.find('i');
+                if (mainNavbarHidden) {
+                    mainIcon.removeClass('fa-bars').addClass('fa-eye-slash');
+                    mainBtn.addClass('active');
+                    mainBtn.attr('data-bs-original-title', 'Afficher le menu principal');
+                } else {
+                    mainIcon.removeClass('fa-eye-slash').addClass('fa-bars');
+                    mainBtn.removeClass('active');
+                    mainBtn.attr('data-bs-original-title', 'Masquer le menu principal');
+                }
+
+                // Bouton navbar secondaire
+                const secondaryBtn = $('#toggleSecondaryNavbar');
+                const secondaryIcon = secondaryBtn.find('i');
+                if (secondaryNavbarHidden) {
+                    secondaryIcon.removeClass('fa-ellipsis-h').addClass('fa-eye-slash');
+                    secondaryBtn.addClass('active');
+                    secondaryBtn.attr('data-bs-original-title', 'Afficher le menu secondaire');
+                } else {
+                    secondaryIcon.removeClass('fa-eye-slash').addClass('fa-ellipsis-h');
+                    secondaryBtn.removeClass('active');
+                    secondaryBtn.attr('data-bs-original-title', 'Masquer le menu secondaire');
+                }
+
+                // Mettre à jour les tooltips
+                tooltipTriggerList.forEach(function(el) {
+                    const tooltip = bootstrap.Tooltip.getInstance(el);
+                    if (tooltip) {
+                        tooltip.dispose();
+                        new bootstrap.Tooltip(el);
+                    }
+                });
+            }
+
+            // Toggle navbar principale
+            $('#toggleMainNavbar').click(function() {
+                const navbar = $('#mainNavbar');
+                const secondaryNavbar = $('#secondaryNavbar');
+                mainNavbarHidden = !mainNavbarHidden;
+
+                if (mainNavbarHidden) {
+                    navbar.addClass('hidden');
+                    // Si la navbar secondaire est visible, elle doit remonter
+                    if (!secondaryNavbarHidden) {
+                        secondaryNavbar.css('top', '0px');
+                    }
+                } else {
+                    navbar.removeClass('hidden');
+                    // Remettre la navbar secondaire à sa position normale
+                    if (!secondaryNavbarHidden) {
+                        secondaryNavbar.css('top', '56px');
+                    }
+                }
+
+                updateBodyClasses();
+                updateButtonIcons();
+
+                // Sauvegarde dans localStorage
+                localStorage.setItem('mainNavbarHidden', mainNavbarHidden);
+            });
+
+            // Toggle navbar secondaire
+            $('#toggleSecondaryNavbar').click(function() {
+                const navbar = $('#secondaryNavbar');
+                secondaryNavbarHidden = !secondaryNavbarHidden;
+
+                if (secondaryNavbarHidden) {
+                    navbar.addClass('hidden');
+                } else {
+                    navbar.removeClass('hidden');
+                    // Repositionner selon l'état de la navbar principale
+                    if (mainNavbarHidden) {
+                        navbar.css('top', '0px');
+                    } else {
+                        navbar.css('top', '56px');
+                    }
+                }
+
+                updateBodyClasses();
+                updateButtonIcons();
+
+                // Sauvegarde dans localStorage
+                localStorage.setItem('secondaryNavbarHidden', secondaryNavbarHidden);
+            });
+
+            // Restaurer l'état depuis localStorage au chargement
+            const savedMainState = localStorage.getItem('mainNavbarHidden');
+            const savedSecondaryState = localStorage.getItem('secondaryNavbarHidden');
+
+            if (savedMainState === 'true') {
+                mainNavbarHidden = true;
+                $('#mainNavbar').addClass('hidden');
+            }
+
+            if (savedSecondaryState === 'true') {
+                secondaryNavbarHidden = true;
+                $('#secondaryNavbar').addClass('hidden');
+            }
+
+            // Ajuster la position de la navbar secondaire si nécessaire
+            if (mainNavbarHidden && !secondaryNavbarHidden) {
+                $('#secondaryNavbar').css('top', '0px');
+            }
+
+            updateBodyClasses();
+            updateButtonIcons();
+
+            // Raccourcis clavier pour les toggles
+            $(document).keydown(function(e) {
+                // Ctrl+Shift+M pour toggle navbar principale
+                if (e.ctrlKey && e.shiftKey && e.keyCode === 77) {
+                    e.preventDefault();
+                    $('#toggleMainNavbar').click();
+                }
+
+                // Ctrl+Shift+S pour toggle navbar secondaire
+                if (e.ctrlKey && e.shiftKey && e.keyCode === 83) {
+                    e.preventDefault();
+                    $('#toggleSecondaryNavbar').click();
+                }
+
+                // Échapper pour afficher les navbars si elles sont masquées
+                if (e.keyCode === 27 && (mainNavbarHidden || secondaryNavbarHidden)) {
+                    e.preventDefault();
+                    if (mainNavbarHidden) $('#toggleMainNavbar').click();
+                    if (secondaryNavbarHidden) $('#toggleSecondaryNavbar').click();
+                }
+            });
+
+            // Animation de pulsation pour attirer l'attention sur les contrôles
+            setTimeout(function() {
+                $('.navbar-toggle-controls').addClass('animate__animated animate__pulse');
+                setTimeout(function() {
+                    $('.navbar-toggle-controls').removeClass('animate__animated animate__pulse');
+                }, 2000);
+            }, 3000);
+
+            // Gestion des événements existants
+            $(".dropdown-item.disabled").click(function (e) {
+                e.preventDefault();
+                alert("Accès refusé : Vous n'avez pas les permissions nécessaires.");
+            });
+
+            // Auto-dismiss alerts
+            setTimeout(function () {
+                $('.alert').each(function () {
+                    var alert = new bootstrap.Alert(this);
+                    alert.close();
+                });
+            }, 5000);
+
+            // Animation pour les notifications
+            $('.notification-badge').hover(function() {
+                $(this).css('transform', 'scale(1.2)');
+            }, function() {
+                $(this).css('transform', 'scale(1)');
+            });
+
+            // Recherche rapide avec Enter
+            $('#quickSearch').keypress(function(e) {
+                if (e.which == 13) {
+                    performQuickSearch();
+
+
+                }
+            });
+
+            // Auto-focus sur le modal de recherche
+            $('#quickSearchModal').on('shown.bs.modal', function () {
+                $('#quickSearch').focus();
+            });
+
+            // Raccourcis clavier existants
+            $(document).keydown(function(e) {
+                // Ctrl+K pour recherche rapide
+                if (e.ctrlKey && e.keyCode === 75) {
+                    e.preventDefault();
+                    $('#quickSearchModal').modal('show');
+                }
+
+                // Ctrl+H pour tableau de bord
+                if (e.ctrlKey && e.keyCode === 72) {
+                    e.preventDefault();
+                    window.location.href = '/Home/Dashboard';
+                }
+
+                // Ctrl+Q pour scanner QR (si autorisé)
+                if (e.ctrlKey && e.keyCode === 81) {
+                    e.preventDefault();
+                    @if (User.IsInRole("Admin") || User.IsInRole("Technicien") || User.IsInRole("Analyste"))
+                    {
+                        <text>window.location.href = '/QRCode/Scanner';</text>
+                    }
+                }
+            });
+        });
+
+               // Fonction de recherche rapide
+        function performQuickSearch() {
+            var searchType = $('#searchType').val();
+            var searchTerm = $('#quickSearch').val().trim();
+
+            if (!searchTerm) {
+                alert('Veuillez entrer un terme de recherche');
+                return;
+            }
+
+            // Appeler le contrôleur de recherche
+            window.location.href = '/Recherche/QuickSearch?searchType=' +
+                                  encodeURIComponent(searchType) +
+                                  '&searchTerm=' +
+                                  encodeURIComponent(searchTerm);
+        }
+        // Fonction pour mettre à jour les notifications
+        function updateNotificationCount() {
+            $.ajax({
+                url: '/Suivi/GetNotificationCount',
+                type: 'GET',
+                success: function(data) {
+                    $('.notification-badge').each(function() {
+                        if (data > 0) {
+                            $(this).text(data).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                },
+                error: function() {
+                    console.log('Erreur lors de la mise à jour des notifications');
+                }
+            });
+        }
+
+        // Mettre à jour les notifications toutes les 30 secondes
+        setInterval(updateNotificationCount, 30000);
+
+        // Fonction pour montrer un guide d'utilisation des contrôles (optionnel)
+        function showNavbarControlsGuide() {
+            const guide = `
+                <div class="alert alert-info alert-dismissible fade show">
+                    <h6><i class="fas fa-lightbulb"></i> Guide des contrôles de navigation :</h6>
+                    <ul class="mb-0">
+                        <li><strong>Premier bouton :</strong> Masquer/Afficher le menu principal</li>
+                        <li><strong>Deuxième bouton :</strong> Masquer/Afficher le menu secondaire</li>
+                        <li><strong>Raccourcis :</strong> Ctrl+Shift+M, Ctrl+Shift+S</li>
+                        <li><strong>Échap :</strong> Restaurer les menus masqués</li>
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.body-content').prepend(guide);
+        }
+
+        // Afficher le guide au premier chargement (optionnel)
+        if (!localStorage.getItem('navbarGuideShown')) {
+            setTimeout(showNavbarControlsGuide, 2000);
+            localStorage.setItem('navbarGuideShown', 'true');
+        }
+    </script>
+   
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

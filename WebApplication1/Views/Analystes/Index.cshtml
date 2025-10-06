@@ -1,0 +1,147 @@
+﻿@model IEnumerable<WebApplication1.Models.Analyste>
+
+@{
+    ViewData["Title"] = "Liste des Analystes";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">
+                        <i class="fas fa-microscope"></i> Gestion des Analystes
+                    </h3>
+                    <div class="card-tools">
+                        <a asp-action="Create" class="btn btn-light btn-sm">
+                            <i class="fas fa-plus"></i> Nouvel Analyste
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <i class="icon fas fa-check"></i> @TempData["Success"]
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <i class="icon fas fa-ban"></i> @TempData["Error"]
+                        </div>
+                    }
+
+                    <!-- Filtre par spécialité -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <form asp-action="Index" method="get">
+                                <div class="input-group">
+                                    <select name="specialiteFiltre" class="form-control" onchange="this.form.submit()">
+                                        <option value="">Toutes les spécialités</option>
+                                        @foreach (var specialite in ViewBag.Specialites)
+                                        {
+                                            <option value="@specialite" selected="@(ViewBag.SelectedSpecialite == specialite ? "selected" : null)">
+                                                @specialite
+                                            </option>
+                                        }
+                                    </select>
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-outline-primary">
+                                            <i class="fas fa-filter"></i> Filtrer
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tableau des analystes -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
+                                    <th>Spécialité</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@Html.DisplayFor(modelItem => item.nom)</td>
+                                        <td>@Html.DisplayFor(modelItem => item.prenom)</td>
+                                        <td>
+                                            <span >@Html.DisplayFor(modelItem => item.specialite)</span>
+                                        </td>
+                                     
+                                        <td>
+                                            @if (item.User != null)
+                                            {
+                                                <small>@item.User.Email</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Non assigné</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a asp-action="Details" asp-route-id="@item.Id"
+                                                   class="btn btn-info" title="Détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a asp-action="Edit" asp-route-id="@item.Id"
+                                                   class="btn btn-warning" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id"
+                                                   class="btn btn-danger" title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (!Model.Any())
+                    {
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle"></i> Aucun analyste trouvé.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.table').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/French.json"
+                },
+                "responsive": true,
+                "autoWidth": false,
+                "pageLength": 10,
+                "order": [[0, 'asc']]
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+    </script>
+}

@@ -1,0 +1,271 @@
+﻿@using WebApplication1.Models.Stockage
+@model IEnumerable<WebApplication1.Models.Stockage.Echantillon>
+
+@{
+    ViewData["Title"] = "Historique des Analyses";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-history"></i> @ViewData["Title"]</h2>
+        <span class="badge bg-primary">@Model.Count() analyses</span>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h4>Aucun historique disponible</h4>
+            <p>Vous n'avez pas encore effectué d'analyses.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Filtres -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="filterStatut">Statut :</label>
+                        <select id="filterStatut" class="form-control">
+                            <option value="">Tous</option>
+                            <option value="Valide">Validés</option>
+                            <option value="AnalyseTerminee">Terminés</option>
+                            <option value="EnValidation">En validation</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="filterDate">Période :</label>
+                        <select id="filterDate" class="form-control">
+                            <option value="">Toutes</option>
+                            <option value="week">Cette semaine</option>
+                            <option value="month">Ce mois</option>
+                            <option value="year">Cette année</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button id="resetFilters" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Count()</h5>
+                        <p class="card-text">Analyses totales</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Count(e => e.Statut == StatutEchantillon.Valide)</h5>
+                        <p class="card-text">Validées</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Count(e => e.Statut == StatutEchantillon.AnalyseTerminee)</h5>
+                        <p class="card-text">Terminées</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        @{
+                            var avgDuration = Model.Where(e => e.DateDebutAnalyse.HasValue && e.DateFinAnalyse.HasValue)
+                            .Average(e => (e.DateFinAnalyse.Value - e.DateDebutAnalyse.Value).TotalHours);
+                        }
+                        <h5 class="card-title">@Math.Round(avgDuration, 1)h</h5>
+                        <p class="card-text">Durée moyenne</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des analyses -->
+        <div class="list-group" id="historiqueList">
+            @foreach (var item in Model)
+            {
+                <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 historique-item"
+                     data-statut="@item.Statut"
+                     data-date="@item.DateFinAnalyse?.ToString("yyyy-MM-dd")">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">
+                            @item.NumeroEchantillon
+                            <span class="badge @GetStatusBadgeClass(item.Statut)">
+                                @GetStatusText(item.Statut)
+                            </span>
+                        </h5>
+                        <small>@(item.DateFinAnalyse?.ToString("dd/MM/yyyy") ?? "En cours")</small>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-md-8">
+                            <p class="mb-1">@item.Description</p>
+                            <div class="d-flex flex-wrap">
+                                @foreach (var analyse in item.Analyses.Take(3))
+                                {
+                                    <span class="badge bg-light me-2 mb-2">
+                                        <i class="fas @GetAnalysisIcon(analyse.TypeAnalyse)"></i> @analyse.Nom
+                                    </span>
+                                }
+                                @if (item.Analyses.Count > 3)
+                                {
+                                    <span class="badge bg-secondary me-2 mb-2">
+                                        +@(item.Analyses.Count - 3) autres
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a asp-action="MesResultats" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Détails
+                            </a>
+                            @if (item.Statut == StatutEchantillon.Valide)
+                            {
+                                <a asp-action="GenererRapport" asp-route-echantillonId="@item.Id"
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-file-pdf"></i> Rapport
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@functions {
+    string GetStatusBadgeClass(StatutEchantillon statut)
+    {
+        switch (statut)
+        {
+            case StatutEchantillon.Valide:
+                return "bg-success";
+            case StatutEchantillon.AnalyseTerminee:
+                return "bg-warning";
+            case StatutEchantillon.EnValidation:
+                return "bg-info";
+            default:
+                return "bg-secondary";
+        }
+    }
+
+    string GetStatusText(StatutEchantillon statut)
+    {
+        switch (statut)
+        {
+            case StatutEchantillon.Valide:
+                return "Validé";
+            case StatutEchantillon.AnalyseTerminee:
+                return "Terminé";
+            case StatutEchantillon.EnValidation:
+                return "En validation";
+            default:
+                return statut.ToString();
+        }
+    }
+
+    string GetAnalysisIcon(string typeAnalyse)
+    {
+        if (typeAnalyse?.Contains("Chimique") == true)
+            return "fa-flask";
+        if (typeAnalyse?.Contains("Microbio") == true)
+            return "fa-microscope";
+        return "fa-chart-bar";
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Filtrage
+            $('#filterStatut, #filterDate').change(function() {
+                filterHistorique();
+            });
+
+            $('#resetFilters').click(function() {
+                $('#filterStatut, #filterDate').val('');
+                filterHistorique();
+            });
+
+            function filterHistorique() {
+                var statut = $('#filterStatut').val();
+                var periode = $('#filterDate').val();
+                var today = new Date();
+
+                $('.historique-item').each(function() {
+                    var $item = $(this);
+                    var show = true;
+
+                    // Filtre par statut
+                    if (statut && $item.data('statut') !== statut) {
+                        show = false;
+                    }
+
+                    // Filtre par période
+                    if (periode && $item.data('date')) {
+                        var itemDate = new Date($item.data('date'));
+                        var diffTime = today - itemDate;
+                        var diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+                        switch(periode) {
+                            case 'week':
+                                if (diffDays > 7) show = false;
+                                break;
+                            case 'month':
+                                if (diffDays > 30) show = false;
+                                break;
+                            case 'year':
+                                if (diffDays > 365) show = false;
+                                break;
+                        }
+                    }
+
+                    $item.toggle(show);
+                });
+
+                // Afficher message si aucun résultat
+                if ($('.historique-item:visible').length === 0) {
+                    $('#historiqueList').append(
+                        '<div class="alert alert-warning">Aucun résultat ne correspond aux filtres sélectionnés.</div>'
+                    );
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .list-group-item {
+        border-radius: 0.5rem !important;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+        .list-group-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+    .badge-lg {
+        font-size: 0.9rem;
+        padding: 0.35em 0.6em;
+    }
+
+    .fa-microscope, .fa-flask {
+        margin-right: 5px;
+    }
+</style>

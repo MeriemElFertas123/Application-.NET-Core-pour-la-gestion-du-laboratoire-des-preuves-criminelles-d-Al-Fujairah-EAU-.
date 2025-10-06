@@ -1,0 +1,111 @@
+﻿@model WebApplication1.Models.Enqueteur
+
+@{
+    ViewData["Title"] = "Modifier un enquêteur";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-person-gear me-2"></i> @ViewData["Title"]
+        </h2>
+        <p class="text-muted">Modifiez les informations de l'enquêteur</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center">
+            <i class="bi bi-exclamation-triangle me-1"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form method="post" asp-controller="Enqueteurs" asp-action="Edit" class="card shadow-lg p-4 rounded-3">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="idEnqueteur" />
+        <input type="hidden" asp-for="UserId" />
+
+        <h4 class="mb-3 text-secondary">
+            <i class="bi bi-person-badge me-2"></i> Informations personnelles
+        </h4>
+        <hr />
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="nom" class="form-label">Nom *</label>
+                <input asp-for="nom" class="form-control" required />
+                <span asp-validation-for="nom" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="prenom" class="form-label">Prénom *</label>
+                <input asp-for="prenom" class="form-control" required />
+                <span asp-validation-for="prenom" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="grade" class="form-label">Grade *</label>
+                <select asp-for="grade" asp-items="ViewBag.GradeList" class="form-select" required>
+                    <option value="">-- Sélectionnez un grade --</option>
+                </select>
+                <span asp-validation-for="grade" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="service" class="form-label">Service</label>
+                <select asp-for="service" asp-items="ViewBag.ServiceList" class="form-select">
+                    <option value="">-- Sélectionnez un service --</option>
+                </select>
+                <span asp-validation-for="service" class="text-danger"></span>
+            </div>
+        </div>
+
+        <h4 class="mt-4 mb-3 text-secondary">
+            <i class="bi bi-shield-lock me-2"></i> Informations de connexion
+        </h4>
+        <hr />
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input name="email" type="email" class="form-control" value="@ViewBag.CurrentEmail" />
+                <small class="text-muted">Laissez vide pour conserver l'email actuel</small>
+            </div>
+            <div class="col-md-6">
+                <label for="password" class="form-label">Nouveau mot de passe</label>
+                <input name="password" type="password" class="form-control" />
+                <small class="text-muted">Laissez vide pour conserver le mot de passe actuel</small>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <div>
+                <a asp-controller="Enqueteurs" asp-action="Details" asp-route-id="@Model.idEnqueteur" class="btn btn-info">
+                    <i class="bi bi-eye me-1"></i> Voir détails
+                </a>
+            </div>
+            <div>
+                <a asp-controller="Enqueteurs" asp-action="Index" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-x-circle me-1"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

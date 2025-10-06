@@ -1,0 +1,539 @@
+﻿@model IEnumerable<WebApplication1.Models.Affaire>
+
+@{
+    ViewBag.Title = "Gestion des Affaires";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">
+                    <i class="fas fa-folder-open text-white me-2"></i>
+                    
+                </h1>
+                <p class="text-white-50">Liste de toutes les affaires en cours</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="@Url.Action("Create")" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus me-2"></i>
+                    Nouvelle Affaire
+                </a>
+            </div>
+        </div>
+    </div>
+
+<div class="container-fluid">
+    <!-- Filtres et recherche -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher une affaire...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="statusFilter" class="form-select">
+                                <option value="">Tous les statuts</option>
+                                <option value="Ouverte">Ouverte</option>
+                                <option value="En cours">En cours</option>
+                                <option value="Fermée">Fermée</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="priorityFilter" class="form-select">
+                                <option value="">Toutes priorités</option>
+                                <option value="Haute">Haute</option>
+                                <option value="Moyenne">Moyenne</option>
+                                <option value="Basse">Basse</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary" id="resetFilters">
+                                <i class="fas fa-undo me-1"></i>
+                                Réinitialiser
+                            </button>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-download me-1"></i>
+                                    Exporter
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportToExcel()"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportToPDF()"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card bg-primary">
+                <div class="stat-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalAffaires">@Model.Count()</h3>
+                    <p>Total des affaires</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-success">
+                <div class="stat-icon">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="affairesOuvertes">@Model.Count(a => a.Statut.ToString() == "Ouverte")</h3>
+                    <p>Affaires ouvertes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-warning">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="affairesEnCours">@Model.Count(a => a.Statut.ToString() == "En cours")</h3>
+                    <p>En cours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="prioriteHaute">@Model.Count(a => a.Priorite.ToString() == "Haute")</h3>
+                    <p>Priorité haute</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des affaires -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Liste des Affaires
+                    </h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        <span id="resultCount">@Model.Count()</span> affaire(s) trouvée(s)
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="affairesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="sortable" data-sort="titre">
+                                <i class="fas fa-heading me-1"></i>
+                                @Html.DisplayNameFor(model => model.Titre)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable" data-sort="description">
+                                <i class="fas fa-align-left me-1"></i>
+                                @Html.DisplayNameFor(model => model.Description)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable" data-sort="dateOuverture">
+                                <i class="fas fa-calendar-plus me-1"></i>
+                                @Html.DisplayNameFor(model => model.DateOuverture)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable" data-sort="dateFermeture">
+                                <i class="fas fa-calendar-minus me-1"></i>
+                                @Html.DisplayNameFor(model => model.DateFermeture)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable" data-sort="statut">
+                                <i class="fas fa-flag me-1"></i>
+                                @Html.DisplayNameFor(model => model.Statut)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable" data-sort="priorite">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                @Html.DisplayNameFor(model => model.Priorite)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable" data-sort="lieu">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                @Html.DisplayNameFor(model => model.Lieu)
+                                <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="text-center" style="width: 150px;">
+                                <i class="fas fa-cogs me-1"></i>
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@Html.DisplayFor(modelItem => item.Titre)</div>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="@item.Description">
+                                        @Html.DisplayFor(modelItem => item.Description)
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        @Html.DisplayFor(modelItem => item.DateOuverture)
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.DateFermeture.HasValue)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            @Html.DisplayFor(modelItem => item.DateFermeture)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var statutClass = "";
+                                        switch (item.Statut.ToString())
+                                        {
+                                            case "Ouverte":
+                                                statutClass = "bg-success";
+                                                break;
+                                            case "En cours":
+                                                statutClass = "bg-warning";
+                                                break;
+                                            case "Fermée":
+                                                statutClass = "bg-secondary";
+                                                break;
+                                            default:
+                                                statutClass = "bg-primary";
+                                                break;
+                                        }
+                                    }
+                                    <span class="badge @statutClass">
+                                        @Html.DisplayFor(modelItem => item.Statut)
+                                    </span>
+                                </td>
+                                <td>
+                                    @{
+                                        var prioriteClass = "";
+                                        var prioriteIcon = "";
+                                        switch (item.Priorite.ToString())
+                                        {
+                                            case "Haute":
+                                                prioriteClass = "bg-danger";
+                                                prioriteIcon = "fas fa-arrow-up";
+                                                break;
+                                            case "Moyenne":
+                                                prioriteClass = "bg-warning";
+                                                prioriteIcon = "fas fa-minus";
+                                                break;
+                                            case "Basse":
+                                                prioriteClass = "bg-success";
+                                                prioriteIcon = "fas fa-arrow-down";
+                                                break;
+                                            default:
+                                                prioriteClass = "bg-secondary";
+                                                prioriteIcon = "fas fa-question";
+                                                break;
+                                        }
+                                    }
+                                    <span class="badge @prioriteClass">
+                                        <i class="@prioriteIcon me-1"></i>
+                                        @Html.DisplayFor(modelItem => item.Priorite)
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                                    @Html.DisplayFor(modelItem => item.Lieu)
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", new { id = item.Id })"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="Détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", new { id = item.Id })"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="@Url.Action("Delete", new { id = item.Id })"
+                                           class="btn btn-sm btn-outline-danger"
+                                           title="Supprimer"
+                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette affaire ?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card {
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+        margin-bottom: 1rem;
+    }
+
+    .stat-content h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-content p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+        padding: 1rem;
+    }
+
+    .table td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .sortable {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+
+    .sortable:hover {
+        background-color: #e9ecef;
+    }
+
+    .sort-icon {
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+        opacity: 0.5;
+    }
+
+    .sortable.asc .sort-icon:before {
+        content: "\f0de";
+    }
+
+    .sortable.desc .sort-icon:before {
+        content: "\f0dd";
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 25px;
+    }
+
+    .btn-group .btn {
+        margin: 0 2px;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Recherche en temps réel
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const priorityFilter = document.getElementById('priorityFilter');
+        const table = document.getElementById('affairesTable');
+        const resultCount = document.getElementById('resultCount');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+            const priorityValue = priorityFilter.value;
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let visibleCount = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let showRow = true;
+
+                // Recherche textuelle
+                if (searchTerm) {
+                    let found = false;
+                    for (let j = 0; j < cells.length - 1; j++) {
+                        if (cells[j].textContent.toLowerCase().includes(searchTerm)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) showRow = false;
+                }
+
+                // Filtre par statut
+                if (statusValue && showRow) {
+                    const statusCell = cells[4];
+                    if (!statusCell.textContent.trim().includes(statusValue)) {
+                        showRow = false;
+                    }
+                }
+
+                // Filtre par priorité
+                if (priorityValue && showRow) {
+                    const priorityCell = cells[5];
+                    if (!priorityCell.textContent.trim().includes(priorityValue)) {
+                        showRow = false;
+                    }
+                }
+
+                row.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            }
+
+            resultCount.textContent = visibleCount;
+        }
+
+        // Événements de filtrage
+        searchInput.addEventListener('input', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+        priorityFilter.addEventListener('change', filterTable);
+
+        // Réinitialiser les filtres
+        document.getElementById('resetFilters').addEventListener('click', function() {
+            searchInput.value = '';
+            statusFilter.value = '';
+            priorityFilter.value = '';
+            filterTable();
+        });
+
+        // Tri des colonnes
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const column = this.dataset.sort;
+                const tbody = table.getElementsByTagName('tbody')[0];
+                const rows = Array.from(tbody.getElementsByTagName('tr'));
+                const isAsc = this.classList.contains('asc');
+
+                // Retirer les classes de tri de tous les headers
+                sortableHeaders.forEach(h => h.classList.remove('asc', 'desc'));
+
+                // Ajouter la classe appropriée
+                this.classList.add(isAsc ? 'desc' : 'asc');
+
+                // Trier les lignes
+                rows.sort((a, b) => {
+                    const aValue = a.cells[this.cellIndex].textContent.trim();
+                    const bValue = b.cells[this.cellIndex].textContent.trim();
+
+                    if (isAsc) {
+                        return bValue.localeCompare(aValue);
+                    } else {
+                        return aValue.localeCompare(bValue);
+                    }
+                });
+
+                // Réorganiser le tableau
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+    });
+
+    // Fonctions d'export (à implémenter selon vos besoins)
+    function exportToExcel() {
+        alert('Fonction d\'export Excel à implémenter');
+    }
+
+    function exportToPDF() {
+        alert('Fonction d\'export PDF à implémenter');
+    }
+</script>

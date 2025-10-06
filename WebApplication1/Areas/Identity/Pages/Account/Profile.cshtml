@@ -1,0 +1,122 @@
+﻿@page
+@model WebApplication1.Pages.Account.ProfileModel
+@{
+    ViewData["Title"] = "Mon Profil";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user"></i> Mon Profil</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post" class="needs-validation" novalidate>
+                        <div class="row">
+                            <!-- Informations personnelles -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="fas fa-user-circle"></i> Informations Personnelles</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            <label for="nom" class="form-label">Nom *</label>
+                                            <input asp-for="Input.nom" class="form-control" required />
+                                            <span asp-validation-for="Input.nom" class="invalid-feedback"></span>
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="prenom" class="form-label">Prénom *</label>
+                                            <input asp-for="Input.prenom" class="form-control" required />
+                                            <span asp-validation-for="Input.prenom" class="invalid-feedback"></span>
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="Email" class="form-label">Email *</label>
+                                            <input asp-for="Input.Email" class="form-control" type="email" required />
+                                            <span asp-validation-for="Input.Email" class="invalid-feedback"></span>
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="PhoneNumber" class="form-label">Téléphone</label>
+                                            <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Ex: 06 12 34 56 78" />
+                                            <span asp-validation-for="Input.PhoneNumber" class="invalid-feedback"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-page="/Home/Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                            <div>
+                                <a class="btn btn-warning me-2" asp-area="Identity" asp-page="/Account/ChangePassword">
+                                    <i class="fas fa-lock"></i> Changer le mot de passe
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Sauvegarder
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Validation Bootstrap
+            (function () {
+                'use strict';
+                window.addEventListener('load', function () {
+                    var forms = document.getElementsByClassName('needs-validation');
+                    var validation = Array.prototype.filter.call(forms, function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
+
+            // Format automatique du téléphone
+            $('#Input_PhoneNumber').on('input', function () {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length >= 10) {
+                    value = value.substring(0, 10);
+                    value = value.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+                }
+                $(this).val(value);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,1148 @@
+﻿@using WebApplication1.Extensions
+@model WebApplication1.Models.Emploi.EmploiTemps
+
+@{
+    ViewBag.Title = "Emploi du Temps Semaine";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid px-4 py-4">
+    @if (Model == null)
+    {
+        <div class="alert alert-warning">
+            <h4><i class="fas fa-exclamation-triangle"></i> Emploi du temps non trouvé</h4>
+            <p>@ViewBag.ErrorMessage</p>
+            <a href="@Url.Action("CreerEmploiTemps", "EmploiTemps", new { week = ViewBag.WeekNumber, year = ViewBag.Year })" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer cet emploi du temps
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- En-tête de la vue -->
+        <div class="schedule-view-header mb-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="schedule-view-badge">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h1 class="schedule-view-title">Emploi du Temps - Semaine @Model.NumeroSemaine</h1>
+                        <p class="schedule-view-subtitle">@Model.PeriodeAffichage</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="status-badge-container">
+                        @if (Model.Statut == "Approved")
+                        {
+                            <span class="status-badge approved">
+                                <i class="fas fa-check-circle"></i> @Model.StatutLibelle
+                            </span>
+                        }
+                        else if (Model.Statut == "Pending")
+                        {
+                            <span class="status-badge pending">
+                                <i class="fas fa-clock"></i> @Model.StatutLibelle
+                            </span>
+                        }
+                        else if (Model.Statut == "Draft")
+                        {
+                            <span class="status-badge draft">
+                                <i class="fas fa-edit"></i> @Model.StatutLibelle
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge archived">
+                                <i class="fas fa-archive"></i> @Model.StatutLibelle
+                            </span>
+                        }
+                    </div>
+                    <div class="action-buttons mt-2">
+                        <button class="btn btn-outline-secondary btn-sm me-2" onclick="window.history.back()">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="printSchedule()">
+                            <i class="fas fa-print"></i> Imprimer
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i> Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                @if (Model.Statut == "Draft" || Model.Statut == "Pending")
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("ModifierEmploiTemps", "EmploiTemps", new { id = Model.Id })">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </a>
+                                    </li>
+                                }
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="duplicateSchedule(@Model.Id, @Model.NumeroSemaine, @Model.Annee)">
+                                        <i class="fas fa-copy"></i> Dupliquer
+                                    </a>
+                                </li>
+                                @if (Model.Statut == "Draft")
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-primary" href="#" onclick="changeStatus(@Model.Id, 'Pending')">
+                                            <i class="fas fa-paper-plane"></i> Soumettre pour approbation
+                                        </a>
+                                    </li>
+                                }
+                                @if (Model.Statut == "Pending")
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-success" href="#" onclick="changeStatus(@Model.Id, 'Approved')">
+                                            <i class="fas fa-check"></i> Approuver
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" onclick="changeStatus(@Model.Id, 'Draft')">
+                                            <i class="fas fa-times"></i> Refuser
+                                        </a>
+                                    </li>
+                                }
+                                @if (Model.Statut == "Approved")
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-warning" href="#" onclick="changeStatus(@Model.Id, 'Archived')">
+                                            <i class="fas fa-archive"></i> Archiver
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations générales -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="schedule-info-card">
+                    <h5><i class="fas fa-info-circle"></i> Informations Générales</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label>Période de planification</label>
+                                <div class="info-value">Semaine @Model.NumeroSemaine - @Model.Annee</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Créé par</label>
+                                <div class="info-value">@Model.CreePar</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label>Dernière modification</label>
+                                <div class="info-value">@ViewBag.LastModified?.ToString("dd/MM/yyyy à HH:mm")</div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.ApprouvePar))
+                            {
+                                <div class="info-group">
+                                    <label>Approuvé par</label>
+                                    <div class="info-value">@Model.ApprouvePar</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Commentaires))
+                    {
+                        <div class="info-group mt-3">
+                            <label>Commentaires</label>
+                            <div class="info-value">@Model.Commentaires</div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="schedule-stats-card">
+                    <h5><i class="fas fa-chart-bar"></i> Statistiques</h5>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">@Model.HeuresTotal</div>
+                            <div class="stat-label">Heures totales</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">@Model.NombrePersonnelAssigne</div>
+                            <div class="stat-label">Personnel assigné</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number coverage-@(Model.TauxCouverture >= 90 ? "good" : Model.TauxCouverture >= 70 ? "warning" : "danger")">@Model.TauxCouverture</div>
+                            <div class="stat-label">% Couverture</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">@Model.Affectations.Select(a => a.ServiceId).Distinct().Count()/4</div>
+                            <div class="stat-label">Services couverts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation des semaines -->
+        <div class="week-navigation mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="@Url.Action("VoirEmploiTempsSemaine", "EmploiTemps", new { week = Model.NumeroSemaine - 1, year = Model.Annee })"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-chevron-left"></i> Semaine précédente
+                </a>
+                <div class="week-selector">
+                    <select class="form-select" onchange="changeWeek(this.value)">
+                        @for (int i = 1; i <= 52; i++)
+                        {
+                        <p> Semaine i(@Model.Annee)</p>
+                        }
+                    </select>
+                </div>
+                <a href="@Url.Action("VoirEmploiTempsSemaine", "EmploiTemps", new { week = Model.NumeroSemaine + 1, year = Model.Annee })"
+                   class="btn btn-outline-secondary">
+                    Semaine suivante <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Grille de planification en lecture seule -->
+        <div class="schedule-display-card">
+            <div class="schedule-display-header">
+                <h5><i class="fas fa-table"></i> Planification Hebdomadaire</h5>
+                <div class="display-controls">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="viewMode" id="detailView" checked>
+                        <label class="btn btn-outline-primary" for="detailView">Vue détaillée</label>
+
+                        <input type="radio" class="btn-check" name="viewMode" id="compactView">
+                        <label class="btn btn-outline-primary" for="compactView">Vue compacte</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="schedule-display-body">
+                <div class="table-responsive">
+                    <table class="schedule-display-table" id="scheduleTable">
+                        <thead>
+                            <tr>
+                                <th class="service-header">Service</th>
+                                <th class="day-header">
+                                    <div class="day-info">
+                                        <div class="day-name">Lundi</div>
+                                        <div class="day-date">@Model.DateDebut.ToString("dd MMM")</div>
+                                    </div>
+                                </th>
+                                <th class="day-header">
+                                    <div class="day-info">
+                                        <div class="day-name">Mardi</div>
+                                        <div class="day-date">@Model.DateDebut.AddDays(1).ToString("dd MMM")</div>
+                                    </div>
+                                </th>
+                                <th class="day-header">
+                                    <div class="day-info">
+                                        <div class="day-name">Mercredi</div>
+                                        <div class="day-date">@Model.DateDebut.AddDays(2).ToString("dd MMM")</div>
+                                    </div>
+                                </th>
+                                <th class="day-header">
+                                    <div class="day-info">
+                                        <div class="day-name">Jeudi</div>
+                                        <div class="day-date">@Model.DateDebut.AddDays(3).ToString("dd MMM")</div>
+                                    </div>
+                                </th>
+                                <th class="day-header">
+                                    <div class="day-info">
+                                        <div class="day-name">Vendredi</div>
+                                        <div class="day-date">@Model.DateDebut.AddDays(4).ToString("dd MMM")</div>
+                                    </div>
+                                </th>
+                                <th class="total-header">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var serviceGroup in Model.Affectations.GroupBy(a => a.Service))
+                            {
+                                var service = serviceGroup.Key;
+                                var affectationsService = serviceGroup.ToList();
+
+                                <tr class="service-row" data-service="@service.Id">
+                                    <td class="service-cell">
+                                        <div class="service-info">
+                                            <div class="service-name">@service.Nom</div>
+                                            <div class="service-capacity">@service.CapaciteMaximum personnes max</div>
+                                        </div>
+                                    </td>
+
+                                    @foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" })
+                                    {
+                                        var affectationsJour = affectationsService.Where(a => a.Jour == day).ToList();
+
+                                        <td class="assignment-cell">
+                                            @foreach (var equipeGroup in affectationsJour.GroupBy(a => a.Equipe))
+                                            {
+                                                var equipe = equipeGroup.Key;
+                                                var affectationsEquipe = equipeGroup.ToList();
+
+                                                <div class="shift-assignment @(equipe.ToLower())-shift">
+                                                    <div class="shift-label">@(equipe == "Morning" ? "Matin" : "Soir") (@(equipe == "Morning" ? "8h-16h" : "16h-24h"))</div>
+                                                    <div class="assigned-staff">
+                                                        @foreach (var affectation in affectationsEquipe)
+                                                        {
+                                                            <span class="staff-member @affectation.Personnel.TypePersonnel.ToLower()">
+                                                                @affectation.Personnel.NomComplet
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+
+                                            @if (!affectationsJour.Any())
+                                            {
+                                                <div class="no-assignment">
+                                                    <i class="fas fa-minus-circle text-muted"></i>
+                                                    <span class="text-muted">Aucune affectation</span>
+                                                </div>
+                                            }
+                                        </td>
+                                    }
+
+                                    <td class="total-cell">
+                                        @{
+                                            var totalHeuresService = affectationsService.Sum(a => a.DureeEnHeures);
+                                            var totalPersonnelService = affectationsService.Select(a => a.PersonnelId).Distinct().Count();
+                                        }
+                                        <div class="total-hours">@totalHeuresService h</div>
+                                        <div class="total-people">@totalPersonnelService pers.</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Légende et absences -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="legend-card">
+                    <h5><i class="fas fa-key"></i> Légende</h5>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-badge technician">Tech</span>
+                            <span>Technicien</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge analyst">Ana</span>
+                            <span>Analyste</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge specialist">Spe</span>
+                            <span>Spécialiste</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge expert">Exp</span>
+                            <span>Expert</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                @if (Model.AbsencesConges != null && Model.AbsencesConges.Any())
+                {
+                    <div class="absences-card">
+                        <h5><i class="fas fa-user-times"></i> Absences et Congés</h5>
+                        <div class="absences-list">
+                            @foreach (var absence in Model.AbsencesConges)
+                            {
+                                <div class="absence-item">
+                                    <div class="absence-info">
+                                        <strong>@absence.Personnel.NomComplet</strong>
+                                        <span class="absence-type">@absence.TypeLibelle</span>
+                                    </div>
+                                    <div class="absence-period">
+                                        @absence.DateDebut.ToString("dd/MM") - @absence.DateFin.ToString("dd/MM")
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<style>
+    :root {
+        --schedule-primary: #8b5cf6;
+        --schedule-secondary: #a855f7;
+        --judicial-primary: #1e3a8a;
+        --judicial-success: #16a34a;
+        --judicial-warning: #d97706;
+        --judicial-danger: #dc2626;
+        --judicial-light: #f8fafc;
+        --judicial-border: #e2e8f0;
+        --judicial-secondary: #64748b;
+    }
+
+    body {
+        background-color: var(--judicial-light);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .schedule-view-header {
+        background: linear-gradient(135deg, var(--schedule-primary), var(--schedule-secondary));
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+    }
+
+    .schedule-view-badge {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .schedule-view-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .schedule-view-subtitle {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .status-badge.approved {
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--judicial-success);
+            border: 2px solid var(--judicial-success);
+        }
+
+        .status-badge.pending {
+            background: rgba(217, 119, 6, 0.2);
+            color: var(--judicial-warning);
+            border: 2px solid var(--judicial-warning);
+        }
+
+        .status-badge.draft {
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--judicial-secondary);
+            border: 2px solid var(--judicial-secondary);
+        }
+
+        .status-badge.archived {
+            background: rgba(75, 85, 99, 0.2);
+            color: #4b5563;
+            border: 2px solid #4b5563;
+        }
+
+    .schedule-info-card, .schedule-stats-card, .schedule-display-card,
+    .legend-card, .absences-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+
+        .schedule-info-card h5, .schedule-stats-card h5, .legend-card h5, .absences-card h5 {
+            color: var(--judicial-primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+    .info-group {
+        margin-bottom: 1rem;
+    }
+
+        .info-group label {
+            font-weight: 500;
+            color: var(--judicial-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+    .info-value {
+        font-weight: 600;
+        color: var(--judicial-primary);
+        font-size: 1rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: var(--judicial-light);
+        border-radius: 8px;
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--judicial-secondary);
+    }
+
+    .coverage-good {
+        color: var(--judicial-success) !important;
+    }
+
+    .coverage-warning {
+        color: var(--judicial-warning) !important;
+    }
+
+    .coverage-danger {
+        color: var(--judicial-danger) !important;
+    }
+
+    .week-navigation {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .week-selector select {
+        min-width: 200px;
+    }
+
+    .schedule-display-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .schedule-display-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--judicial-border);
+        background: var(--judicial-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .schedule-display-header h5 {
+            margin: 0;
+            color: var(--judicial-primary);
+            font-weight: 600;
+        }
+
+    .schedule-display-body {
+        padding: 0;
+    }
+
+    .schedule-display-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .schedule-display-table th {
+            background: var(--judicial-primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+    .service-header {
+        width: 200px;
+        text-align: left;
+    }
+
+    .day-header {
+        width: 180px;
+    }
+
+    .total-header {
+        width: 120px;
+    }
+
+    .day-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .day-name {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .day-date {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    .schedule-display-table td {
+        border: 1px solid var(--judicial-border);
+        padding: 0;
+        vertical-align: top;
+    }
+
+    .service-cell {
+        padding: 1rem;
+        background: var(--judicial-light);
+    }
+
+    .service-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .service-name {
+        font-weight: 600;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .service-capacity {
+        color: var(--judicial-secondary);
+        font-size: 0.8rem;
+    }
+
+    .assignment-cell {
+        padding: 0.5rem;
+        min-height: 80px;
+    }
+
+    .shift-assignment {
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--judicial-border);
+        border-radius: 6px;
+        padding: 0.5rem;
+        background: #fafafa;
+    }
+
+        .shift-assignment:last-child {
+            margin-bottom: 0;
+        }
+
+    .morning-shift {
+        background: linear-gradient(45deg, #fef3c7, #fde68a);
+        border-color: var(--judicial-warning);
+    }
+
+    .evening-shift {
+        background: linear-gradient(45deg, #ddd6fe, #c4b5fd);
+        border-color: var(--schedule-primary);
+    }
+
+    .shift-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--judicial-primary);
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .assigned-staff {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .staff-member {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: white;
+    }
+
+        .staff-member.technician {
+            background: #3b82f6;
+        }
+
+        .staff-member.analyst {
+            background: var(--judicial-success);
+        }
+
+        .staff-member.specialist {
+            background: var(--judicial-warning);
+        }
+
+        .staff-member.expert {
+            background: var(--judicial-danger);
+        }
+
+    .no-assignment {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        min-height: 60px;
+    }
+
+    .total-cell {
+        padding: 1rem;
+        text-align: center;
+        background: var(--judicial-light);
+    }
+
+    .total-hours {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--judicial-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .total-people {
+        font-size: 0.9rem;
+        color: var(--judicial-secondary);
+    }
+
+    .legend-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .legend-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: white;
+        min-width: 40px;
+        text-align: center;
+    }
+
+        .legend-badge.technician {
+            background: #3b82f6;
+        }
+
+        .legend-badge.analyst {
+            background: var(--judicial-success);
+        }
+
+        .legend-badge.specialist {
+            background: var(--judicial-warning);
+        }
+
+        .legend-badge.expert {
+            background: var(--judicial-danger);
+        }
+
+    .absences-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .absence-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: var(--judicial-light);
+        border-radius: 6px;
+        border-left: 4px solid var(--judicial-warning);
+    }
+
+    .absence-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .absence-type {
+        font-size: 0.8rem;
+        color: var(--judicial-secondary);
+    }
+
+    .absence-period {
+        font-weight: 600;
+        color: var(--judicial-primary);
+        font-size: 0.9rem;
+    }
+
+    .compact-view .shift-assignment {
+        padding: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .compact-view .shift-label {
+        font-size: 0.7rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .compact-view .staff-member {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.3rem;
+    }
+
+    .compact-view .assignment-cell {
+        min-height: 60px;
+    }
+
+    media print {
+        body
+
+    {
+        background: white;
+    }
+
+    .schedule-view-header {
+        background: var(--judicial-primary) !important;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+
+    .action-buttons, .week-navigation, .display-controls {
+        display: none !important;
+    }
+
+    .schedule-display-card {
+        box-shadow: none;
+        border: 1px solid var(--judicial-border);
+    }
+
+    .staff-member {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+
+    .morning-shift, .evening-shift {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+
+    }
+
+    media (max-width: 768px) {
+        .schedule-view-header .d-flex
+
+    {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .week-navigation .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .schedule-display-table {
+        font-size: 0.8rem;
+    }
+
+    .assignment-cell {
+        min-height: 80px;
+    }
+
+    .legend-items {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    }
+
+    .schedule-display-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    keyframes fadeInUp {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .service-row:hover {
+        background-color: rgba(139, 92, 246, 0.02);
+    }
+
+    .assignment-cell:hover {
+        background-color: rgba(139, 92, 246, 0.05);
+    }
+
+    .staff-member:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        transition: transform 0.2s ease;
+    }
+</style>
+
+<!-- Remplacez les lignes 925-929 par ce code sécurisé -->
+<script>
+    let currentWeek = @(Model?.NumeroSemaine ?? ViewBag.WeekNumber ?? DateTime.Now.GetWeekOfYear());
+    let currentYear = @(Model?.Annee ?? ViewBag.Year ?? DateTime.Now.Year);
+    let viewMode = 'detailed';
+
+    // Vérification de sécurité
+    if (!currentWeek || !currentYear) {
+        console.error('Données manquantes pour la vue emploi du temps');
+        currentWeek = @DateTime.Now.GetWeekOfYear();
+        currentYear = @DateTime.Now.Year;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vérifier si nous avons un modèle valide
+        const hasValidModel = @Html.Raw(Model != null ? "true" : "false");
+
+        if (!hasValidModel) {
+            console.log('Modèle non disponible - mode création ou erreur');
+            // Désactiver certaines fonctionnalités qui nécessitent le modèle
+            disableModelDependentFeatures();
+        }
+
+        initializeViewMode();
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            });
+        }, 5000);
+    });
+
+    function disableModelDependentFeatures() {
+        // Désactiver les fonctionnalités qui nécessitent Model
+        const modelDependentElements = document.querySelectorAll('[data-requires-model]');
+        modelDependentElements.forEach(el => {
+            el.style.display = 'none';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeViewMode();
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            });
+        }, 5000);
+    });
+
+    function initializeViewMode() {
+        const detailView = document.getElementById('detailView');
+        const compactView = document.getElementById('compactView');
+
+        if (detailView && compactView) {
+            detailView.addEventListener('change', function() {
+                if (this.checked) {
+                    switchViewMode('detailed');
+                }
+            });
+
+            compactView.addEventListener('change', function() {
+                if (this.checked) {
+                    switchViewMode('compact');
+                }
+            });
+        }
+    }
+
+    function switchViewMode(mode) {
+        const table = document.getElementById('scheduleTable');
+        if (!table) return;
+
+        if (mode === 'compact') {
+            table.classList.add('compact-view');
+            viewMode = 'compact';
+        } else {
+            table.classList.remove('compact-view');
+            viewMode = 'detailed';
+        }
+    }
+
+    function changeWeek(weekNumber) {
+        window.location.href = '@Url.Action("VoirEmploiTempsSemaine", "EmploiTemps")?week=' + weekNumber + '&year=' + currentYear;
+        }
+
+        function printSchedule() {
+        const elementsToHide = [
+        '.action-buttons',
+        '.week-navigation',
+        '.display-controls'
+        ];
+
+        elementsToHide.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => el.style.display = 'none');
+        });
+
+        window.print();
+
+        setTimeout(() => {
+        elementsToHide.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => el.style.display = '');
+        });
+        }, 1000);
+        }
+
+        function duplicateSchedule(sourceId, sourceWeek, sourceYear) {
+        const targetWeek = prompt(`Vers quelle semaine voulez-vous dupliquer l'emploi du temps de la semaine ${sourceWeek} ?`, sourceWeek + 1);
+        const targetYear = prompt('Pour quelle année ?', sourceYear);
+
+        if (targetWeek && targetYear) {
+        fetch('@Url.Action("DupliquerEmploiTemps", "EmploiTemps")', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+        },
+        body: `sourceId=${sourceId}&targetWeek=${targetWeek}&targetYear=${targetYear}`
+        })
+        .then(response => response.json())
+        .then(data => {
+        if (data.success) {
+        showNotification(data.message, 'success');
+        if (confirm('Voulez-vous voir le nouvel emploi du temps ?')) {
+        window.location.href = '@Url.Action("VoirEmploiTempsSemaine", "EmploiTemps")?week=' + targetWeek + '&year=' + targetYear;
+        }
+        } else {
+        showNotification(data.message, 'danger');
+        }
+        })
+        .catch(error => {
+        showNotification('Erreur lors de la duplication', 'danger');
+        });
+        }
+        }
+
+        function changeStatus(id, newStatus) {
+        let message = '';
+        switch(newStatus) {
+        case 'Pending':
+        message = 'Voulez-vous soumettre cet emploi du temps pour approbation ?';
+        break;
+        case 'Approved':
+        message = 'Voulez-vous approuver cet emploi du temps ?';
+        break;
+        case 'Archived':
+        message = 'Voulez-vous archiver cet emploi du temps ?';
+        break;
+        case 'Draft':
+        message = 'Voulez-vous remettre cet emploi du temps en brouillon ?';
+        break;
+        }
+
+        if (confirm(message)) {
+        fetch('@Url.Action("ChangerStatut", "EmploiTemps")', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+        },
+        body: `id=${id}&nouveauStatut=${newStatus}`
+        })
+        .then(response => response.json())
+        .then(data => {
+        if (data.success) {
+        showNotification(data.message, 'success');
+        setTimeout(() => {
+        location.reload();
+        }, 1500);
+        } else {
+        showNotification(data.message, 'danger');
+        }
+        })
+        .catch(error => {
+        showNotification('Erreur lors du changement de statut', 'danger');
+        });
+        }
+        }
+
+        function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '1050';
+        notification.style.minWidth = '300px';
+
+        const icons = {
+        'success': 'fas fa-check-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'danger': 'fas fa-exclamation-circle',
+        'info': 'fas fa-info-circle'
+        };
+
+        notification.innerHTML = `
+        <i class="${icons[type]} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+        if (notification.parentNode) {
+        notification.remove();
+        }
+        }, 5000);
+        }
+</script>

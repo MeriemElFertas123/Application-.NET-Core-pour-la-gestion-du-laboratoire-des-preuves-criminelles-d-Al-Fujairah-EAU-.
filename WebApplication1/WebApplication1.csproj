@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-WebApplication1-a42298d2-d44b-47c0-9943-b8a7a76f49c6</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\crimeScene.jpg" />
+    <None Include="wwwroot\images\img1.jpg" />
+    <None Include="wwwroot\images\img2.jpg" />
+    <None Include="wwwroot\images\img3.jpg" />
+    <None Include="wwwroot\images\img4.jpg" />
+    <None Include="wwwroot\images\img5.jpg" />
+    <None Include="wwwroot\images\img6.jpg" />
+    <None Include="wwwroot\images\img7.jpg" />
+    <None Include="wwwroot\images\img8.jpg" />
+    <None Include="wwwroot\images\istockphoto-1484211862-1024x1024.jpg" />
+    <None Include="wwwroot\images\OIP %281%29.jpeg" />
+    <None Include="wwwroot\images\OIP.jpeg" />
+    <None Include="wwwroot\images\portrait-young-man-black-hoodie-white-background_1142-61474.avif" />
+    <None Include="wwwroot\images\Ridisi texte_4.png" />
+    <None Include="wwwroot\images\two-3237662_1280.jpg" />
+    <None Include="wwwroot\images\télécharger.webp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.7.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.18" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.18" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.18" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Content\" />
+  </ItemGroup>
+
+</Project>

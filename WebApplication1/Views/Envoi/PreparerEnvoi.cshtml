@@ -1,0 +1,727 @@
+﻿@model WebApplication1.Models.Envoi.PreparationEnvoiViewModel
+@{
+    ViewData["Title"] = "Préparer l'Envoi";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-box"></i> Préparer l'Envoi</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="PreparerEnvoi" asp-controller="Envoi" method="post" class="needs-validation" novalidate="novalidate" enctype="multipart/form-data" id="envoiForm">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Informations générales de l'envoi -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations de l'Envoi</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="AffaireId" class="form-label">Affaire *</label>
+                                            <select asp-for="AffaireId"
+                                                    asp-items="@(ViewBag.Affaires as IEnumerable<SelectListItem>)"
+                                                    class="form-select"
+                                                    required="required"
+                                                    id="selectAffaire">
+                                                <option value="">-- Sélectionner une affaire --</option>
+                                            </select>
+                                            <span asp-validation-for="AffaireId" class="invalid-feedback"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="TypeAnalyseDemandee" class="form-label">Type d'analyse *</label>
+                                            <select asp-for="TypeAnalyseDemandee"
+                                                    asp-items="@(ViewBag.TypesAnalyse as IEnumerable<SelectListItem>)"
+                                                    class="form-select"
+                                                    required="required">
+                                                <option value="">-- Sélectionner le type --</option>
+                                            </select>
+                                            <span asp-validation-for="TypeAnalyseDemandee" class="invalid-feedback"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="DateEnvoiPrevue" class="form-label">Date d'envoi prévue *</label>
+                                            <input asp-for="DateEnvoiPrevue"
+                                                   type="date"
+                                                   class="form-control"
+                                                   required="required" />
+                                            <span asp-validation-for="DateEnvoiPrevue" class="invalid-feedback"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section des échantillons disponibles -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-vial"></i> Échantillons disponibles</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="echantillons-container">
+                                    @if (Model.EchantillonsDisponibles?.Any() == true)
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th width="50px">
+                                                            <input type="checkbox" id="selectAll" class="form-check-input">
+                                                        </th>
+                                                        <th>Code</th>
+                                                        <th>Description</th>
+                                                        <th>Type</th>
+                                                        <th>Statut</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @for (int i = 0; i < Model.EchantillonsDisponibles.Count; i++)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                @if (!Model.EchantillonsDisponibles[i].DejaEnvoye)
+                                                                {
+                                                                    <input type="checkbox"
+                                                                           name="EchantillonsSelectionnes"
+                                                                           value="@Model.EchantillonsDisponibles[i].Id"
+                                                                           class="form-check-input echantillon-checkbox"
+                                                                           data-echantillon-id="@Model.EchantillonsDisponibles[i].Id"
+                                                                           data-echantillon-code="@Model.EchantillonsDisponibles[i].Code"
+                                                                           data-echantillon-description="@Model.EchantillonsDisponibles[i].Description" />
+                                                                }
+                                                            </td>
+                                                            <td>@Model.EchantillonsDisponibles[i].Id</td>
+                                                            <td>@Model.EchantillonsDisponibles[i].Description</td>
+                                                            <td>@Model.EchantillonsDisponibles[i].Code</td>
+                                                            <td>
+                                                                @if (Model.EchantillonsDisponibles[i].DejaEnvoye)
+                                                                {
+                                                                    <span class="badge bg-secondary">Déjà envoyé</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-success">Disponible</span>
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                @if (!Model.EchantillonsDisponibles[i].DejaEnvoye)
+                                                                {
+                                                                    <button type="button"
+                                                                            class="btn btn-sm btn-outline-primary btn-toggle-details"
+                                                                            data-echantillon-id="@Model.EchantillonsDisponibles[i].Id">
+                                                                        <i class="fas fa-plus"></i> Détails
+                                                                    </button>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> Aucun échantillon disponible pour cette affaire.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section des détails des échantillons sélectionnés -->
+                        <div id="details-container">
+                            <!-- Les formulaires de détails seront ajoutés ici dynamiquement -->
+                        </div>
+
+                        <!-- Champs cachés pour stockage des données -->
+                        <input asp-for="EchantillonsDetailsJson" type="hidden" />
+                        <input id="qrCodesJson" name="QRCodesJson" type="hidden" value="" />
+                        <input id="fichiersJson" name="FichiersJson" type="hidden" value="" />
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="MesEnvois" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>          
+                            <button type="submit" class="btn btn-success me-2" id="btnEnvoyer" name="estEnvoi" value="true">
+                                <i class="fas fa-paper-plane"></i> Envoyer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script>
+        // Déclaration des variables globales
+        var echantillonsDetails = {};
+        var qrCodes = {};
+        var fichiers = {};
+
+        $(document).ready(function() {
+            console.log('Page PreparerEnvoi chargée');
+
+            // Sélection/désélection de tous les échantillons
+            $('#selectAll').change(function() {
+                $('.echantillon-checkbox').prop('checked', $(this).prop('checked'));
+                updateDetailsSection();
+            });
+
+            // Changement d'affaire - recharger les échantillons
+            $('#selectAffaire').change(function() {
+                var affaireId = $(this).val();
+                if (affaireId) {
+                    window.location.href = '@Url.Action("PreparerEnvoi")?affaireId=' + affaireId;
+                }
+            });
+
+            // Gestion de la sélection des échantillons
+            $(document).on('change', '.echantillon-checkbox', function() {
+                var echantillonId = $(this).data('echantillon-id');
+                if ($(this).is(':checked')) {
+                    showDetailsForm(echantillonId);
+                } else {
+                    hideDetailsForm(echantillonId);
+                    delete echantillonsDetails[echantillonId];
+                    delete qrCodes[echantillonId];
+                    delete fichiers[echantillonId];
+                }
+                updateJsonFields();
+            });
+
+            // Gestion du bouton Envoyer
+            $('#btnEnvoyer').click(function(e) {
+                e.preventDefault();
+
+                console.log('Bouton Envoyer cliqué');
+                console.log('EchantillonsDetails:', echantillonsDetails);
+                console.log('QRCodes:', qrCodes);
+
+                var hasError = false;
+                var errorMessages = [];
+
+                // Vérifier qu'au moins un échantillon est sélectionné
+                if ($('.echantillon-checkbox:checked').length === 0) {
+                    hasError = true;
+                    errorMessages.push("Veuillez sélectionner au moins un échantillon à envoyer.");
+                }
+
+                // Vérifier que tous les échantillons sélectionnés ont leurs détails sauvegardés
+                $('.echantillon-checkbox:checked').each(function() {
+                    var echantillonId = $(this).data('echantillon-id');
+                    console.log('Vérification échantillon:', echantillonId);
+
+                    if (!echantillonsDetails[echantillonId]) {
+                        hasError = true;
+                        errorMessages.push(`Échantillon ${echantillonId}: Détails manquants`);
+                        $(`#details-form-${echantillonId} .card-header`).removeClass('bg-primary bg-success').addClass('bg-warning');
+                    }
+
+                    if (!qrCodes[echantillonId]) {
+                        hasError = true;
+                        errorMessages.push(`Échantillon ${echantillonId}: QR Code manquant`);
+                    }
+                });
+
+                if (hasError) {
+                    showErrorMessage('Erreurs de validation:\n- ' + errorMessages.join('\n- '));
+                    return;
+                }
+
+                // S'assurer que les champs JSON sont bien mis à jour
+                updateJsonFields();
+
+                // Vérifier que les champs cachés ont bien les valeurs
+                console.log('Valeur EchantillonsDetailsJson:', $('#EchantillonsDetailsJson').val());
+                console.log('Valeur QRCodesJson:', $('#qrCodesJson').val());
+
+                // Désactiver le bouton
+                $(this).prop('disabled', true);
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Envoi en cours...');
+
+                // Supprimer tout ancien champ estEnvoi s'il existe
+                $('input[name="estEnvoi"]').remove();
+
+                // Ajouter un nouveau champ caché pour indiquer que c'est un envoi direct
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'estEnvoi',
+                    value: 'true'
+                }).appendTo('#envoiForm');
+
+                console.log('Soumission du formulaire avec estEnvoi=true');
+
+                // Soumettre le formulaire
+                $('#envoiForm').submit();
+            });
+        });
+
+        // Afficher le formulaire de détails pour un échantillon
+        function showDetailsForm(echantillonId) {
+            console.log('Affichage du formulaire pour échantillon:', echantillonId);
+
+            if ($('#details-form-' + echantillonId).length > 0) {
+                $('#details-form-' + echantillonId).slideDown();
+                return;
+            }
+
+            var checkbox = $('input[data-echantillon-id="' + echantillonId + '"]');
+            var echantillonCode = checkbox.data('echantillon-code');
+            var echantillonDescription = checkbox.data('echantillon-description');
+
+            var detailsHtml = `
+                <div class="card mb-4 border-primary" id="details-form-${echantillonId}">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-vial"></i> Détails de l'Échantillon - ${echantillonCode}
+                            <button type="button" class="btn btn-sm btn-outline-light float-end btn-close-details"
+                                    data-echantillon-id="${echantillonId}">
+                                <i class="fas fa-times"></i> Fermer
+                            </button>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Alerte de validation -->
+                        <div class="alert alert-danger" id="validation-alert-${echantillonId}" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span class="validation-message"></span>
+                        </div>
+
+                        <!-- Section QR Code -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-qrcode"></i> Identification QR Code</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <div id="qr-code-${echantillonId}" class="mb-3"></div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-generate-qr"
+                                                data-echantillon-id="${echantillonId}">
+                                            <i class="fas fa-sync-alt"></i> Régénérer QR Code
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Code QR</label>
+                                            <input type="text" class="form-control qr-text-input"
+                                                   data-echantillon-id="${echantillonId}"
+                                                   value=""
+                                                   readonly />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Caractéristiques physiques -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-weight"></i> Caractéristiques</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Poids (g) *</label>
+                                            <input type="number" step="0.001" min="0.001" max="99999.999"
+                                                   class="form-control poids-input"
+                                                   data-echantillon-id="${echantillonId}"
+                                                   placeholder="Ex: 1.250" required />
+                                            <div class="invalid-feedback">
+                                                Le poids doit être compris entre 0.001g et 99999.999g
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Conditions Stockage *</label>
+                                            <input type="text" class="form-control conditions-input"
+                                                   data-echantillon-id="${echantillonId}"
+                                                   placeholder="Ex: Température ambiante, Réfrigérateur..."
+                                                   required />
+                                            <div class="invalid-feedback">
+                                                Les conditions de stockage sont obligatoires
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Couleur</label>
+                                            <input type="text" class="form-control couleur-input"
+                                                   data-echantillon-id="${echantillonId}"
+                                                   placeholder="Ex: Rouge, Bleu, Transparent..."
+                                                   maxlength="100" />
+                                            <div class="form-text">Optionnel - Maximum 100 caractères</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Emballage *</label>
+                                            <select class="form-select emballage-input"
+                                                    data-echantillon-id="${echantillonId}" required>
+                                                <option value="">-- Sélectionner un emballage --</option>
+                                                <option value="Sachet plastique">Sachet plastique</option>
+                                                <option value="Tube plastique">Tube plastique</option>
+                                                <option value="Flacon verre">Flacon en verre</option>
+                                                <option value="Boite carton">Boîte en carton</option>
+                                                <option value="Envelope papier">Enveloppe papier</option>
+                                                <option value="Container étanche">Container étanche</option>
+                                                <option value="Sachet sous vide">Sachet sous vide</option>
+                                                <option value="Autre">Autre</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Veuillez sélectionner un type d'emballage
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Emplacement (optionnel)</label>
+                                            <input type="text" class="form-control emplacement-input"
+                                                   data-echantillon-id="${echantillonId}"
+                                                   placeholder="Sera défini lors du stockage..."
+                                                   maxlength="200" />
+                                            <div class="form-text">Optionnel - Sera complété lors du stockage</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observations -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-clipboard"></i> Observations</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <textarea class="form-control observations-input"
+                                              data-echantillon-id="${echantillonId}"
+                                              rows="3" placeholder="Notes supplémentaires..."
+                                              maxlength="1000"></textarea>
+                                    <div class="form-text">Maximum 1000 caractères</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary btn-reset-form"
+                                    data-echantillon-id="${echantillonId}">
+                                <i class="fas fa-undo"></i> Réinitialiser
+                            </button>
+                            <button type="button" class="btn btn-success btn-save-details"
+                                    data-echantillon-id="${echantillonId}">
+                                <i class="fas fa-save"></i> Sauvegarder les détails
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('#details-container').append(detailsHtml);
+            generateQRCode(echantillonId);
+            addFormEvents(echantillonId);
+        }
+
+        function generateQRCode(echantillonId) {
+            var qrText = "ECH-" + echantillonId + "-" + new Date().getTime().toString().slice(-6);
+            console.log('Génération QR Code:', qrText, 'pour échantillon:', echantillonId);
+
+            $(`.qr-text-input[data-echantillon-id="${echantillonId}"]`).val(qrText);
+
+            var qrContainer = document.getElementById(`qr-code-${echantillonId}`);
+            qrContainer.innerHTML = "";
+            new QRCode(qrContainer, {
+                text: qrText,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            qrCodes[echantillonId] = qrText;
+            updateJsonFields();
+        }
+
+        function addFormEvents(echantillonId) {
+            // Bouton générer QR
+            $(`.btn-generate-qr[data-echantillon-id="${echantillonId}"]`).click(function() {
+                generateQRCode(echantillonId);
+            });
+
+            // Bouton sauvegarder
+            $(`.btn-save-details[data-echantillon-id="${echantillonId}"]`).click(function() {
+                saveDetails(echantillonId);
+            });
+
+            // Bouton réinitialiser
+            $(`.btn-reset-form[data-echantillon-id="${echantillonId}"]`).click(function() {
+                resetForm(echantillonId);
+            });
+
+            // Bouton fermer
+            $(`.btn-close-details[data-echantillon-id="${echantillonId}"]`).click(function() {
+                hideDetailsForm(echantillonId);
+            });
+        }
+
+        // Sauvegarder les détails
+        function saveDetails(echantillonId) {
+            console.log('Sauvegarde des détails pour échantillon:', echantillonId);
+
+            // Récupération des valeurs
+            var poids = $(`.poids-input[data-echantillon-id="${echantillonId}"]`).val();
+            var conditions = $(`.conditions-input[data-echantillon-id="${echantillonId}"]`).val();
+            var emballage = $(`.emballage-input[data-echantillon-id="${echantillonId}"]`).val();
+            var couleur = $(`.couleur-input[data-echantillon-id="${echantillonId}"]`).val();
+            var emplacement = $(`.emplacement-input[data-echantillon-id="${echantillonId}"]`).val() || "";
+            var observations = $(`.observations-input[data-echantillon-id="${echantillonId}"]`).val();
+
+            // Validation des champs obligatoires
+            var erreurs = [];
+
+            if (!poids || parseFloat(poids) <= 0 || parseFloat(poids) > 99999.999) {
+                erreurs.push("Le poids doit être compris entre 0.001g et 99999.999g");
+            }
+
+            if (!conditions || conditions.trim() === "") {
+                erreurs.push("Les conditions de stockage sont obligatoires");
+            }
+
+            if (!emballage) {
+                erreurs.push("Le type d'emballage est obligatoire");
+            }
+
+            // Validation des longueurs
+            if (couleur && couleur.length > 100) {
+                erreurs.push("La couleur ne peut pas dépasser 100 caractères");
+            }
+
+            if (observations && observations.length > 1000) {
+                erreurs.push("Les observations ne peuvent pas dépasser 1000 caractères");
+            }
+
+            // Afficher les erreurs s'il y en a
+            if (erreurs.length > 0) {
+                $(`#validation-alert-${echantillonId}`).show();
+                $(`#validation-alert-${echantillonId} .validation-message`).html(erreurs.join('<br>'));
+                return;
+            }
+
+            // Masquer les alertes d'erreur
+            $(`#validation-alert-${echantillonId}`).hide();
+
+            // Sauvegarder les données
+            echantillonsDetails[echantillonId] = {
+                Id: echantillonId,
+                Poids: parseFloat(poids),
+                ConditionsStockage: conditions.trim(),
+                Couleur: couleur || "",
+                Emballage: emballage,
+                Emplacement: emplacement,
+                Observations: observations || ""
+            };
+
+            console.log('Détails sauvegardés:', echantillonsDetails[echantillonId]);
+
+            updateJsonFields();
+            showSuccessMessage('Détails sauvegardés avec succès pour l\'échantillon ' + echantillonId);
+
+            // Marquer visuellement que le formulaire est valide
+            $(`#details-form-${echantillonId} .card-header`).removeClass('bg-warning').addClass('bg-success');
+        }
+
+        // Réinitialiser un formulaire
+        function resetForm(echantillonId) {
+            console.log('Réinitialisation du formulaire pour échantillon:', echantillonId);
+
+            $(`#details-form-${echantillonId} input[type="text"], #details-form-${echantillonId} input[type="number"], #details-form-${echantillonId} textarea, #details-form-${echantillonId} select`).val('');
+            delete echantillonsDetails[echantillonId];
+            delete fichiers[echantillonId];
+            generateQRCode(echantillonId);
+            updateJsonFields();
+            $(`#validation-alert-${echantillonId}`).hide();
+            $(`#details-form-${echantillonId} .card-header`).removeClass('bg-success bg-warning').addClass('bg-primary');
+        }
+
+        // Mettre à jour les champs JSON
+        function updateJsonFields() {
+            var detailsJson = JSON.stringify(echantillonsDetails);
+            var qrJson = JSON.stringify(qrCodes);
+            var fichiersJson = JSON.stringify(fichiers);
+
+            $('#EchantillonsDetailsJson').val(detailsJson);
+            $('#qrCodesJson').val(qrJson);
+            $('#fichiersJson').val(fichiersJson);
+
+            console.log('Mise à jour des champs JSON:');
+            console.log('- EchantillonsDetails:', detailsJson);
+            console.log('- QRCodes:', qrJson);
+            console.log('- Fichiers:', fichiersJson);
+        }
+
+        // Masquer un formulaire
+        function hideDetailsForm(echantillonId) {
+            console.log('Masquage du formulaire pour échantillon:', echantillonId);
+
+            $(`#details-form-${echantillonId}`).slideUp(function() {
+                $(this).remove();
+            });
+            $(`input[data-echantillon-id="${echantillonId}"]`).prop('checked', false);
+        }
+
+        // Fonction pour mettre à jour la section des détails
+        function updateDetailsSection() {
+            $('.echantillon-checkbox:checked').each(function() {
+                var echantillonId = $(this).data('echantillon-id');
+                showDetailsForm(echantillonId);
+            });
+
+            $('.echantillon-checkbox:not(:checked)').each(function() {
+                var echantillonId = $(this).data('echantillon-id');
+                hideDetailsForm(echantillonId);
+                delete echantillonsDetails[echantillonId];
+                delete qrCodes[echantillonId];
+                delete fichiers[echantillonId];
+            });
+
+            updateJsonFields();
+        }
+
+        // Messages d'alerte
+        function showSuccessMessage(message) {
+            console.log('Success:', message);
+
+            var toastId = 'toast-' + Date.now();
+            var toast = `
+                <div id="${toastId}" class="alert alert-success alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+                    <strong><i class="fas fa-check-circle"></i> Succès!</strong><br/>${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $('body').append(toast);
+
+            setTimeout(function() {
+                $('#' + toastId).fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
+        function showErrorMessage(message) {
+            console.error('Error:', message);
+
+            var toastId = 'toast-' + Date.now();
+            var toast = `
+                <div id="${toastId}" class="alert alert-danger alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px; white-space: pre-line;" role="alert">
+                    <strong><i class="fas fa-exclamation-circle"></i> Erreur!</strong><br/>${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $('body').append(toast);
+
+            setTimeout(function() {
+                $('#' + toastId).fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+    </script>
+
+    <style>
+        .card .card {
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+        }
+
+        .card .card-header {
+            background-color: #f8f9fa;
+            padding: 0.75rem 1.25rem;
+        }
+
+            .card .card-header.bg-success {
+                background-color: #28a745 !important;
+                color: white;
+            }
+
+            .card .card-header.bg-warning {
+                background-color: #ffc107 !important;
+                color: #212529;
+            }
+
+        .btn-toggle-details.btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .form-control:invalid {
+            border-color: #dc3545;
+        }
+
+        .form-control:valid {
+            border-color: #28a745;
+        }
+
+        .invalid-feedback {
+            display: block;
+        }
+
+        .validation-message {
+            font-weight: 500;
+        }
+
+        .card.border-primary {
+            transition: all 0.3s ease;
+        }
+
+        .card.border-primary:hover {
+                box-shadow: 0 4px 8px rgba(0,123,255,0.25);
+        }
+
+        .position-fixed {
+            position: fixed !important;
+        }
+
+        .fa-spinner.fa-spin {
+            animation: fa-spin 2s infinite linear;
+        }
+
+        @@keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(359deg);
+            }
+        }
+    </style>
+}

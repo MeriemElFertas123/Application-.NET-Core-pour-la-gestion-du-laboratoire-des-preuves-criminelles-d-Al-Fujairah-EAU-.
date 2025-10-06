@@ -1,0 +1,95 @@
+﻿@model WebApplication1.Models.Technicien
+
+@{
+    ViewData["Title"] = "Supprimer un technicien";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i> @ViewData["Title"]
+        </h2>
+        <p class="text-muted">Êtes-vous sûr de vouloir supprimer ce technicien ?</p>
+    </div>
+
+    <div class="card shadow-lg border-danger">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-person-x me-2"></i>
+                Confirmation de suppression
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Attention !</strong> Cette action est irréversible et supprimera définitivement :
+                <ul class="mt-2 mb-0">
+                    <li>Le profil du technicien</li>
+                    <li>Le compte utilisateur associé</li>
+                    <li>Toutes les analyses associées à ce technicien</li>
+                </ul>
+            </div>
+
+            <!-- Informations du technicien à supprimer -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="info-group">
+                        <label class="fw-bold text-secondary">Nom complet :</label>
+                        <p class="mb-0 fs-5">@Model.Nom @Model.Prenom</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-group">
+                        <label class="fw-bold text-secondary">Email :</label>
+                        <p class="mb-0 fs-5">@Model.Email</p>
+                    </div>
+                </div>
+            </div>
+
+           
+        </div>
+
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a asp-action="Index" class="btn btn-success">
+                        <i class="bi bi-arrow-left me-1"></i> Annuler
+                    </a>
+                </div>
+                <div>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info me-2">
+                        <i class="bi bi-eye me-1"></i> Voir détails
+                    </a>
+                    <form method="post" asp-action="Delete" style="display: inline;">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Êtes-vous absolument sûr de vouloir supprimer ce technicien ? Cette action est définitive et ne peut pas être annulée.')">
+                            <i class="bi bi-trash me-1"></i> Confirmer la suppression
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .info-group {
+        padding: 10px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+        .info-group:last-child {
+            border-bottom: none;
+        }
+
+        .info-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+</style>

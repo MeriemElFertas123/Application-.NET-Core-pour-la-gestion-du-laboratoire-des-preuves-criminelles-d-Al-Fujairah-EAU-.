@@ -1,0 +1,262 @@
+﻿@model WebApplication1.Models.Affaire
+
+@{
+    ViewData["Title"] = "Modifier l'affaire";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Modifier l'affaire
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" class="needs-validation" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <!-- Titre -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-heading text-primary me-1"></i>
+                                    @Html.DisplayNameFor(model => model.Titre)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Titre" class="form-control"
+                                       placeholder="Saisissez le titre de l'affaire" required />
+                                <span asp-validation-for="Titre" class="invalid-feedback"></span>
+                            </div>
+
+                            <!-- Lieu -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-map-marker-alt text-primary me-1"></i>
+                                    @Html.DisplayNameFor(model => model.Lieu)
+                                </label>
+                                <input asp-for="Lieu" class="form-control"
+                                       placeholder="Lieu de l'affaire" />
+                                <span asp-validation-for="Lieu" class="invalid-feedback"></span>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-align-left text-primary me-1"></i>
+                                @Html.DisplayNameFor(model => model.Description)
+                            </label>
+                            <textarea asp-for="Description" class="form-control"
+                                      rows="4"
+                                      placeholder="Description détaillée de l'affaire..."></textarea>
+                            <span asp-validation-for="Description" class="invalid-feedback"></span>
+                        </div>
+
+                        <div class="row">
+                            <!-- Date d'ouverture -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-plus text-primary me-1"></i>
+                                    @Html.DisplayNameFor(model => model.DateOuverture)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="DateOuverture" type="date" class="form-control" required />
+                                <span asp-validation-for="DateOuverture" class="invalid-feedback"></span>
+                            </div>
+
+                            <!-- Date de fermeture -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-minus text-primary me-1"></i>
+                                    @Html.DisplayNameFor(model => model.DateFermeture)
+                                </label>
+                                <input asp-for="DateFermeture" type="date" class="form-control" />
+                                <span asp-validation-for="DateFermeture" class="invalid-feedback"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Statut -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-flag text-primary me-1"></i>
+                                    @Html.DisplayNameFor(model => model.Statut)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Statut" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var value in Enum.GetValues(typeof(WebApplication1.Models.StatutAffaire)))
+                                    {
+                                        <option value="@value">@value</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Statut" class="invalid-feedback"></span>
+                            </div>
+
+                            <!-- Priorité -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-exclamation-triangle text-primary me-1"></i>
+                                    @Html.DisplayNameFor(model => model.Priorite)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Priorite" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var value in Enum.GetValues(typeof(WebApplication1.Models.Priorite)))
+                                    {
+                                        <option value="@value">@value</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Priorite" class="invalid-feedback"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Retour à la liste
+                            </a>
+                            <div>
+                                <button type="reset" class="btn btn-outline-warning me-2">
+                                    <i class="fas fa-undo me-2"></i>
+                                    Réinitialiser
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    Enregistrer les modifications
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            border-bottom: none;
+            padding: 1.5rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-label {
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            transition: all 0.2s;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #80bdff;
+                box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+            }
+
+        .btn {
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+
+        .breadcrumb {
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+        }
+
+        .breadcrumb-item a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+        }
+
+            .breadcrumb-item a:hover {
+                color: white;
+            }
+
+        .breadcrumb-item.active {
+            color: white;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .invalid-feedback {
+            display: block;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Validation côté client
+        document.addEventListener('DOMContentLoaded', function () {
+            const forms = document.querySelectorAll('.needs-validation');
+
+            Array.from(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+    </script>
+}

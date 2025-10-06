@@ -1,0 +1,41 @@
+﻿@model WebApplication1.Models.Stockage.ConsultationAnalysteViewModel
+
+@{
+    ViewBag.Title = "Mes échantillons à analyser";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+
+}
+
+<h2>Mes échantillons à analyser</h2>
+
+<div class="alert alert-info">
+    Bienvenue, @Model.NomAnalyste
+</div>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Numéro</th>
+            <th>Type</th>
+            <th>Priorité</th>
+            <th>Statut</th>
+            <th>Date réception</th>
+            <th>Zone</th>
+            <th>Emplacement</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var e in Model.Echantillons)
+        {
+            <tr>
+                <td>@e.NumeroEchantillon</td>
+                <td>@e.Type</td>
+                <td>@e.Priorite</td>
+                <td>@e.Statut</td>
+                <td>@e.DateReception.ToShortDateString()</td>
+                <td>@e.Zone</td>
+                <td>@e.Emplacement</td>
+            </tr>
+        }
+    </tbody>
+</table>

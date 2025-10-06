@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "À propos";
+}
+
+<main aria-labelledby="title" class="about-container">
+    <div class="about-content">
+        <h2 id="title">Laboratoire des Preuves Judiciaires</h2>
+
+        <p>
+            Le Laboratoire des Preuves Judiciaires est une institution scientifique
+            dédiée à l'analyse et à l'authentification des éléments de preuve utilisés dans le cadre
+            des enquêtes et procédures judiciaires.
+        </p>
+        <p>
+            Le but est de garantir la fiabilité et l'intégrité des expertises réalisées
+        </p>
+        <p>
+            Grâce une équipe d'experts spécialisés en criminalistique,
+            nous contribuons activement à l'établissement de la vérité et au respect des droits fondamentaux.
+        </p>
+    </div>
+</main>
+
+<style>
+    .about-container {
+        background-image: url('/images/img8.jpg'); /* image de fond */
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .about-content {
+        background: rgba(0, 0, 0, 0.6); /* effet transparent pour lisibilité */
+        padding: 40px;
+        border-radius: 12px;
+        max-width: 800px;
+        color: #fff;
+    }
+
+        .about-content h2 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+        }
+
+        .about-content p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+</style>

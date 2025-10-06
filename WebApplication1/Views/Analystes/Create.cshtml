@@ -1,0 +1,174 @@
+﻿@model WebApplication1.Models.Analyste
+
+@{
+    ViewData["Title"] = "Créer un analyste";
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+}
+
+<div class="container py-4">
+    <!-- Titre principal avec style -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-person-plus-fill me-2"></i> @ViewData["Title"]
+        </h2>
+        <p class="text-muted">Veuillez remplir les informations ci-dessous pour ajouter un nouvel analyste</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center">
+            <i class="bi bi-exclamation-triangle me-1"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form method="post" asp-action="Create" class="card shadow-lg p-4 rounded-3" novalidate>
+        <h4 class="mb-3 text-secondary">
+            <i class="bi bi-person-badge me-2"></i> Informations personnelles
+        </h4>
+        <hr />
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="nom" class="form-label">Nom *</label>
+                <input asp-for="nom" class="form-control" required />
+                <span asp-validation-for="nom" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="prenom" class="form-label">Prénom *</label>
+                <input asp-for="prenom" class="form-control" required />
+                <span asp-validation-for="prenom" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="specialite" class="form-label">Spécialité *</label>
+                <select asp-for="specialite" asp-items="@(ViewBag.SpecialiteList ?? new List<SelectListItem>())" class="form-select" required>
+                    <option value="">-- Sélectionnez une spécialité --</option>
+                </select>
+                <span asp-validation-for="specialite" class="text-danger"></span>
+
+                <!-- Debug simplifié -->
+                @if (ViewBag.SpecialiteList != null)
+                {
+                    <small class="text-muted">Spécialités disponibles</small>
+                }
+                else
+                {
+                    <small class="text-warning">Chargement des spécialités...</small>
+                }
+            </div>
+        </div>
+
+        <h4 class="mt-4 mb-3 text-secondary">
+            <i class="bi bi-shield-lock me-2"></i> Informations de connexion
+        </h4>
+        <hr />
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email *</label>
+                <input name="email" type="email" class="form-control" required />
+                <div class="invalid-feedback">
+                    L'email est requis et doit être valide.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label for="password" class="form-label">Mot de passe *</label>
+                <input name="password" type="password" class="form-control" required minlength="6" />
+                <div class="invalid-feedback">
+                    Le mot de passe doit contenir au moins 6 caractères.
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+            <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-x-circle me-1"></i> Annuler
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-1"></i> Créer
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Validation personnalisée côté client
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var form = document.querySelector('form');
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }, false);
+        })();
+
+        // Validation en temps réel
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+
+            inputs.forEach(function(input) {
+                input.addEventListener('blur', function() {
+                    if (input.value.trim() === '') {
+                        input.classList.add('is-invalid');
+                    } else {
+                        input.classList.remove('is-invalid');
+                        input.classList.add('is-valid');
+                    }
+                });
+
+                input.addEventListener('input', function() {
+                    if (input.classList.contains('is-invalid') && input.value.trim() !== '') {
+                        input.classList.remove('is-invalid');
+                        input.classList.add('is-valid');
+                    }
+                });
+            });
+
+            // Debug: Vérifier le contenu de la liste déroulante
+            const specialiteSelect = document.querySelector('select[name="specialite"]');
+            if (specialiteSelect) {
+                console.log('Nombre d\'options dans la liste des spécialités:', specialiteSelect.options.length);
+                for (let i = 0; i < specialiteSelect.options.length; i++) {
+                    console.log('Option ' + i + ':', specialiteSelect.options[i].value, specialiteSelect.options[i].text);
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .is-valid {
+        border-color: #28a745;
+    }
+
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+</style>

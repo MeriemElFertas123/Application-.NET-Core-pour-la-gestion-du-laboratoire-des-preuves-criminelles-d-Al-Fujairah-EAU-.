@@ -1,0 +1,264 @@
+﻿@model IEnumerable<WebApplication1.Models.Enqueteur>
+@{
+    Layout = "~/Views/Shared/_LayoutMenu.cshtml";
+    ViewBag.Title = "Index";
+    var gradesDisponibles = ViewBag.Grades as List<string>;
+    var gradeFiltre = ViewBag.SelectedGrade as string;
+}
+<style>
+    .enqueteurs-container {
+        background: white;
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .header-section {
+        text-align: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .filter-section {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .filter-select {
+        padding: 0.5rem;
+        font-size: 1rem;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        margin-left: 0.5rem;
+    }
+
+    .btn-group {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .create-btn, .user-management-btn {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .user-management-btn {
+        background: #28a745;
+    }
+
+    .create-btn:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .user-management-btn:hover {
+        background: #218838;
+        color: white;
+        text-decoration: none;
+    }
+
+    .table-container {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+        .modern-table thead {
+            background: #f8f9fa;
+        }
+
+        .modern-table th, .modern-table td {
+            padding: 1rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: middle;
+        }
+
+    .action-links {
+        display: flex;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    .action-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid #007bff;
+        background: #007bff;
+        color: white;
+        min-width: 70px;
+        text-align: center;
+        text-decoration: none;
+    }
+
+        .action-btn:hover {
+            background: #0056b3;
+            color: white;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .filter-form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .filter-btn:hover {
+            background: #545b62;
+        }
+</style>
+
+<div class="enqueteurs-container">
+    <div class="content-wrapper">
+        <div class="header-section">
+            <h1 class="page-title">Gestion des Enquêteurs</h1>
+
+            <div class="filter-section">
+                <div class="filter-form">
+                    <label for="gradeFiltre">Filtrer par grade :</label>
+                    <select name="gradeFiltre" id="gradeFiltre" class="filter-select">
+                        <option value="">-- Tous --</option>
+                        @foreach (var grade in gradesDisponibles ?? new List<string>())
+                        {
+                            <option value="@grade" selected="@(grade == gradeFiltre ? "selected" : null)">
+                                @grade
+                            </option>
+                        }
+                    </select>
+                    <button type="button" class="filter-btn" onclick="appliquerFiltre()">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                @Html.ActionLink("Ajouter un nouveau enquêteur", "Create", null, new { @class = "user-management-btn" })
+            </div>
+        </div>
+
+        <div class="table-container">
+            @if (Model != null && Model.Any())
+            {
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>@Html.DisplayNameFor(model => model.nom)</th>
+                            <th>@Html.DisplayNameFor(model => model.prenom)</th>
+                            <th>@Html.DisplayNameFor(model => model.grade)</th>
+                            <th>@Html.DisplayNameFor(model => model.service)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(m => item.nom)</td>
+                                <td>@Html.DisplayFor(m => item.prenom)</td>
+                                <td>@Html.DisplayFor(m => item.grade)</td>
+                                <td>@Html.DisplayFor(m => item.service)</td>
+                                <td>
+                                    <div class="action-links">
+                                        @Html.ActionLink("Modifier", "Edit", "Enqueteurs", new { id = item.idEnqueteur }, new { @class = "action-btn" })
+                                        @Html.ActionLink("Détails", "Details", "Enqueteurs", new { id = item.idEnqueteur }, new { @class = "action-btn" })
+                                        @Html.ActionLink("Supprimer", "Delete", "Enqueteurs", new { id = item.idEnqueteur }, new { @class = "action-btn" })
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <p>Aucun enquêteur trouvé</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function appliquerFiltre() {
+            var gradeSelectionne = document.getElementById('gradeFiltre').value;
+            var url = new URL(window.location.href);
+
+            if (gradeSelectionne) {
+                url.searchParams.set('gradeFiltre', gradeSelectionne);
+            } else {
+                url.searchParams.delete('gradeFiltre');
+            }
+
+            window.location.href = url.toString();
+        }
+
+        // Appliquer le filtre automatiquement quand la sélection change (optionnel)
+        document.getElementById('gradeFiltre').addEventListener('change', function() {
+            // Pour un filtrage automatique, décommentez la ligne suivante :
+            // appliquerFiltre();
+        });
+
+        // Pré-remplir le filtre avec la valeur actuelle
+        document.addEventListener('DOMContentLoaded', function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var gradeFiltre = urlParams.get('gradeFiltre');
+            if (gradeFiltre) {
+                document.getElementById('gradeFiltre').value = gradeFiltre;
+            }
+        });
+    </script>
+}
